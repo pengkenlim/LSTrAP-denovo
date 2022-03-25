@@ -61,11 +61,13 @@ optional arguments:
 ```
 
 **Place holder for next step** 
+
 **(sample download, QC and k-means classification)**
 
 Place holder description
 
 **Place holder for next step** 
+
 **(organ/condition-specific assembly, remap filtering to get bona fide genes and concatenation)**
 
 Place holder description
