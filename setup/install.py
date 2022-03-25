@@ -3,7 +3,6 @@ import os
 print("Checking if required programs are installed...")
 programdir=os.path.join(os.getcwd(),"programs")
 
-
 #installing aspera if not installed
 installpath= os.path.join(programdir,"aspera")
 if not os.path.exists(installpath):
@@ -61,3 +60,14 @@ if not os.path.exists(installpath):
 	os.system(f"mv TransDecoder-TransDecoder-v5.5.0 {installpath}")
 else:
 	print("TransDecoder found.")
+    
+ 
+installpath= os.path.join(programdir, "ORFfinder")
+if not os.path.exists(installpath):
+    print("Downloading and installing ORFfinder into programs directory")
+    os.system("wget https://ftp.ncbi.nlm.nih.gov/genomes/TOOLS/ORFfinder/linux-i64/ORFfinder.gz")
+    os.system("gunzip ORFfinder.gz")
+    os.system(f"mv ORFfinder {installpath}")
+
+
+
