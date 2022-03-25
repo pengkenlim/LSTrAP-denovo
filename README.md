@@ -21,12 +21,16 @@ python3 ./setup/install.py
 ```
 
 # Running the pipeline
+
 **Generating a preliminary assembly**
+
 Note: this functionality is still under development
+
 Simplest implementation is as follows
 ```
 python main/preliminary_assembly.py -o <OUTPUT_DIR> -t <THREAD_POOL> -i <NCBI_TAXID> -dm ftp
 ```
+
 Full options:
 ```
 usage: preliminary_assembly.py [-h] -o  [-k] [-ct] [-s] -t  [-w] [-g] [-sc] [-ml] -dm  (-i  | -a )
@@ -55,6 +59,11 @@ optional arguments:
   -a , --accessions     User-defined list of SRA run accessions to fetch. Requires at least 10 accessions. E.g.:
                         SRR123456,SRR654321,ERR246810,...
 ```
+
 **Place holder for next step (sample download, QC and k-means classification)**
+
 Place holder description
+
 **Place holder for next step (organ/condition-specific assembly, remap filtering to get bona fide genes and concatenation)**
+
+Place holder description
