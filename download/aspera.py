@@ -22,27 +22,27 @@ def get_download_path(accession):
         path= f"/vol1/fastq/{accession[:6]}/0{accession[-2:]}/{accession}/"
     elif len(accession) == 12:
         path= f"/vol1/fastq/{accession[:6]}/{accession[-3:]}/{accession}/"
-    ftp_dirpath=  "http://ftp.sra.ebi.ac.uk" + path
-    ftp_fullpath_1 = os.path.join(ftp_dirpath,accession+".fastq.gz")
-    ftp_fullpath_2 = os.path.join(ftp_dirpath,accession+"_1.fastq.gz")
-    filesize_1 = check_filesize(ftp_fullpath_1)
-    filesize_2 = check_filesize(ftp_fullpath_2)
+    http_dirpath=  "http://ftp.sra.ebi.ac.uk" + path
+    http_fullpath_1 = os.path.join(http_dirpath,accession+".fastq.gz")
+    http_fullpath_2 = os.path.join(http_dirpath,accession+"_1.fastq.gz")
+    filesize_1 = check_filesize(http_fullpath_1)
+    filesize_2 = check_filesize(http_fullpath_2)
     if  filesize_1 > filesize_2:
         filesize= filesize_1
         ascp_fullpath=  os.path.join("era-fasp@fasp.sra.ebi.ac.uk:" +path, accession+".fastq.gz")
-        ftp_fullpath= ftp_fullpath_1
+        ftp_fullpath= os.path.join("ftp://ftp.sra.ebi.ac.uk" + path, accession+".fastq.gz")
     elif filesize_1 < filesize_2:
         filesize= filesize_2
         ascp_fullpath=  os.path.join("era-fasp@fasp.sra.ebi.ac.uk:" +path, accession+"_1.fastq.gz")
-        ftp_fullpath= ftp_fullpath_2
+        ftp_fullpath= os.path.join("ftp://ftp.sra.ebi.ac.uk" + path, accession+"_1.fastq.gz")
     else:
         filesize= filesize_1
         ascp_fullpath=  os.path.join("era-fasp@fasp.sra.ebi.ac.uk:" +path, accession+".fastq.gz")
-        ftp_fullpath= ftp_fullpath_1
+        ftp_fullpath= os.path.join("ftp://ftp.sra.ebi.ac.uk" + path, accession+".fastq.gz")
     return ascp_fullpath, ftp_fullpath, filesize
 
-def check_filesize(ftp_fullpath):
-    header= subprocess.check_output(f"curl -sI {ftp_fullpath}", shell=True).decode("utf-8")
+def check_filesize(http_fullpath):
+    header= subprocess.check_output(f"curl -sI {http_fullpath}", shell=True).decode("utf-8")
     if "404 Not Found" in header:
         return 0
     elif "200 OK" in header:
