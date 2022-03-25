@@ -55,7 +55,7 @@ def launch_ascp(ascp_fullpath, outputdir, filesizelimit=1500000000):
     stderr=subprocess.STDOUT)
     
 def launch_curl(ftp_fullpath, outputdir, filesizelimit=1500000000):
-    subprocess.run(["curl", "-r", f"0-{str(filesizelimit)}","-o", outputdir, ftp_fullpath ])
-    #stdout=subprocess.DEVNULL,
-    #stderr=subprocess.STDOUT)
+    subprocess.run(["curl", "-r", f"0-{str(filesizelimit)}","-o", outputdir, ftp_fullpath ],
+    stdout=subprocess.DEVNULL,
+    stderr=subprocess.STDOUT)
 __all__=["get_download_path", "check_filesize", "launch_ascp","launch_curl" ]
