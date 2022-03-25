@@ -19,10 +19,11 @@ from setup import constants
 from preprocess import trim
 
 #job to generate Single-sample assembly
-def single_sample_assembly(accession):
-    #a very stupid method to make sure that each process is out of sync. will have to fix
-    sleep(random.randint(0,10))
+def single_sample_assembly(accession,index):
+    #to un-sync processes 
+    sleep((index%workers)*5)
     #get download path and filesize of accession
+    print(f"{accession}: checking file size...")
     ascp_fullpath, ftp_fullpath, filesize = aspera.get_download_path(accession)
     if filesize < filesizelimit:
         return f"Accession {accession} does not meet size requirement"
@@ -30,14 +31,21 @@ def single_sample_assembly(accession):
         #download
         fastqpath=os.path.join(fastqdir,accession+".fastq.gz")
         if download_method == "ascp":
+            print(f"{accession}: downloading file via ascp...")
             aspera.launch_ascp(ascp_fullpath, fastqpath, filesizelimit)
+            sleep(1)
         elif download_method == "ftp":
+            print(f"{accession}: downloading file via ftp...")
             aspera.launch_curl(ftp_fullpath, fastqpath, filesizelimit)
+            sleep(1)
+            
         #trim and uncompress
+        print(f"{accession}: trimming file using Fastp...")
         trim.launch_fastp(fastqpath,fastqpath.split(".gz")[0],threads)
         #mnake config file for soapdenovotrans to parse
         fastqpath= fastqpath.split(".gz")[0]
         configoutpath = os.path.join(ssadir, accession + "_temp.config")
+        print(f"{accession}: Assembling transcripts with Soapdenovo-Trans...")
         soapdenovo.make_config(fastqpath,configoutpath)
         #start assembly process
         outputpath_prefix= os.path.join(ssadir, accession)
@@ -45,18 +53,20 @@ def single_sample_assembly(accession):
         #remove uncompressed and trimmed fastq file to save space
         os.system(f"rm {fastqpath}")
         #extract orf from assembly to get cds.fasta
+        print(f"{accession}: Extracting CDS with ORFfinder...")
         soapdenovo.extract_orf(outputpath_prefix + ".fasta", outputpath_prefix + "_cds.fasta", orfminlen, startcodon ,geneticcode)
         os.system(f"rm {outputpath_prefix}.fasta")
-        return accession
+        print(f"{accession}: Single-sample assembly completed.")
+        return f"{accession} processed"
 
 def parellel_ssa(workers, accessions):
-    #progress_bar= tqdm(total=len(accessions), desc= "Accessions processed", unit="Acsn", leave=True)
+    progress_bar= tqdm(total=len(accessions), desc= "Processing accessions", unit="Acsn", leave=True)
     with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
-                results= [executor.submit(single_sample_assembly, accession) for accession in accessions]
+                results= [executor.submit(single_sample_assembly, accession, index) for index, accession in enumerate(accessions)]
                 for f in concurrent.futures.as_completed(results):
-                    #progress_bar.update(1)
-                    #progress_bar.set_postfix_str(s=f.result())
-                    print(f.result())
+                    progress_bar.update(1)
+                    progress_bar.set_postfix_str(s=f.result())
+                    #print(f.result())
 
 if __name__ == "__main__":
 	#arguments
