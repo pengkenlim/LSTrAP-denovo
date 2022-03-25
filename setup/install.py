@@ -68,6 +68,8 @@ if not os.path.exists(installpath):
     os.system("wget https://ftp.ncbi.nlm.nih.gov/genomes/TOOLS/ORFfinder/linux-i64/ORFfinder.gz")
     os.system("gunzip ORFfinder.gz")
     os.system(f"mv ORFfinder {installpath}")
-
+    #changing permissions for ORFfinder
+    print("Changing permissions for ORFfinder. Password might be needed for sudo.")
+    os.system(f"sudo chmod 777 {installpath}")
 
 
