@@ -55,3 +55,6 @@ optional arguments:
   -a , --accessions     User-defined list of SRA run accessions to fetch. Requires at least 10 accessions. E.g.:
                         SRR123456,SRR654321,ERR246810,...
 ```
+**Place holder for next step (sample download, QC and k-means classification)**
+Place holder description
+**Place holder for next step (organ/condition-specific assembly, remap filtering to get bona fide genes and concatenation)**
