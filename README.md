@@ -10,7 +10,7 @@ git clone https://github.com/pengkenlim/LSTrAP-denovo.git
 **Create environment**
 ```
 cd LSTrAP-denovo
-virtualenv -p <MY_ENV>
+virtualenv -p python <MY_ENV>
 source ./<MY_ENV>/bin/activate
 pip install --upgrade pip
 pip install -r ./setup/requirements.txt
