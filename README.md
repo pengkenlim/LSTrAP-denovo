@@ -1,6 +1,6 @@
 # LSTrAP-denovo
  Large Scale Transcriptome Assembly Pipeline
- Note: Pipeline is still under active developmen.
+ Note: Pipeline is still under active development.
 
 # Setup
 **clone repository to local machine**
