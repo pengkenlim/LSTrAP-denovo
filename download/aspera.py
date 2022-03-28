@@ -50,12 +50,13 @@ def check_filesize(http_fullpath):
         return filesize
         
 def launch_ascp(ascp_fullpath, outputdir, filesizelimit=1500000000):
-    subprocess.run([constants.asperapath, "-QT", "-l", "300m", "-P33001", "-@",f"0:{filesizelimit}" ,"-i", constants.aspera_ssh_key , ascp_fullpath, outputdir], 
+    returncode= subprocess.run([constants.asperapath, "-QT", "-l", "300m", "-P33001", "-@",f"0:{filesizelimit}" ,"-i", constants.aspera_ssh_key , ascp_fullpath, outputdir], 
     stdout=subprocess.DEVNULL, 
     stderr=subprocess.STDOUT)
-    
+    return returncode.returncode
 def launch_curl(ftp_fullpath, outputdir, filesizelimit=1500000000):
-    subprocess.run(["curl", "-r", f"0-{str(filesizelimit)}","-o", outputdir, ftp_fullpath ],
+    returncode= subprocess.run(["curl", "-r", f"0-{str(filesizelimit)}","-o", outputdir, ftp_fullpath ],
     stdout=subprocess.DEVNULL,
     stderr=subprocess.STDOUT)
+    return returncode.returncode
 __all__=["get_download_path", "check_filesize", "launch_ascp","launch_curl" ]

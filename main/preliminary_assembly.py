@@ -30,31 +30,73 @@ def single_sample_assembly(accession,index):
     else:
         #download
         fastqpath=os.path.join(fastqdir,accession+".fastq.gz")
-        if download_method == "ascp":
-            print(f"{accession}: downloading file via ascp...")
-            aspera.launch_ascp(ascp_fullpath, fastqpath, filesizelimit)
-            sleep(1)
-        elif download_method == "ftp":
-            print(f"{accession}: downloading file via ftp...")
-            aspera.launch_curl(ftp_fullpath, fastqpath, filesizelimit)
-            sleep(1)
-            
+        retries=0
+        while retries<3:
+            if retries!= 0:
+                print(f"{accession}: Download failed. Retrying...")
+            if download_method == "ascp":
+                print(f"{accession}: downloading file via ascp...")
+                rcode = aspera.launch_ascp(ascp_fullpath, fastqpath, filesizelimit)
+                sleep(1)
+            elif download_method == "ftp":
+                print(f"{accession}: downloading file via ftp...")
+                rcode =aspera.launch_curl(ftp_fullpath, fastqpath, filesizelimit)
+                sleep(1)
+            if rcode!= 0:
+                retries+=1
+            if retries == 3:
+                return f"{accession}: aborted after {retries} retries"
+            else:
+                continue
         #trim and uncompress
-        print(f"{accession}: trimming file using Fastp...")
-        trim.launch_fastp(fastqpath,fastqpath.split(".gz")[0],threads)
-        #mnake config file for soapdenovotrans to parse
-        fastqpath= fastqpath.split(".gz")[0]
-        configoutpath = os.path.join(ssadir, accession + "_temp.config")
-        print(f"{accession}: Assembling transcripts with Soapdenovo-Trans...")
-        soapdenovo.make_config(fastqpath,configoutpath)
-        #start assembly process
-        outputpath_prefix= os.path.join(ssadir, accession)
-        soapdenovo.launch_soap(configoutpath, kmerlen, outputpath_prefix, threads)
+        retries=0
+        while retries<3:
+            if retries!= 0:
+                print(f"{accession}: Fastp trimming failed. Retrying...")
+            print(f"{accession}: trimming file using Fastp...")
+            rcode=trim.launch_fastp(fastqpath,fastqpath.split(".gz")[0],threads)
+            if rcode !=0:
+                retries+=1
+            if retries == 3:
+                return f"{accession}: aborted after {retries} retries"
+            else:
+                continue
+                
+        retries=0
+        while retries<3:
+            if retries!= 0:
+                print(f"{accession}: Soapdenovo-Trans failed. Retrying...")
+            #make config file for soapdenovotrans to parse
+            fastqpath= fastqpath.split(".gz")[0]
+            configoutpath = os.path.join(ssadir, accession + "_temp.config")
+            print(f"{accession}: Assembling transcripts with Soapdenovo-Trans...")
+            soapdenovo.make_config(fastqpath,configoutpath)
+            #start assembly process
+            outputpath_prefix= os.path.join(ssadir, accession)
+            rcode=soapdenovo.launch_soap(configoutpath, kmerlen, outputpath_prefix, threads)
+            if rcode !=0:
+                retries+=1
+            if retries == 3:
+                return f"{accession}: aborted after {retries} retries"
+            else:
+                continue
+        
         #remove uncompressed and trimmed fastq file to save space
         os.system(f"rm {fastqpath}")
-        #extract orf from assembly to get cds.fasta
-        print(f"{accession}: Extracting CDS with ORFfinder...")
-        soapdenovo.extract_orf(outputpath_prefix + ".fasta", outputpath_prefix + "_cds.fasta", orfminlen, startcodon ,geneticcode)
+        
+        retries=0
+        while retries<3:
+            if retries!= 0:
+                print(f"{accession}: ORFfinder failed. Retrying...")
+            #extract orf from assembly to get cds.fasta
+            print(f"{accession}: Extracting CDS with ORFfinder...")
+            rcode= soapdenovo.extract_orf(outputpath_prefix + ".fasta", outputpath_prefix + "_cds.fasta", orfminlen, startcodon ,geneticcode)
+            if rcode != 0:
+                retries+=1
+            if retries == 3:
+                return f"{accession}: aborted after {retries} retries"
+            else:
+                continue
         os.system(f"rm {outputpath_prefix}.fasta")
         print(f"{accession}: Single-sample assembly completed.")
         return f"{accession} processed"
@@ -64,9 +106,11 @@ def parellel_ssa(workers, accessions):
     with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
                 results= [executor.submit(single_sample_assembly, accession, index) for index, accession in enumerate(accessions)]
                 for f in concurrent.futures.as_completed(results):
-                    progress_bar.update(1)
-                    progress_bar.set_postfix_str(s=f.result())
-                    #print(f.result())
+                    if "processed" in f.result():
+                        progress_bar.update(1)
+                        progress_bar.set_postfix_str(s=f.result())
+                    else:
+                        print(f.result())
 
 if __name__ == "__main__":
 	#arguments
