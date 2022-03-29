@@ -16,7 +16,7 @@ def make_config(fastqpath,configoutpath ):
         f.write(f"max_rd_len=100\n[LIB]\nrd_len_cutof=100\navg_ins=200\nreverse_seq=0\nasm_flags=3\nmap_len=32\nq={fastqpath}")
 
 def extract_orf(fastainputpath, fastaoutputpath, orfminlen, startcodon, geneticcode):
-    returncode= subprocess.run([constants.orffinderpath, "-in", fastainputpath, "-out", fastaoutputpath, "-ml", str(orfminlen), "-s", str(startcodon), "-g", str(geneticcode)],
+    returncode= subprocess.run([constants.orffinderpath, "-in", fastainputpath, "-out", fastaoutputpath, "-ml", str(orfminlen), "-s", str(startcodon), "-g", str(geneticcode), "-outfmt", "1"],
     stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
     return returncode.returncode
     
