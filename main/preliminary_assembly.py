@@ -129,8 +129,8 @@ if __name__ == "__main__":
     help= "Specify the maximum workers for running multiple download-assembly jobs in parellel. Set to 2 by default.")
     parser.add_argument("-g", "--gene_code", type=int, metavar="", default=1, choices=range(1, 31), 
     help= "Genetic code (codon table) passed to ORFfinder during ORF extraction. Set to 1 (universal) by default. Refer to https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi for more information.")
-    parser.add_argument("-sc", "--start_codon", type=int, metavar="", default=1, choices=range(0, 2+1),
-    help= "ORF start codon passed to ORFfinder during ORF extraction. Set to 1 (ATG only) by default. Refer to ORFfinder usage https://ftp.ncbi.nlm.nih.gov/genomes/TOOLS/ORFfinder/USAGE.txt for more information")
+    parser.add_argument("-sc", "--start_codon", type=int, metavar="", default=0, choices=range(0, 2+1),
+    help= "ORF start codon passed to ORFfinder during ORF extraction. Set to 0 (ATG only) by default. Refer to ORFfinder usage https://ftp.ncbi.nlm.nih.gov/genomes/TOOLS/ORFfinder/USAGE.txt for more information")
     parser.add_argument("-ml", "--min_len", type=int, metavar="", default=300, choices=range(30, 500),
     help= "Minimal ORF length (nt) passed to ORFfinder during ORF extraction. Set to 300 by default.")
     parser.add_argument("-dm", "--download_method", type=str, metavar="", required=True, choices=["ascp","ftp"],
