@@ -20,6 +20,9 @@ from preprocess import trim
 
 #job to generate Single-sample assembly
 def single_sample_assembly(accession,index):
+    global processed_accessions
+    if accession in processed_accessions:
+        return f"{accession} processed"
     #to un-sync processes 
     sleep((index%workers)*5)
     #get download path and filesize of accession
@@ -85,6 +88,7 @@ def single_sample_assembly(accession,index):
         
         os.system(f"rm {outputpath_prefix}.fasta")
         print(f"{accession}: Single-sample assembly completed.")
+        processed_accessions+=accession
         return f"{accession} processed"
 
 
@@ -113,7 +117,7 @@ if __name__ == "__main__":
     help = "Specify consensus threshold during filtering. Threshold will be determined automatically by default.")
     parser.add_argument("-s","--filesizelimit" , type=int, metavar="", default=1500, 
     help="Specify the size limit(mb) of accession read files to partially download. Limit set to 1500 by default.")
-    parser.add_argument("-t", "--threads", type=int, metavar="", required=True, 
+    parser.add_argument("-t", "--threads", type=int, metavar="", default=4, 
     help = "Total thread pool for workers. Needs to be divisible by number of workers.")
     parser.add_argument("-w", "--workers", type=int, metavar="", default=2, 
     help= "Specify the maximum workers for running multiple download-assembly jobs in parellel. Set to 2 by default.")
@@ -123,8 +127,9 @@ if __name__ == "__main__":
     help= "ORF start codon passed to ORFfinder during ORF extraction. Set to 0 (ATG only) by default. Refer to ORFfinder usage https://ftp.ncbi.nlm.nih.gov/genomes/TOOLS/ORFfinder/USAGE.txt for more information")
     parser.add_argument("-ml", "--min_len", type=int, metavar="", default=300, choices=range(30, 500),
     help= "Minimal ORF length (nt) passed to ORFfinder during ORF extraction. Set to 300 by default.")
-    parser.add_argument("-dm", "--download_method", type=str, metavar="", required=True, choices=["ascp","ftp"],
-    help = "Method to download accession runs. ftp/ascp.")   
+    parser.add_argument("-dm", "--download_method", type=str, metavar="", default="ftp", choices=["ascp","ftp"],
+    help = "Method to download accession runs. ftp/ascp.")  
+
     
     #mutually excusive args fetch by taxid or by userdefined accessions
     ME_group_1 = parser.add_mutually_exclusive_group(required=True)
@@ -132,75 +137,82 @@ if __name__ == "__main__":
     help= "NCBI TaxID of organism for fetching SRA run accessions.")
     ME_group_1.add_argument("-a", "--accessions", type=str, metavar="", 
     help= "User-defined list of SRA run accessions to fetch. Requires at least 10 accessions. E.g.: SRR123456,SRR654321,ERR246810,...")
+    ME_group_1.add_argument("-con", "--conti", action="store_true",
+    help = "Resume incomplete run based on output directory. Only requires -o to run.")
     
     args=parser.parse_args()
-    
-    #assigning arguments to variables
-    taxid= args.id
-    accessions= args.accessions
     outputdir= args.output_dir
-    consensus_threshold= args.consensus_threshold
-    filesizelimit= args.filesizelimit * 1000000
-    threadpool= args.threads
-    workers=args.workers
-    kmerlen=args.kmer_len
-    orfminlen=args.min_len
-    startcodon=args.start_codon
-    geneticcode=args.gene_code
-    download_method= args.download_method
-    
-    #check if threads pool is divisible by number of workers
-    if threadpool % workers != 0:
-        print(f"Specified thread pool of {threadpool} is not divisible by number of workers.")
-        threadpool= threadpool - (threadpool % workers)
-        print(f"Using thread pool of {threadpool} instead.")
-    threads=int(threadpool/workers)
-        
-    #create outputdir , fastqdir and ssadir if not found
+    conti=args.conti
+        #create outputdir , fastqdir and ssadir if not found
     if not os.path.exists(outputdir):
-        os.makedirs(outputdir)
-    
+        os.makedirs(outputdir)    
     fastqdir=os.path.join(outputdir,"fastq")
     ssadir=os.path.join(outputdir, "ssa")
-    
     if not os.path.exists(fastqdir):
         os.makedirs(fastqdir)
-        
     if not os.path.exists(ssadir):
         os.makedirs(ssadir)
-
-	#check if accessions are given
-    if accessions is not None:
-        accessions = accessions.split(",")
-        if len(accessions) < 10:
-            sys.exit("Not enough accessions provided. Refer to --help for more information.")
-        else:
-            print("User defined accessions:")
-            for index , accession in enumerate(accessions):
-                print(f"{index +1}. ",accession)
-            
-            #assemble SSAs in parellel
-            parellel_ssa(workers, accessions)
-                    
-                    
-	#check if taxid is given
-    elif taxid is not None:
-        scientific_name= ena.get_sciname(taxid)
-        if type(scientific_name) is  not list:
-            sys.exit("TaxID {taxid} is invalid/not found.")
-        elif len(scientific_name) > 1:
-            sys.exit("More than one organism found for TaxID {taxid}.")
-        else:
-            scientific_name= scientific_name[0]["scientific_name"]
-            print(f"Fetching RNA-seq accessions of {scientific_name}, NCBI TaxID {taxid} from ENA..")
-            accessions = ena.get_runs(taxid)
-            print(f"Total accessions: {len(accessions)}")
+    logfile=misc.logfile(os.path.join(outputdir,"logs.json"))
+    
+    #assigning arguments to variables, writing to log OR fetching variables from log
+    if conti==False:
+        taxid= args.id
+        accessions= args.accessions
+        consensus_threshold= args.consensus_threshold
+        filesizelimit= args.filesizelimit * 1000000
+        threadpool= args.threads
+        workers=args.workers
+        kmerlen=args.kmer_len
+        orfminlen=args.min_len
+        startcodon=args.start_codon
+        geneticcode=args.gene_code
+        download_method= args.download_method
+        #check if accessions are given
+        if accessions is not None:
+            accessions = accessions.split(",")
+            if len(accessions) < 10:
+                sys.exit("Not enough accessions provided. Refer to --help for more information.")
+        #check if taxid is given
+        elif taxid is not None:
+            scientific_name= ena.get_sciname(taxid)
+            if type(scientific_name) is  not list:
+                sys.exit("TaxID {taxid} is invalid/not found.")
+            elif len(scientific_name) > 1:
+                sys.exit("More than one organism found for TaxID {taxid}.")
+            else:
+                scientific_name= scientific_name[0]["scientific_name"]
+                print(f"Fetching RNA-seq accessions of {scientific_name}, NCBI TaxID {taxid} from ENA..")
+                accessions = ena.get_runs(taxid)
+                print(f"Total accessions: {len(accessions)}")
+                
+        if threadpool % workers != 0:
+            print(f"Specified thread pool of {threadpool} is not divisible by number of workers.")
+            threadpool= threadpool - (threadpool % workers)
+            print(f"Using thread pool of {threadpool} instead.")
+        threads=int(threadpool/workers)
         
-        random.shuffle(accessions)
-        accessions=accessions[:10]
-        print("Randomly selected accessions:")
-        for index , accession in enumerate(accessions):
-            print(f"{index +1}. ",accession)
-        #assemble SSAs in parellel
-        parellel_ssa(workers, accessions)
+        logfile.contents["prelim"]["cmd_args"]={"taxid":taxid,
+        "accessions":accessions,
+        "outputdir": outputdir,
+        "consensus_threshold": consensus_threshold,
+        "filesizelimit":filesizelimit,
+        "threadpool":threadpool,
+        "workers":workers,
+        "kmerlen": kmerlen,
+        "orfminlen": orfminlen,
+        "geneticcode": geneticcode,
+        "download_method":download_method}
+        logfile.update()
 
+    elif conti==True:
+        #exit if log file contains command args
+        if logfile.contents["prelim"]["cmd_args"]=={}:
+            sys.exit(f"No previous run detected in {outputdir}. Exiting...")
+        else:
+            print(f"Previous run detected. Resuming run...")
+            cmd_args= logfile.contents["prelim"]["cmd_args"]
+            taxid, accessions, outputdir, consensus_threshold, filesizelimit, threadpool,workers, kmerlen , orfminlen, geneticcode, download_method, = cmd_args.values()
+    
+    processed_accessions= logfile.contents["prelim"]["processed"]
+    #assemble SSAs in parellel
+    parellel_ssa(workers, accessions)
