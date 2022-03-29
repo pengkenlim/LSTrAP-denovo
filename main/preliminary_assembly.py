@@ -14,7 +14,7 @@ from time import sleep
 from tqdm import tqdm
 from download import ena
 from download import aspera
-from assembly import soapdenovo
+from assembly import soapdenovo, misc
 from setup import constants
 from preprocess import trim
 
@@ -30,76 +30,63 @@ def single_sample_assembly(accession,index):
     else:
         #download
         fastqpath=os.path.join(fastqdir,accession+".fastq.gz")
-        retries=0
-        while retries<3:
-            if retries!= 0:
-                print(f"{accession}: Download failed. Retrying...")
-            if download_method == "ascp":
-                print(f"{accession}: downloading file via ascp...")
-                rcode = aspera.launch_ascp(ascp_fullpath, fastqpath, filesizelimit)
-                sleep(1)
-            elif download_method == "ftp":
-                print(f"{accession}: downloading file via ftp...")
-                rcode =aspera.launch_curl(ftp_fullpath, fastqpath, filesizelimit)
-                sleep(1)
-            if rcode!= 0:
-                retries+=1
-            if retries == 3:
-                return f"{accession}: aborted after {retries} retries"
-            else:
-                continue
+        if download_method == "ascp":
+            
+            result= misc.run_with_retries(retrylimit, 
+            aspera.launch_ascp, 
+            [ascp_fullpath,fastqpath,filesizelimit],
+            f"{accession}: Download failed. Retrying...", 
+            f"{accession}: downloading file via ascp...")
+            
+        elif download_method == "ftp":
+            
+            result= misc.run_with_retries(retrylimit,
+            aspera.launch_curl,
+            [ftp_fullpath,fastqpath,filesizelimit],
+            f"{accession}: Download failed. Retrying...",
+            f"{accession}: downloading file via ftp...")
+        if result == "failed":
+            return f"{accession}: aborted after {retrylimit} retries."
+
         #trim and uncompress
-        retries=0
-        while retries<3:
-            if retries!= 0:
-                print(f"{accession}: Fastp trimming failed. Retrying...")
-            print(f"{accession}: trimming file using Fastp...")
-            rcode=trim.launch_fastp(fastqpath,fastqpath.split(".gz")[0],threads)
-            if rcode !=0:
-                retries+=1
-            if retries == 3:
-                return f"{accession}: aborted after {retries} retries"
-            else:
-                continue
-                
-        retries=0
-        while retries<3:
-            if retries!= 0:
-                print(f"{accession}: Soapdenovo-Trans failed. Retrying...")
-            #make config file for soapdenovotrans to parse
-            fastqpath= fastqpath.split(".gz")[0]
-            configoutpath = os.path.join(ssadir, accession + "_temp.config")
-            print(f"{accession}: Assembling transcripts with Soapdenovo-Trans...")
-            soapdenovo.make_config(fastqpath,configoutpath)
-            #start assembly process
-            outputpath_prefix= os.path.join(ssadir, accession)
-            rcode=soapdenovo.launch_soap(configoutpath, kmerlen, outputpath_prefix, threads)
-            if rcode !=0:
-                retries+=1
-            if retries == 3:
-                return f"{accession}: aborted after {retries} retries"
-            else:
-                continue
+        result= misc.run_with_retries(retrylimit,
+        trim.launch_fastp,
+        [fastqpath, fastqpath.split(".gz")[0],threads],
+        f"{accession}: Fastp trimming failed. Retrying...",
+        f"{accession}: trimming file using Fastp...")
+        if result == "failed":
+            return f"{accession}: aborted after {retrylimit} retries."
+        
+        #make config file for soapdenovotrans to parse
+        fastqpath= fastqpath.split(".gz")[0]
+        configoutpath = os.path.join(ssadir, accession + "_temp.config")
+        soapdenovo.make_config(fastqpath,configoutpath)
+        #Single-sample-assembly process
+        outputpath_prefix= os.path.join(ssadir, accession)
+        results=misc.run_with_retries(retrylimit,
+        soapdenovo.launch_soap,
+        [configoutpath, kmerlen, outputpath_prefix, threads],
+        f"{accession}: Soapdenovo-Trans failed. Retrying...",
+        f"{accession}: Assembling transcripts with Soapdenovo-Trans...")
+        if result == "failed":
+            return f"{accession}: aborted after {retrylimit} retries."
         
         #remove uncompressed and trimmed fastq file to save space
         os.system(f"rm {fastqpath}")
         
-        retries=0
-        while retries<3:
-            if retries!= 0:
-                print(f"{accession}: ORFfinder failed. Retrying...")
-            #extract orf from assembly to get cds.fasta
-            print(f"{accession}: Extracting CDS with ORFfinder...")
-            rcode= soapdenovo.extract_orf(outputpath_prefix + ".fasta", outputpath_prefix + "_cds.fasta", orfminlen, startcodon ,geneticcode)
-            if rcode != 0:
-                retries+=1
-            if retries == 3:
-                return f"{accession}: aborted after {retries} retries"
-            else:
-                continue
+        #extract orf from assembly to get cds.fasta
+        results=misc.run_with_retries(retrylimit,
+        soapdenovo.extract_orf,
+        [outputpath_prefix + ".fasta", outputpath_prefix + "_cds.fasta", orfminlen, startcodon ,geneticcode],
+        f"{accession}: ORFfinder failed. Retrying...",
+        f"{accession}: Extracting CDS with ORFfinder...")
+        if result == "failed":
+            return f"{accession}: aborted after {retrylimit} retries."
+        
         os.system(f"rm {outputpath_prefix}.fasta")
         print(f"{accession}: Single-sample assembly completed.")
         return f"{accession} processed"
+
 
 def parellel_ssa(workers, accessions):
     progress_bar= tqdm(total=len(accessions), desc= "Processing accessions", unit="Acsn", leave=True)
@@ -113,7 +100,10 @@ def parellel_ssa(workers, accessions):
                         print(f.result())
 
 if __name__ == "__main__":
-	#arguments
+	#REMOVE THIS AFTER TESTING
+    retrylimit=2
+    
+    #arguments
     parser= argparse.ArgumentParser(description="LSTrAP-denovo.preliminary_assembly: Assemble a reduced but high-confidence assembly from public RNA-seq data")
     parser.add_argument("-o", "--output_dir", type=str, metavar= "", required=True,
     help= "Directory for data output.")
