@@ -228,7 +228,7 @@ if __name__ == "__main__":
         elif len(scientific_name) > 1:
             sys.exit("More than one organism found for TaxID {taxid}. Exiting...")
         scientific_name= scientific_name[0]["scientific_name"]
-        print(f"\nFetching RNA-seq accessions of {scientific_name}, NCBI TaxID {taxid} from ENA..\n")
+        print(f"\nFetching RNA-seq accessions of {scientific_name}( NCBI TaxID: {taxid}) from ENA..\n")
         accessions = ena.get_runs(taxid)
         random.shuffle(accessions)
         print(f"Total accessions fetched from ENA: {len(accessions)}\n")
