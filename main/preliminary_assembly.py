@@ -92,6 +92,8 @@ def single_sample_assembly(accession,index):
         os.system(f"rm {outputpath_prefix}.fasta")
         print(f"{accession}: Single-sample assembly completed.")
         processed_accessions+=accession
+        logfile.contents["prelim"]["processed"] = processed_accessions
+        logfile.update()
         return f"{accession} processed"
 
 
