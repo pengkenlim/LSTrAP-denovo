@@ -14,13 +14,16 @@ from time import sleep
 from tqdm import tqdm
 from download import ena
 from download import aspera
-from assembly import soapdenovo, misc
+from assembly import soapdenovo, misc , consensus
 from setup import constants
 from preprocess import trim
 
-#job to generate Single-sample assembly
+
 def single_sample_assembly(accession,index):
+    '''Job to generate Single-sample assembly. 
+    Validate download path -> download via ftp/ascp-> read trimming by fastp -> assembly by soapdenovo-Trans'''
     global processed_accessions
+    #check if acccessions is already processed in the case of a resumed run.
     if accession in processed_accessions:
         return f"{accession} processed"
     #to un-sync processes 
@@ -93,9 +96,11 @@ def single_sample_assembly(accession,index):
 
 
 def parellel_ssa(workers, selected_accessions):
+    ''' Wrapper to parellelize SSA jobs. 
+    Includes progress bar visualisation.'''
     progress_bar= tqdm(total=len(selected_accessions), desc= "SSA of selected accessions", unit="Acsn", leave=True)
     with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
-                results= [executor.submit(single_sample_assembly, accession, index) for index, accession in enumerate(accessions)]
+                results= [executor.submit(single_sample_assembly, accession, index) for index, accession in enumerate(selected_accessions)]
                 for f in concurrent.futures.as_completed(results):
                     if "processed" in f.result():
                         progress_bar.update(1)
@@ -103,8 +108,57 @@ def parellel_ssa(workers, selected_accessions):
                     else:
                         print(f.result())
 
+def ssa_consensus(assemblydir):
+    """ generate consensus assembly from SSAs"""
+    global consensus_threshold
+    print("\nConcatenating all Single-sample assemblies...\n")
+    #make subdir within assemblydir to store consensus assemblies
+    outputdir=os.path.join(assemblydir, "concat")
+    if not os.path.exists(outputdir):
+        os.makedirs(outputdir)
+    #concatenate and rename transcript ids
+    concatname="ssa_concat_cds.fasta"
+    concatpath=os.path.join(outputdir,concatname)
+    consensus.concat_rename_assemblies(assemblydir,concatpath)
+    #launch CD-HIT in shell with retry wrapper
+    clstr_concatpath= os.path.join(outputdir,"ssa_concat_cds_CT1.fasta")
+    result=misc.run_with_retries(retrylimit, 
+    consensus.launch_cdhit, 
+    [concatpath,0.995,clstr_concatpath, threadpool],
+    "CD-HIT-EST failed. Retrying...\n", 
+    "Running CD-HIT-EST on concatenated assembly...\n")
+    if result == "failed":
+        sys.exit(f"CD-HIT-EST aborted after aborted after {retrylimit} retries. Exiting...")
+    clstrinfopath = clstr_concatpath + ".clstr" 
+    print("Parsing output from CD-HIT-EST and writing to log...\n")
+    #extract sequence IDs to retain for each consensus threshold
+    CT_seqid_dict={}
+    logfile.contents["prelim"]["consensus"]["stats"]={}
+    for n_threshold in range(1,len(selected_accessions)+1):
+        seq_to_retain= consensus.cluster_seq_extractor(n_threshold,clstrinfopath)
+        CT_seqid_dict[f"CT{n_threshold}"]= seq_to_retain
+        logfile.contents["prelim"]["consensus"]["stats"][f"CT{n_threshold}"]=len(seq_to_retain)
+    logfile.update()
+    #for auto determination of consensus_threshold
+    if consensus_threshold == 0:
+        print("Determining consensus threshold automatically...\n")
+        consensus_threshold = consensus.select_CT(list(logfile.contents["prelim"]["consensus"]["stats"].values()))
+        logfile.contents["prelim"]["cmd_args"]["consensus_threshold"]= consensus_threshold
+        logfile.update()  
+    consensus_ssa_path= os.path.join(outputdir,f"ssa_concat_cds_CT{consensus_threshold}.fasta")
+    logfile.contents["prelim"]["consensus"]["path"]= consensus_ssa_path
+    logfile.update()
+    print(f"Consensus-SSA assembly with a consensus threshold of {consensus_threshold} created.")
+    consensus.fasta_subset(clstr_concatpath, consensus_ssa_path, CT_seqid_dict[f"CT{consensus_threshold}"]) 
+    
+        
+        
+        
+    
+
+
 if __name__ == "__main__":
-	#REMOVE THIS AFTER TESTING
+	#retry limit determines the number of retries before aborting
     retrylimit=2
     
     #arguments
@@ -213,12 +267,17 @@ if __name__ == "__main__":
     elif conti==True:
         #exit if log file contains command args
         if logfile.contents["prelim"]["cmd_args"]=={}:
-            sys.exit(f"No previous run initiation detected in {outputdir}. Exiting...")
-
-        print(f"Previous run detected. Resuming run...\n")
+            sys.exit(f"\nNo previous run initiation detected in {outputdir}. Exiting...")
+        if logfile.contents["prelim"]["status"]== "completed":
+            sys.exit(f"\nPrevious run initiated in {outputdir} has fully completed. Exiting...")
+        print(f"\nPrevious incomplete run detected. Resuming run...\n")
         taxid, selected_accessions, outputdir, consensus_threshold, filesizelimit, threadpool,workers, kmerlen , orfminlen, geneticcode, download_method, = logfile.contents["prelim"]["cmd_args"].values()
         accessions, scientific_name = logfile.contents["prelim"]["ena"].values()
     
     processed_accessions= logfile.contents["prelim"]["processed"]
     #assemble SSAs in parellel
-    parellel_ssa(workers, selected_accessions)
+    parellel_ssa(workers, selected_accessions)   
+    ssa_consensus(ssadir)
+    logfile.contents["prelim"]["status"]= "completed"
+    logfile.update()
+    
