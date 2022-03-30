@@ -47,6 +47,7 @@ if not os.path.exists(installpath):
 	os.system("tar -xf trashme.tar.gz")
 	os.system("rm trashme.tar.gz")
 	os.system(f"mv cd-hit-v4.8.1-2019-0228 {installpath}")
+    os.system(f"cd {installpath} ; make" )
 else:
 	print("CD-HIT found.")
 
