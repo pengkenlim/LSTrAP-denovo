@@ -91,7 +91,7 @@ def single_sample_assembly(accession,index):
         
         os.system(f"rm {outputpath_prefix}.fasta")
         print(f"{accession}: Single-sample assembly completed.")
-        processed_accessions+=accession
+        processed_accessions += [accession]
         logfile.contents["prelim"]["processed"] = processed_accessions
         logfile.update()
         return f"{accession} processed"
@@ -107,6 +107,7 @@ def parellel_ssa(workers, selected_accessions):
                     if "processed" in f.result():
                         progress_bar.update(1)
                         progress_bar.set_postfix_str(s=f.result())
+                        print("\n")
                     else:
                         print(f.result())
 
