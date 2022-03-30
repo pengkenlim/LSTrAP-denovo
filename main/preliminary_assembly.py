@@ -269,7 +269,7 @@ if __name__ == "__main__":
         if logfile.contents["prelim"]["cmd_args"]=={}:
             sys.exit(f"\nNo previous run initiation detected in {outputdir}. Exiting...")
         if logfile.contents["prelim"]["status"]== "completed":
-            sys.exit(f"\nPrevious run initiated in {outputdir} has fully completed. Exiting...")
+            sys.exit(f"\nPrevious run initiated in {outputdir} has fully completed. There is nothing to run.")
         print(f"\nPrevious incomplete run detected. Resuming run...\n")
         taxid, selected_accessions, outputdir, consensus_threshold, filesizelimit, threadpool,workers, kmerlen , orfminlen, geneticcode, download_method, = logfile.contents["prelim"]["cmd_args"].values()
         accessions, scientific_name = logfile.contents["prelim"]["ena"].values()
