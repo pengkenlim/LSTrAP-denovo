@@ -8,9 +8,9 @@ if __name__ == "__main__":
         
 
 import json
-
-#basiclly a wrapper function to re-run shell-command functions that failed (based on subprocess.run()'s returncode)       
+    
 def run_with_retries(retry_limit,func,arg_list,retry_message,run_message):
+    """wrapper function to re-run shell-command functions that failed (based on subprocess.run()'s returncode)"""
     retries=0
     while True:
         if retries!=0:
@@ -25,11 +25,11 @@ def run_with_retries(retry_limit,func,arg_list,retry_message,run_message):
             return "failed"        
     return "succeeded"
 
-#log file to read and write progress
 class logfile:
+    ''' logfile object to store, retrieve and update checkpoint information'''
     def __init__(self, path):
         self.path= path
-        self.template={"prelim":{"cmd_args":{},"ena":{},"processed":[],"status":"incomplete"}}
+        self.template={"prelim":{"cmd_args":{},"ena":{},"processed":[],"consensus":{},"status":"incomplete"}}
         if not os.path.exists(path):
             with open(path, "w") as f:
                 json.dump(self.template,f, indent=2)
