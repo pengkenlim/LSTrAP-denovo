@@ -29,17 +29,28 @@ def run_with_retries(retry_limit,func,arg_list,retry_message,run_message):
 class logfile:
     def __init__(self, path):
         self.path= path
+        self.template={"prelim":{"cmd_args":{},"ena":{},"processed":[],"status":"incomplete"}}
         if not os.path.exists(path):
             with open(path, "w") as f:
-                empty_dict={"prelim":{"cmd_args":{},"processed":[],"status":"incomplete"}}
-                json.dump(empty_dict,f, indent=1)
-                self.contents = empty_dict
-        else:
-            
+                json.dump(self.template,f, indent=2)
+                self.contents = self.template
+        else:   
             with open(path, "r") as f:
                self.contents= json.load(f)
+    
     def update(self):
         path= self.path
         with open(path, "w") as f:
-            json.dump(self.contents,f, indent=1)
+            json.dump(self.contents,f, indent=2)
+    
+    def load(self):
+        path= self.path
+        with open(path, "r") as f:
+            self.contents= json.load(f)
+    
+    def clear(self):
+        path= self.path
+        self.contents=self.template
+        with open(path, "w") as f:
+            json.dump(self.contents,f, indent=2)
 

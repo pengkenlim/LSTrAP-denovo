@@ -92,8 +92,8 @@ def single_sample_assembly(accession,index):
         return f"{accession} processed"
 
 
-def parellel_ssa(workers, accessions):
-    progress_bar= tqdm(total=len(accessions), desc= "Processing accessions", unit="Acsn", leave=True)
+def parellel_ssa(workers, selected_accessions):
+    progress_bar= tqdm(total=len(selected_accessions), desc= "SSA of selected accessions", unit="Acsn", leave=True)
     with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
                 results= [executor.submit(single_sample_assembly, accession, index) for index, accession in enumerate(accessions)]
                 for f in concurrent.futures.as_completed(results):
@@ -129,14 +129,13 @@ if __name__ == "__main__":
     help= "Minimal ORF length (nt) passed to ORFfinder during ORF extraction. Set to 300 by default.")
     parser.add_argument("-dm", "--download_method", type=str, metavar="", default="ftp", choices=["ascp","ftp"],
     help = "Method to download accession runs. ftp/ascp.")  
-
+    parser.add_argument("-a", "--accessions", type=str, metavar="",
+    help= "User-defined list of SRA run accessions to fetch for preliminary assembly. Requires at least 10 accessions. E.g.: SRR123456,SRR654321,ERR246810,...")
     
-    #mutually excusive args fetch by taxid or by userdefined accessions
+    #mutually excusive args for initial run or resume incomplete run
     ME_group_1 = parser.add_mutually_exclusive_group(required=True)
     ME_group_1.add_argument("-i", "--id", type=int, metavar="", 
     help= "NCBI TaxID of organism for fetching SRA run accessions.")
-    ME_group_1.add_argument("-a", "--accessions", type=str, metavar="", 
-    help= "User-defined list of SRA run accessions to fetch. Requires at least 10 accessions. E.g.: SRR123456,SRR654321,ERR246810,...")
     ME_group_1.add_argument("-con", "--conti", action="store_true",
     help = "Resume incomplete run based on output directory. Only requires -o to run.")
     
@@ -157,7 +156,7 @@ if __name__ == "__main__":
     #assigning arguments to variables, writing to log OR fetching variables from log
     if conti==False:
         taxid= args.id
-        accessions= args.accessions
+        selected_accessions= args.accessions
         consensus_threshold= args.consensus_threshold
         filesizelimit= args.filesizelimit * 1000000
         threadpool= args.threads
@@ -167,32 +166,36 @@ if __name__ == "__main__":
         startcodon=args.start_codon
         geneticcode=args.gene_code
         download_method= args.download_method
-        #check if accessions are given
-        if accessions is not None:
-            accessions = accessions.split(",")
-            if len(accessions) < 10:
+        
+        #getting sciname and accessions from ena using taxid
+        scientific_name= ena.get_sciname(taxid)
+        if type(scientific_name) is  not list:
+            sys.exit("TaxID {taxid} is invalid/not found. Exiting...")
+        elif len(scientific_name) > 1:
+            sys.exit("More than one organism found for TaxID {taxid}. Exiting...")
+        scientific_name= scientific_name[0]["scientific_name"]
+        print(f"\nFetching RNA-seq accessions of {scientific_name}, NCBI TaxID {taxid} from ENA..\n")
+        accessions = ena.get_runs(taxid)
+        random.shuffle(accessions)
+        print(f"Total accessions fetched from ENA: {len(accessions)}\n")
+        #check if accessions are given. if not, select accessions from total accessions
+        if selected_accessions is not None:
+            selected_accessions = selected_accessions.split(",")
+            if len(selected_accessions) < 10:
                 sys.exit("Not enough accessions provided. Refer to --help for more information.")
-        #check if taxid is given
-        elif taxid is not None:
-            scientific_name= ena.get_sciname(taxid)
-            if type(scientific_name) is  not list:
-                sys.exit("TaxID {taxid} is invalid/not found.")
-            elif len(scientific_name) > 1:
-                sys.exit("More than one organism found for TaxID {taxid}.")
-            else:
-                scientific_name= scientific_name[0]["scientific_name"]
-                print(f"Fetching RNA-seq accessions of {scientific_name}, NCBI TaxID {taxid} from ENA..")
-                accessions = ena.get_runs(taxid)
-                print(f"Total accessions: {len(accessions)}")
+        else:
+            selected_accessions= accessions[:10]
                 
         if threadpool % workers != 0:
             print(f"Specified thread pool of {threadpool} is not divisible by number of workers.")
             threadpool= threadpool - (threadpool % workers)
-            print(f"Using thread pool of {threadpool} instead.")
+            print(f"Using thread pool of {threadpool} instead.\n")
         threads=int(threadpool/workers)
         
+        #clear log file and write information relavent to fresh run
+        logfile.clear()
         logfile.contents["prelim"]["cmd_args"]={"taxid":taxid,
-        "accessions":accessions,
+        "selected_accessions":selected_accessions,
         "outputdir": outputdir,
         "consensus_threshold": consensus_threshold,
         "filesizelimit":filesizelimit,
@@ -202,17 +205,20 @@ if __name__ == "__main__":
         "orfminlen": orfminlen,
         "geneticcode": geneticcode,
         "download_method":download_method}
+        
+        logfile.contents["prelim"]["ena"]={"assessions":accessions,
+        "scientific_name": scientific_name}
         logfile.update()
 
     elif conti==True:
         #exit if log file contains command args
         if logfile.contents["prelim"]["cmd_args"]=={}:
-            sys.exit(f"No previous run detected in {outputdir}. Exiting...")
-        else:
-            print(f"Previous run detected. Resuming run...")
-            cmd_args= logfile.contents["prelim"]["cmd_args"]
-            taxid, accessions, outputdir, consensus_threshold, filesizelimit, threadpool,workers, kmerlen , orfminlen, geneticcode, download_method, = cmd_args.values()
+            sys.exit(f"No previous run initiation detected in {outputdir}. Exiting...")
+
+        print(f"Previous run detected. Resuming run...\n")
+        taxid, selected_accessions, outputdir, consensus_threshold, filesizelimit, threadpool,workers, kmerlen , orfminlen, geneticcode, download_method, = logfile.contents["prelim"]["cmd_args"].values()
+        accessions, scientific_name = logfile.contents["prelim"]["ena"].values()
     
     processed_accessions= logfile.contents["prelim"]["processed"]
     #assemble SSAs in parellel
-    parellel_ssa(workers, accessions)
+    parellel_ssa(workers, selected_accessions)
