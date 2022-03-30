@@ -42,12 +42,12 @@ else:
 #installing CD-HIT if not installed
 installpath= os.path.join(programdir, "CD-HIT")
 if not os.path.exists(installpath):
-	print("Downloading and installing CD-HIT into programs directory")
-	os.system("wget https://github.com/weizhongli/cdhit/releases/download/V4.8.1/cd-hit-v4.8.1-2019-0228.tar.gz -O trashme.tar.gz")
-	os.system("tar -xf trashme.tar.gz")
-	os.system("rm trashme.tar.gz")
-	os.system(f"mv cd-hit-v4.8.1-2019-0228 {installpath}")
-    os.system(f"cd {installpath} ; make" )
+    print("Downloading and installing CD-HIT into programs directory")
+    os.system("wget https://github.com/weizhongli/cdhit/releases/download/V4.8.1/cd-hit-v4.8.1-2019-0228.tar.gz -O trashme.tar.gz")
+    os.system("tar -xf trashme.tar.gz")
+    os.system("rm trashme.tar.gz")
+    os.system(f"mv cd-hit-v4.8.1-2019-0228 {installpath}")
+    os.system(f"cd {installpath} ; make")
 else:
 	print("CD-HIT found.")
 
