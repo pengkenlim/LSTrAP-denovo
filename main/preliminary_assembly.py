@@ -23,6 +23,7 @@ def single_sample_assembly(accession,index):
     '''Job to generate Single-sample assembly. 
     Validate download path -> download via ftp/ascp-> read trimming by fastp -> assembly by soapdenovo-Trans'''
     global processed_accessions
+    global failed_accessions
     #check if acccessions is already processed in the case of a resumed run.
     if accession in processed_accessions:
         return f"{accession} processed"
@@ -32,6 +33,9 @@ def single_sample_assembly(accession,index):
     print(f"{accession}: checking file size...")
     ascp_fullpath, ftp_fullpath, filesize = aspera.get_download_path(accession)
     if filesize < filesizelimit:
+        failed_accessions+= [acccession]
+        logfile.contents["prelim"]["failed"]= failed_accessions
+        logfile.update()
         return f"Accession {accession} does not meet size requirement"
     else:
         #download
@@ -52,6 +56,9 @@ def single_sample_assembly(accession,index):
             f"{accession}: Download failed. Retrying...",
             f"{accession}: downloading file via ftp...")
         if result == "failed":
+            failed_accessions+= [acccession]
+            logfile.contents["prelim"]["failed"]= failed_accessions
+            logfile.update()
             return f"{accession}: aborted after {retrylimit} retries."
 
         #trim and uncompress
@@ -61,6 +68,9 @@ def single_sample_assembly(accession,index):
         f"{accession}: Fastp trimming failed. Retrying...",
         f"{accession}: trimming file using Fastp...")
         if result == "failed":
+            failed_accessions+= [acccession]
+            logfile.contents["prelim"]["failed"]= failed_accessions
+            logfile.update()
             return f"{accession}: aborted after {retrylimit} retries."
         
         #make config file for soapdenovotrans to parse
@@ -75,6 +85,9 @@ def single_sample_assembly(accession,index):
         f"{accession}: Soapdenovo-Trans failed. Retrying...",
         f"{accession}: Assembling transcripts with Soapdenovo-Trans...")
         if result == "failed":
+            failed_accessions+= [acccession]
+            logfile.contents["prelim"]["failed"]= failed_accessions
+            logfile.update()
             return f"{accession}: aborted after {retrylimit} retries."
         
         #remove uncompressed and trimmed fastq file to save space
@@ -87,6 +100,9 @@ def single_sample_assembly(accession,index):
         f"{accession}: ORFfinder failed. Retrying...",
         f"{accession}: Extracting CDS with ORFfinder...")
         if result == "failed":
+            failed_accessions+= [acccession]
+            logfile.contents["prelim"]["failed"]= failed_accessions
+            logfile.update()
             return f"{accession}: aborted after {retrylimit} retries."
         
         os.system(f"rm {outputpath_prefix}.fasta")
@@ -97,9 +113,11 @@ def single_sample_assembly(accession,index):
         return f"{accession} processed"
 
 
-def parellel_ssa(workers, selected_accessions):
+def parellel_ssa(workers):
     ''' Wrapper to parellelize SSA jobs. 
     Includes progress bar visualisation.'''
+    global selected_accessions
+    global processed_accessions
     progress_bar= tqdm(total=len(selected_accessions), desc= "SSA of selected accessions", unit="Acsn", leave=True)
     with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
                 results= [executor.submit(single_sample_assembly, accession, index) for index, accession in enumerate(selected_accessions)]
@@ -110,6 +128,25 @@ def parellel_ssa(workers, selected_accessions):
                         print("\n")
                     else:
                         print(f.result())
+                
+                #conditional to sense when something is really wrong
+                if len(processed_accessions) <1:
+                    sys.exit("Unexpected error occured. Exiting...")
+                #rerun to get at least 10 successful runs
+                while len(processed_accessions) <10:
+                    selected_accessions = accessions[:len(selected_accessions)- len(processed_accessions) +10]
+                    logfile.contents["prelim"]["cmd_args"]["selected_accessions"] = selected_accessions
+                    logfile.update()
+                    results= [executor.submit(single_sample_assembly, accession, index) for index, accession in enumerate(selected_accessions)]
+                    for f in concurrent.futures.as_completed(results):
+                        progress_bar.update(1)
+                        progress_bar.set_postfix_str(s=f.result())
+                        print("\n")
+                            else:
+                                print(f.result())
+                    
+                    
+                
 
 def ssa_consensus(assemblydir):
     """ generate consensus assembly from SSAs"""
@@ -280,8 +317,10 @@ if __name__ == "__main__":
         accessions, scientific_name = logfile.contents["prelim"]["ena"].values()
     
     processed_accessions= logfile.contents["prelim"]["processed"]
+    failed_accessions= logfile.contents["prelim"]["failed"]
     #assemble SSAs in parellel
     parellel_ssa(workers, selected_accessions)   
+    #check if there are any failed accessions
     ssa_consensus(ssadir)
     logfile.contents["prelim"]["status"]= "completed"
     logfile.update()
