@@ -28,14 +28,14 @@ Note: Not in active development. All functionalities are fully fleshed-out.
 
 Simplest implementation is as follows
 ```
-python main/preliminary_assembly.py -o <OUTPUT_DIR> -t <THREAD_POOL> -i <NCBI_TAXID> -dm ftp
+python main/Preliminary_assembly.py -o <OUTPUT_DIR> -t <THREAD_POOL> -i <NCBI_TAXID> -dm ftp
 ```
 
 Full options:
 ```
-usage: preliminary_assembly.py [-h] -o  [-k] [-ct] [-s] -t  [-w] [-g] [-sc] [-ml] -dm  (-i  | -a )
+usage: Preliminary_assembly.py [-h] -o  [-k] [-ct] [-s] -t  [-w] [-g] [-sc] [-ml] -dm  (-i  | -a )
 
-LSTrAP-denovo.preliminary_assembly: Assemble a reduced but high-confidence assembly from public RNA-seq data
+LSTrAP-denovo.Preliminary_assembly.py: Assemble a reduced but high-confidence assembly from public RNA-seq data
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -63,7 +63,7 @@ Note: Currently in active development
 
 Simplest implementation is as follows
 ```
-???
+<INSERT CLI IMPLEMENTATION HERE>
 ```
 
 
