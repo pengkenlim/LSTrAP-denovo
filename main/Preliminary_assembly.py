@@ -18,14 +18,14 @@ from assembly import soapdenovo, misc , consensus
 from setup import constants
 from preprocess import trim
 
-#
+
 def single_sample_assembly(accession,index):
     '''Job to generate Single-sample assembly. 
     Validate download path -> download via ftp/ascp-> read trimming by fastp -> assembly by soapdenovo-Trans'''
     global processed_accessions
     global failed_accessions
     global logfile
-    #check if acccessions is already processed in the case of a resumed run.
+    #check if accessions is already processed in the case of a resumed run.
     if accession in processed_accessions:
         return f"{accession} processed"
     #to un-sync processes 
@@ -34,7 +34,7 @@ def single_sample_assembly(accession,index):
     print(f"{accession}: checking file size...")
     ascp_fullpath, ftp_fullpath, filesize = aspera.get_download_path(accession)
     if filesize < filesizelimit:
-        failed_accessions+= [acccession]
+        failed_accessions+= [accession]
         logfile.contents["prelim"]["failed"]= failed_accessions
         logfile.update()
         return f"Accession {accession} does not meet size requirement"
@@ -57,7 +57,7 @@ def single_sample_assembly(accession,index):
             f"{accession}: Download failed. Retrying...",
             f"{accession}: downloading file via ftp...")
         if result == "failed":
-            failed_accessions+= [acccession]
+            failed_accessions+= [accession]
             logfile.contents["prelim"]["failed"]= failed_accessions
             logfile.update()
             return f"{accession}: aborted after {retrylimit} retries."
@@ -69,7 +69,7 @@ def single_sample_assembly(accession,index):
         f"{accession}: Fastp trimming failed. Retrying...",
         f"{accession}: trimming file using Fastp...")
         if result == "failed":
-            failed_accessions+= [acccession]
+            failed_accessions+= [accession]
             logfile.contents["prelim"]["failed"]= failed_accessions
             logfile.update()
             return f"{accession}: aborted after {retrylimit} retries."
@@ -86,7 +86,7 @@ def single_sample_assembly(accession,index):
         f"{accession}: Soapdenovo-Trans failed. Retrying...",
         f"{accession}: Assembling transcripts with Soapdenovo-Trans...")
         if result == "failed":
-            failed_accessions+= [acccession]
+            failed_accessions+= [accession]
             logfile.contents["prelim"]["failed"]= failed_accessions
             logfile.update()
             return f"{accession}: aborted after {retrylimit} retries."
@@ -101,7 +101,7 @@ def single_sample_assembly(accession,index):
         f"{accession}: ORFfinder failed. Retrying...",
         f"{accession}: Extracting CDS with ORFfinder...")
         if result == "failed":
-            failed_accessions+= [acccession]
+            failed_accessions+= [accession]
             logfile.contents["prelim"]["failed"]= failed_accessions
             logfile.update()
             return f"{accession}: aborted after {retrylimit} retries."
