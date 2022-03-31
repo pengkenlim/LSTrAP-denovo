@@ -24,6 +24,7 @@ def single_sample_assembly(accession,index):
     Validate download path -> download via ftp/ascp-> read trimming by fastp -> assembly by soapdenovo-Trans'''
     global processed_accessions
     global failed_accessions
+    global logfile
     #check if acccessions is already processed in the case of a resumed run.
     if accession in processed_accessions:
         return f"{accession} processed"
@@ -118,6 +119,7 @@ def parellel_ssa(workers):
     Includes progress bar visualisation.'''
     global selected_accessions
     global processed_accessions
+    global logfile
     progress_bar= tqdm(total=len(selected_accessions), desc= "SSA of selected accessions", unit="Acsn", leave=True)
     with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
                 results= [executor.submit(single_sample_assembly, accession, index) for index, accession in enumerate(selected_accessions)]
