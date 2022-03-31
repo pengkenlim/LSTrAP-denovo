@@ -24,6 +24,7 @@ python3 ./setup/install.py
 
 **Step 1. Generating a preliminary assembly**
 
+Note: Not in active development. All functionalities are fully fleshed-out.
 
 Simplest implementation is as follows
 ```
@@ -56,11 +57,15 @@ optional arguments:
   -con, --conti         Resume incomplete run based on output directory. Only requires -o to run.
 ```
 
-**Place holder for next step** 
+**Step 2. Sample download, QC and expression clustering** 
 
-**(sample download, QC and k-means classification)**
+Note: Currently in active development
 
-Place holder description
+Simplest implementation is as follows
+```
+???
+```
+
 
 **Place holder for next step** 
 
