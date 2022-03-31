@@ -139,11 +139,12 @@ def parellel_ssa(workers):
                     logfile.update()
                     results= [executor.submit(single_sample_assembly, accession, index) for index, accession in enumerate(selected_accessions)]
                     for f in concurrent.futures.as_completed(results):
-                        progress_bar.update(1)
-                        progress_bar.set_postfix_str(s=f.result())
-                        print("\n")
-                            else:
-                                print(f.result())
+                        if "processed" in f.result():
+                            progress_bar.update(1)
+                            progress_bar.set_postfix_str(s=f.result())
+                            print("\n")
+                        else:
+                            print(f.result())
                     
                     
                 
