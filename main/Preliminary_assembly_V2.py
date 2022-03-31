@@ -18,7 +18,7 @@ from assembly import soapdenovo, misc , consensus
 from setup import constants
 from preprocess import trim
 
-
+#
 def single_sample_assembly(accession,index):
     '''Job to generate Single-sample assembly. 
     Validate download path -> download via ftp/ascp-> read trimming by fastp -> assembly by soapdenovo-Trans'''
