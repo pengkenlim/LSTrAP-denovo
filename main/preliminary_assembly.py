@@ -165,19 +165,19 @@ if __name__ == "__main__":
     retrylimit=2
     
     #arguments
-    parser= argparse.ArgumentParser(description="LSTrAP-denovo.preliminary_assembly: Assemble a reduced but high-confidence assembly from public RNA-seq data")
+    parser= argparse.ArgumentParser(description="LSTrAP-denovo.Preliminary_assembly: Assemble a reduced but high-confidence assembly from public RNA-seq data")
     parser.add_argument("-o", "--output_dir", type=str, metavar= "", required=True,
     help= "Directory for data output.")
     parser.add_argument("-k", "--kmer_len", type=int, metavar="", default=35, choices=range(21, 49+1,2), 
-    help = "Specify K-mer length (odd integer only) for assembly using Soapdenovo-Trans. K-mer length will be set to 35 by default.")
+    help = "Specifies K-mer length (odd integer only) for assembly using Soapdenovo-Trans. K-mer length will be set to 35 by default.")
     parser.add_argument("-ct", "--consensus_threshold", type=int ,metavar="", default=0 , choices=range(0, 10+1),
-    help = "Specify consensus threshold during filtering. Threshold will be determined automatically by default.")
+    help = "Specifies consensus threshold during filtering. Threshold will be determined automatically by default.")
     parser.add_argument("-s","--filesizelimit" , type=int, metavar="", default=1500, 
-    help="Specify the size limit(mb) of accession read files to partially download. Limit set to 1500 by default.")
+    help="Specifies the size limit(mb) of accession read files to partially download. Limit set to 1500 (mb) by default.")
     parser.add_argument("-t", "--threads", type=int, metavar="", default=4, 
     help = "Total thread pool for workers. Needs to be divisible by number of workers.")
     parser.add_argument("-w", "--workers", type=int, metavar="", default=2, 
-    help= "Specify the maximum workers for running multiple download-assembly jobs in parellel. Set to 2 by default.")
+    help= "Specifies the maximum workers for running multiple download-assembly jobs in parellel. Set to 2 by default.")
     parser.add_argument("-g", "--gene_code", type=int, metavar="", default=1, choices=range(1, 31), 
     help= "Genetic code (codon table) passed to ORFfinder during ORF extraction. Set to 1 (universal) by default. Refer to https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi for more information.")
     parser.add_argument("-sc", "--start_codon", type=int, metavar="", default=0, choices=range(0, 2+1),
@@ -199,7 +199,7 @@ if __name__ == "__main__":
     args=parser.parse_args()
     outputdir= args.output_dir
     conti=args.conti
-        #create outputdir , fastqdir and ssadir if not found
+    #create outputdir , fastqdir and ssadir if not found
     if not os.path.exists(outputdir):
         os.makedirs(outputdir)    
     fastqdir=os.path.join(outputdir,"fastq")
@@ -240,6 +240,8 @@ if __name__ == "__main__":
             selected_accessions = selected_accessions.split(",")
             if len(selected_accessions) < 10:
                 sys.exit("Not enough accessions provided. Refer to --help for more information.")
+            #bring selected accessions to the front of the total accessions list
+            accessions = list(set(selected_accessions + accessions))
         else:
             selected_accessions= accessions[:10]
                 
