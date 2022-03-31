@@ -71,6 +71,16 @@ if not os.path.exists(installpath):
     os.system(f"mv ORFfinder {installpath}")
     #changing permissions for ORFfinder
     print("Changing permissions for ORFfinder. Password might be needed for sudo.")
-    os.system(f"sudo chmod 777 {installpath}")
+    os.system(f"chmod 777 {installpath}")
+
+installpath= os.path.join(programdir, "kallisto")
+if not os.path.exists(installpath):
+    print("Downloading and installing Kallisto into programs directory")
+    os.system("wget https://github.com/pachterlab/kallisto/releases/download/v0.46.1/kallisto_linux-v0.46.1.tar.gz -O trashme.tar.gz")
+    os.system("tar -xf trashme.tar.gz")
+    os.system("rm trashme.tar.gz")
+    os.system(f"mv kallisto {installpath}")
+else:
+    print("Kallisto found.")
 
 
