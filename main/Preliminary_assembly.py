@@ -9,6 +9,7 @@ if __name__ == "__main__":
 import argparse
 import concurrent.futures
 import random
+import numpy as np
 from time import sleep
 
 from tqdm import tqdm
@@ -32,7 +33,7 @@ def single_sample_assembly(accession,index):
     print(f"{accession}: checking file size...")
     ascp_fullpath, ftp_fullpath, filesize = aspera.get_download_path(accession)
     if filesize < filesizelimit:
-        return f"{accession}: aborted. Filesize {filesize/1000000}mb below limit requirements. "
+        return f"{accession}:Aborted. Filesize {np.round(filesize/1000000)} mb is below limit requirements. "
     else:
         #download
         fastqpath=os.path.join(fastqdir,accession+".fastq.gz")
