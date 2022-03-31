@@ -29,7 +29,7 @@ class logfile:
     ''' logfile object to store, retrieve and update checkpoint information'''
     def __init__(self, path):
         self.path= path
-        self.template={"prelim":{"cmd_args":{},"ena":{},"processed":[],"consensus":{},"status":"incomplete"}}
+        self.template={"prelim":{"cmd_args":{},"ena":{},"processed":[],"failed":[],"consensus":{},"status":"incomplete"}}
         if not os.path.exists(path):
             with open(path, "w") as f:
                 json.dump(self.template,f, indent=2)
