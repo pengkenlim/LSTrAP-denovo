@@ -320,8 +320,7 @@ if __name__ == "__main__":
     processed_accessions= logfile.contents["prelim"]["processed"]
     failed_accessions= logfile.contents["prelim"]["failed"]
     #assemble SSAs in parellel
-    parellel_ssa(workers, selected_accessions)   
-    #check if there are any failed accessions
+    parellel_ssa(workers)   
     ssa_consensus(ssadir)
     logfile.contents["prelim"]["status"]= "completed"
     logfile.update()
