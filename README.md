@@ -22,7 +22,7 @@ python3 ./setup/install.py
 
 # Running the pipeline
 
-**Step 1. Generating a preliminary assembly**
+**Step 1. Generating a preliminary assembly (reduced but high-confidence assembly)**
 
 Note: Not in active development. All functionalities are fully fleshed-out.
 
@@ -57,7 +57,7 @@ optional arguments:
   -con, --conti         Resume incomplete run based on output directory. Only requires -o to run.
 ```
 
-**Step 2. Sample download, QC and expression clustering** 
+**Step 2. Large-scale download , Quality Control and transcriptome-profile-based clustering of accessions** 
 
 Note: Currently in active development
 
@@ -67,8 +67,8 @@ Simplest implementation is as follows
 ```
 
 
-**Place holder for next step** 
+**Step 3. Moduluar concatenation of multi-kmer and transcriptome-profile-specific assemblies.** 
 
-**(organ/condition-specific assembly, remap filtering to get bona fide genes and concatenation)**
+Note: Not yet in development
 
-Place holder description
+(organ/condition-specific assembly, remap filtering to get bona fide genes and concatenation)
