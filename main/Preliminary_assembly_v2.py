@@ -28,8 +28,8 @@ def single_sample_assembly(accession,index):
     Validate download path -> download via ftp/ascp-> read trimming by fastp -> assembly by soapdenovo-Trans'''
     logfile.load()
     #check if accessions is already processed in the case of a resumed run.
-    if accession in logfile.contents["prelim"]["processed_acc"]:
-        return f"{accession} processed"
+    if accession in logfile.contents["prelim"]["processed_acc"].keys():
+        return f"{accession} already processed. Skipping accession.."
     #to un-sync processes 
     sleep((index%workers)*5)
     #get download path and filesize of accession
@@ -134,11 +134,11 @@ def parellel_ssa(workers):
                 logfile.load()
                 progress_bar= tqdm(total=len(logfile.contents["prelim"]["run_var"]["selected_accessions"]), desc= "Accessions processed", unit="Acsn", leave=True)
                 #conditional to sense when something is really wrong (i.e. every accession fails)
-                if len(logfile.contents["prelim"]["processed_acc"]) ==0:
+                if len([k for k in logfile.contents["prelim"]["processed_acc"].values() if type(k) is int ]) ==0:
                     sys.exit("Unexpected error occured. Exiting...")
                 #rerun to get at least 10 successful runs
-                while len(logfile.contents["prelim"]["processed_acc"]) <10:
-                    logfile.contents["prelim"]["run_var"]["selected_accessions"] = accessions[:len(logfile.contents["prelim"]["run_var"]["selected_accessions"])- len(logfile.contents["prelim"]["processed_acc"]) +10]
+                while len([k for k in logfile.contents["prelim"]["processed_acc"].values() if type(k) is int ]) <10:
+                    logfile.contents["prelim"]["run_var"]["selected_accessions"] = accessions[:len(logfile.contents["prelim"]["run_var"]["selected_accessions"]) - len([k for k in logfile.contents["prelim"]["processed_acc"].values() if type(k) is int ]) +10]
                     logfile.update()
                     results= [executor.submit(single_sample_assembly, accession, index) for index, accession in enumerate(selected_accessions)]
                     for f in concurrent.futures.as_completed(results):
