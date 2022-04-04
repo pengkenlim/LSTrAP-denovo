@@ -33,7 +33,7 @@ def single_sample_assembly(accession,index):
     #to un-sync processes 
     sleep((index%workers)*5)
     #get download path and filesize of accession
-    print(f"{accession}: checking file size...")
+    print(f"{accession}: Checking file size...")
     ascp_fullpath, ftp_fullpath, filesize = aspera.get_download_path(accession)
     if filesize < filesizelimit:
         logfile.load()
@@ -107,8 +107,11 @@ def single_sample_assembly(accession,index):
             logfile.contents["prelim"]["processed_acc"][accession]= "Assembly failed."
             logfile.update()
             return f"{accession}: Aborted after {retrylimit} retries."
-        
         os.system(f"rm {outputpath_prefix}.fasta")
+        n_cds, _, _ = misc.get_assembly_stats(outputpath_prefix + "_cds.fasta")
+        logfile.load()
+        logfile.contents["prelim"]["processed_acc"][accession]= n_cds
+        logfile.update()
         print(f"{accession}: Single-sample assembly completed.")
         return f"{accession} processed"
 
