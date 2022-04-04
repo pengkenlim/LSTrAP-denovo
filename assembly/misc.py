@@ -51,6 +51,7 @@ class logfile:
             self.contents= json.load(f)
     
     def clear(self,step):
+        path= self.path
         if step == "prelim":
             self.contents["prelim"]=self.template["prelim"]
         elif step == "cluster":
