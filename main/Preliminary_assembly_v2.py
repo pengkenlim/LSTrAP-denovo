@@ -35,7 +35,7 @@ def single_sample_assembly(accession,index):
     ascp_fullpath, ftp_fullpath, filesize = aspera.get_download_path(accession)
     if filesize < filesizelimit:
         logfile.load()
-        logfile.contents["prelim"]["processed_acc"][accession]= "File size requirements not met."
+        logfile.contents["prelim"]["processed_acc"][accession]= "File size requirement not met."
         logfile.update()
         return f"{accession}: Aborted. Filesize {np.round(filesize/1000000)} mb is below limit requirements. "
     else:
@@ -47,7 +47,7 @@ def single_sample_assembly(accession,index):
             aspera.launch_ascp, 
             [ascp_fullpath,fastqpath,filesizelimit],
             f"{accession}: Download failed. Retrying...", 
-            f"{accession}: downloading file via ascp...")
+            f"{accession}: Downloading file via ascp...")
             
         elif download_method == "ftp":
             
@@ -55,19 +55,19 @@ def single_sample_assembly(accession,index):
             aspera.launch_curl,
             [ftp_fullpath,fastqpath,filesizelimit],
             f"{accession}: Download failed. Retrying...",
-            f"{accession}: downloading file via ftp...")
+            f"{accession}: Downloading file via ftp...")
         if result == "failed":
             logfile.load()
             logfile.contents["prelim"]["processed_acc"][accession]= "Download failed."
             logfile.update()
-            return f"{accession}: aborted after {retrylimit} retries."
+            return f"{accession}: Aborted after {retrylimit} retries."
 
         #trim and uncompress
         result= misc.run_with_retries(retrylimit,
         trim.launch_fastp,
         [fastqpath, fastqpath.split(".gz")[0],threads],
         f"{accession}: Fastp trimming failed. Retrying...",
-        f"{accession}: trimming file using Fastp...")
+        f"{accession}: Trimming file using Fastp...")
         if result == "failed":
             logfile.load()
             logfile.contents["prelim"]["processed_acc"][accession]= "Fastp failed."
@@ -187,6 +187,7 @@ def ssa_consensus(assemblydir):
         consensus.fasta_subset(clstr_concatpath, consensus_ssa_path, CT_seqid_dict[logfile.contents["prelim"]["consensus"]["stats"]["CT"]])
     else:
          print(f"Using user-defined consensus threshold of {consensus_threshold} to generate preliminary assembly....\n")
+         logfile.contents["prelim"]["consensus"]["stats"]["CT"] = consensus_threshold
          consensus_ssa_path= os.path.join(outputdir,f"ssa_concat_cds_CT{consensus_threshold}.fasta")
          consensus.fasta_subset(clstr_concatpath, consensus_ssa_path, CT_seqid_dict[f"CT{consensus_threshold}"])
     logfile.contents["prelim"]["consensus"]["stats"]["path"]= consensus_ssa_path
@@ -322,7 +323,8 @@ if __name__ == "__main__":
         if logfile.contents["prelim"]["status"]== "completed":
             sys.exit(f"\nPrevious run initiated in {outputdir} has fully completed. There is nothing to run.")
         taxid, selected_accessions, outputdir, consensus_threshold, filesizelimit, threadpool,workers, kmerlen , orfminlen, geneticcode, download_method, = logfile.contents["prelim"]["run_var"].values()
-        accessions, scientific_name, _, command_issued, init_time, = logfile.contents["prelim"]["ena"].values()
+        _, scientific_name, _, command_issued, init_time = logfile.contents["prelim"]["run_info"].values()
+        accessions = logfile.contents["prelim"]["total_acc"]
         print(f"\nPrevious incomplete run: {command_issued} \ninitiated on {init_time} detected.\nResuming run...\n")
     
     logfile.load()
