@@ -314,6 +314,7 @@ if __name__ == "__main__":
         logfile.contents["prelim"]["run_info"]={"taxid":taxid,
         "sci_name": scientific_name, "n_total_acc": len(accessions), "command_issued": " ".join(sys.argv), "init_time": datetime.now().strftime("%d/%m/%Y %H:%M:%S")}
         logfile.contents["prelim"]["total_acc"]= accessions
+        logfile.contents["prelim"]["processed_acc"]={}
         logfile.update()
 
     elif conti==True:
@@ -328,8 +329,6 @@ if __name__ == "__main__":
         print(f"\nPrevious incomplete run: {command_issued} \ninitiated on {init_time} detected.\nResuming run...\n")
     
     logfile.load()
-    logfile.contents["prelim"]["processed_acc"]={}
-    logfile.update()
     #assemble SSAs in parellel
     parellel_ssa(workers)   
     ssa_consensus(ssadir)
