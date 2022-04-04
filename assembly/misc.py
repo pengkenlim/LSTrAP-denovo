@@ -29,9 +29,8 @@ class logfile:
     ''' logfile object to store, retrieve and update checkpoint information'''
     def __init__(self, path):
         self.path= path
-        #self.template={"prelim":{"cmd_args":{},"ena":{},"processed":[],"consensus":{},"status":"incomplete"}}
-        self.template={"prelim":{"run_info":{"taxid":None, "sci_name":None, "total_acc":None, "command_issued": None, "init_time": None}, 
-        "run_var":None ,"processed_acc":None, "consensus":{"CDS":None,"stats":{"CT":None, "path":None, "n_CDS": None ,"CDS_len":None, "GC": None }}, "status":"incomplete"}, "cluster":None, "modular_assembly":None}
+        self.template={"prelim":{"run_info":{"taxid":None, "sci_name":None, "n_total_acc":None, "command_issued": None, "init_time": None}, 
+        "run_var":None ,"total_acc": None,"processed_acc":None, "consensus":{"CDS":None,"stats":{"CT":None, "path":None, "n_CDS": None ,"CDS_len":None, "GC": None }}, "status":"incomplete"}, "cluster":None, "modular_assembly":None}
         if not os.path.exists(path):
             with open(path, "w") as f:
                 json.dump(self.template,f, indent=2)

@@ -37,7 +37,7 @@ def single_sample_assembly(accession,index):
         logfile.load()
         logfile.contents["prelim"]["processed_acc"][accession]= "File size requirements not met."
         logfile.update()
-        return f"{accession}:Aborted. Filesize {np.round(filesize/1000000)} mb is below limit requirements. "
+        return f"{accession}: Aborted. Filesize {np.round(filesize/1000000)} mb is below limit requirements. "
     else:
         #download
         fastqpath=os.path.join(fastqdir,accession+".fastq.gz")
@@ -72,7 +72,7 @@ def single_sample_assembly(accession,index):
             logfile.load()
             logfile.contents["prelim"]["processed_acc"][accession]= "Fastp failed."
             logfile.update()
-            return f"{accession}: aborted after {retrylimit} retries."
+            return f"{accession}: Aborted after {retrylimit} retries."
         
         #make config file for soapdenovotrans to parse
         fastqpath= fastqpath.split(".gz")[0]
@@ -89,7 +89,7 @@ def single_sample_assembly(accession,index):
             logfile.load()
             logfile.contents["prelim"]["processed_acc"][accession]= "Assembly failed."
             logfile.update()
-            return f"{accession}: aborted after {retrylimit} retries."
+            return f"{accession}: Aborted after {retrylimit} retries."
         
         #remove uncompressed and trimmed fastq file to save space
         os.system(f"rm {fastqpath}")
@@ -104,7 +104,7 @@ def single_sample_assembly(accession,index):
             logfile.load()
             logfile.contents["prelim"]["processed_acc"][accession]= "Assembly failed."
             logfile.update()
-            return f"{accession}: aborted after {retrylimit} retries."
+            return f"{accession}: Aborted after {retrylimit} retries."
         
         os.system(f"rm {outputpath_prefix}.fasta")
         print(f"{accession}: Single-sample assembly completed.")
@@ -311,7 +311,8 @@ if __name__ == "__main__":
         "download_method":download_method}
         
         logfile.contents["prelim"]["run_info"]={"taxid":taxid,
-        "sci_name": scientific_name, "total_acc": len(accessions), "command_issued": " ".join(sys.argv), "init_time": datetime.now().strftime("%d/%m/%Y %H:%M:%S")}
+        "sci_name": scientific_name, "n_total_acc": len(accessions), "command_issued": " ".join(sys.argv), "init_time": datetime.now().strftime("%d/%m/%Y %H:%M:%S")}
+        logfile.contents["prelim"]["total_acc"]= accessions
         logfile.update()
 
     elif conti==True:
