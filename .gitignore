@@ -2,3 +2,5 @@
 *.pyc
 *.pyc
 *env*/*
+fastp.json
+fastp.html
