@@ -12,9 +12,10 @@ import subprocess
 from setup import constants
 
 def launch_fastp(inputpath,outputpath,threads):
-    subprocess.run([constants.fastppath, "-w", str(threads), "--in1",  inputpath, "--out1", outputpath],
+    returncode=subprocess.run([constants.fastppath, "-w", str(threads), "--in1",  inputpath, "--out1", outputpath],
     stdout=subprocess.DEVNULL, 
     stderr=subprocess.STDOUT)
+    return returncode.returncode
     
 
 __all__=["launch_fastp"]
