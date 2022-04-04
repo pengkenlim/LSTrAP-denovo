@@ -8,7 +8,7 @@ if __name__ == "__main__":
         
 
 import json
-    
+import numpy as np    
 def run_with_retries(retry_limit,func,arg_list,retry_message,run_message):
     """wrapper function to re-run shell-command functions that failed (based on subprocess.run()'s returncode)"""
     retries=0
@@ -29,7 +29,9 @@ class logfile:
     ''' logfile object to store, retrieve and update checkpoint information'''
     def __init__(self, path):
         self.path= path
-        self.template={"prelim":{"cmd_args":{},"ena":{},"processed":[],"consensus":{},"status":"incomplete"}}
+        #self.template={"prelim":{"cmd_args":{},"ena":{},"processed":[],"consensus":{},"status":"incomplete"}}
+        self.template={"prelim":{"run_info":{"taxid":None, "sci_name":None, "total_acc":None, "command_issued": None, "init_time": None}, 
+        "run_var":None ,"processed_acc":None, "consensus":{"CDS":None,"stats":{"CT":None, "path":None, "n_CDS": None ,"CDS_len":None, "GC": None }}, "status":"incomplete"}, "cluster":None, "modular_assembly":None}
         if not os.path.exists(path):
             with open(path, "w") as f:
                 json.dump(self.template,f, indent=2)
@@ -48,9 +50,26 @@ class logfile:
         with open(path, "r") as f:
             self.contents= json.load(f)
     
-    def clear(self):
-        path= self.path
-        self.contents=self.template
+    def clear(self,step):
+        if step == "prelim":
+            self.contents["prelim"]=self.template["prelim"]
+        elif step == "cluster":
+            self.contents["cluster"]= self.template["cluster"]
+        elif step == "modular_assembly":
+            self.contents["modular_assembly"]= self.template["modular_assembly"]
         with open(path, "w") as f:
             json.dump(self.contents,f, indent=2)
 
+
+def get_assembly_stats(pathtofasta):
+    with open(pathtofasta, "r") as f:
+        fasta= f.read()
+    n_cds=fasta.count(">")
+    fasta_lines= fasta.split("\n")
+    seq_concat= "".join([k  for k in fasta_lines if ">" not in k])
+    avg_cds_len = int(len(seq_concat)/n_cds)
+    GC= np.round((seq_concat.count("G") + seq_concat.count("C"))/len(seq_concat)*100,2)
+    
+    return n_cds, avg_cds_len, GC
+        
+    
