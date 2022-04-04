@@ -24,8 +24,9 @@ from datetime import datetime
 def single_sample_assembly(accession,index):
     '''Job to generate Single-sample assembly. 
     Validate download path -> download via ftp/ascp-> read trimming by fastp -> assembly by soapdenovo-Trans'''
+    logfile.load()
     #check if accessions is already processed in the case of a resumed run.
-    if accession in processed_accessions:
+    if accession in logfile.contents["prelim"]["processed_acc"]:
         return f"{accession} processed"
     #to un-sync processes 
     sleep((index%workers)*5)
