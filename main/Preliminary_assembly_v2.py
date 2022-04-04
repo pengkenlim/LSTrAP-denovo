@@ -11,14 +11,16 @@ import concurrent.futures
 import random
 import numpy as np
 from time import sleep
+from datetime import datetime
 
 from tqdm import tqdm
 from download import ena
 from download import aspera
-from assembly import soapdenovo, misc , consensus
+from assembly import soapdenovo, misc , consensus, report
 from setup import constants
 from preprocess import trim
-from datetime import datetime
+
+
 
 
 def single_sample_assembly(accession,index):
@@ -115,8 +117,8 @@ def parellel_ssa(workers):
     ''' Wrapper to parellelize SSA jobs. 
     Includes progress bar visualisation.'''
     logfile.load()
-    progress_bar= tqdm(total=len(logfile.contents["prelim"]["run_var"]["selected_accessions"]), desc= "Accessions processed", unit="Acsn", leave=True)
     with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
+                progress_bar= tqdm(total=len(logfile.contents["prelim"]["run_var"]["selected_accessions"]), desc= "Accessions processed", unit="Acsn", leave=True)
                 results= [executor.submit(single_sample_assembly, accession, index) for index, accession in enumerate(selected_accessions)]
                 for f in concurrent.futures.as_completed(results):
                     if "processed" in f.result():
@@ -125,7 +127,9 @@ def parellel_ssa(workers):
                         print("\n")
                     else:
                         print(f.result())
+                progress_bar.close()
                 logfile.load()
+                progress_bar= tqdm(total=len(logfile.contents["prelim"]["run_var"]["selected_accessions"]), desc= "Accessions processed", unit="Acsn", leave=True)
                 #conditional to sense when something is really wrong (i.e. every accession fails)
                 if len(logfile.contents["prelim"]["processed_acc"]) ==0:
                     sys.exit("Unexpected error occured. Exiting...")
@@ -296,9 +300,12 @@ if __name__ == "__main__":
             print(f"Using thread pool of {threadpool} instead.\n")
         threads=int(threadpool/workers)
         
+        if logfile.contents["prelim"]["run_info"]["init_time"] is not None:
+            if logfile.contents["prelim"]["status"] == "completed":
+                sys.exit(f"Previous completed run detected in {outputdir}. Exiting...")
+            else:
+                sys.exit(f"Previous incomplete run detected at {outputdir}.\n Either use -con to continue previous run or remove output directory to start a fresh run.\n Exiting...")
         #clear log file and write information relavent to fresh run
-        logfile.clear("prelim")
-        logfile.load()
         logfile.contents["prelim"]["run_var"]={"taxid":taxid,
         "selected_accessions":selected_accessions,
         "outputdir": outputdir,
@@ -326,7 +333,7 @@ if __name__ == "__main__":
         taxid, selected_accessions, outputdir, consensus_threshold, filesizelimit, threadpool,workers, kmerlen , orfminlen, geneticcode, download_method, = logfile.contents["prelim"]["run_var"].values()
         _, scientific_name, _, command_issued, init_time = logfile.contents["prelim"]["run_info"].values()
         accessions = logfile.contents["prelim"]["total_acc"]
-        print(f"\nPrevious incomplete run: {command_issued} \ninitiated on {init_time} detected.\nResuming run...\n")
+        print(f"\nPrevious incomplete run initiated on {init_time} detected:\n{command_issued}\n\nResuming run...\n")
     
     logfile.load()
     #assemble SSAs in parellel
@@ -335,4 +342,6 @@ if __name__ == "__main__":
     logfile.load()
     logfile.contents["prelim"]["status"]= "completed"
     logfile.update()
+    print("LSTrAP-denovo.Preliminary_assembly.py completed.\nGenerating html report...")
+    report.generate_from_json_log(logfile.path, os.path.join(outputdir, "LSTrAP-denovo.html"))
     
