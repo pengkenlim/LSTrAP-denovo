@@ -181,8 +181,8 @@ def ssa_consensus(assemblydir):
     if consensus_threshold == 0:
         logfile.contents["prelim"]["consensus"]["stats"]["CT"] = consensus.select_CT(list(logfile.contents["prelim"]["consensus"]["stats"].values()))
         logfile.update()
-        print(f"Consensus threshold of {logfile.contents["prelim"]["consensus"]["stats"]["CT"]} has been determined automatically. Generating preliminary assembly....\n")
-        consensus_ssa_path= os.path.join(outputdir,f"ssa_concat_cds_CT{logfile.contents["prelim"]["consensus"]["stats"]["CT"]}.fasta")
+        print("Consensus threshold of " + str(logfile.contents["prelim"]["consensus"]["stats"]["CT"])+" has been determined automatically. Generating preliminary assembly....\n")
+        consensus_ssa_path= os.path.join(outputdir,"ssa_concat_cds_CT"+ str(logfile.contents["prelim"]["consensus"]["stats"]["CT"])+".fasta")
         consensus.fasta_subset(clstr_concatpath, consensus_ssa_path, CT_seqid_dict[logfile.contents["prelim"]["consensus"]["stats"]["CT"]])
     else:
          print(f"Using user-defined consensus threshold of {consensus_threshold} to generate preliminary assembly....\n")
