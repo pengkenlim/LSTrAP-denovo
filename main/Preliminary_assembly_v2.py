@@ -122,7 +122,7 @@ def parellel_ssa(workers):
     logfile.load()
     with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
                 progress_bar= tqdm(total=len(logfile.contents["prelim"]["run_var"]["selected_accessions"]), desc= "Accessions processed", unit="Acsn", leave=True)
-                results= [executor.submit(single_sample_assembly, accession, index) for index, accession in enumerate(selected_accessions)]
+                results= [executor.submit(single_sample_assembly, accession, index) for index, accession in enumerate(logfile.contents["prelim"]["run_var"]["selected_accessions"])]
                 for f in concurrent.futures.as_completed(results):
                     if "processed" in f.result():
                         progress_bar.update(1)
@@ -141,7 +141,7 @@ def parellel_ssa(workers):
                     progress_bar= tqdm(total=len(logfile.contents["prelim"]["run_var"]["selected_accessions"]), desc= "Accessions processed", unit="Acsn", leave=True)
                     logfile.contents["prelim"]["run_var"]["selected_accessions"] = accessions[:len(logfile.contents["prelim"]["run_var"]["selected_accessions"]) - len([k for k in logfile.contents["prelim"]["processed_acc"].values() if type(k) is int ]) +10]
                     logfile.update()
-                    results= [executor.submit(single_sample_assembly, accession, index) for index, accession in enumerate(selected_accessions)]
+                    results= [executor.submit(single_sample_assembly, accession, index) for index, accession in enumerate(logfile.contents["prelim"]["run_var"]["selected_accessions"])]
                     for f in concurrent.futures.as_completed(results):
                         if "processed" in f.result():
                             progress_bar.update(1)
