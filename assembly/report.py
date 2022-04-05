@@ -20,7 +20,7 @@ def generate_from_json_log(logpath, reportpath):
     #extracting info from log.json's dictionary and assigning them as variables
     
     #information relavent to prelim
-    consensus_v_cds_data= ['Consensus theshold', 'Number of CDS'] + [[CT, n_cds] for CT, n_cds in log_content["prelim"]["consensus"]["CDS"].items()]
+    consensus_v_cds_data= [['Consensus theshold', 'Number of CDS']] + [[CT, n_cds] for CT, n_cds in log_content["prelim"]["consensus"]["CDS"].items()]
     taxid = log_content["prelim"]["run_info"].get("taxid")
     sci_name = log_content["prelim"]["run_info"].get("sci_name")
     n_total_acc = log_content["prelim"]["run_info"].get("n_total_acc")
