@@ -39,7 +39,7 @@ def single_sample_assembly(accession,index):
         logfile.load()
         logfile.contents["prelim"]["processed_acc"][accession]= "File size requirement not met."
         logfile.update()
-        return f"{accession}: Aborted. Filesize {np.round(filesize/1000000)} mb is below limit requirements. "
+        return f"{accession}: Aborted. Filesize {np.round(filesize/1000000)} mb is below file size requirement. "
     else:
         #download
         fastqpath=os.path.join(fastqdir,accession+".fastq.gz")
@@ -138,9 +138,9 @@ def parellel_ssa(workers):
                     sys.exit("Unexpected error occured. Exiting...")
                 #rerun to get at least 10 successful runs
                 while len([k for k in logfile.contents["prelim"]["processed_acc"].values() if type(k) is int ]) <10:
-                    progress_bar= tqdm(total=len(logfile.contents["prelim"]["run_var"]["selected_accessions"]), desc= "Accessions processed", unit="Acsn", leave=True)
                     logfile.contents["prelim"]["run_var"]["selected_accessions"] = accessions[:len(logfile.contents["prelim"]["run_var"]["selected_accessions"]) - len([k for k in logfile.contents["prelim"]["processed_acc"].values() if type(k) is int ]) +10]
                     logfile.update()
+                    progress_bar= tqdm(total=len(logfile.contents["prelim"]["run_var"]["selected_accessions"]), desc= "Accessions processed", unit="Acsn", leave=True)
                     results= [executor.submit(single_sample_assembly, accession, index) for index, accession in enumerate(logfile.contents["prelim"]["run_var"]["selected_accessions"])]
                     for f in concurrent.futures.as_completed(results):
                         if "processed" in f.result():

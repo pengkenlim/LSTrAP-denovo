@@ -32,9 +32,9 @@ def generate_from_json_log(logpath, reportpath):
     optimal_CT= log_content["prelim"]["consensus"]["stats"].get("CT")
     
     if log_content["prelim"]["run_var"]["consensus_threshold"]==0:
-        optimal_CT_string=f"<p>An optimal CT of <b>{optimal_CT}</b> has been determined automatically.</p>"
+        optimal_CT_string=f"<p>An optimal CT of <b>{optimal_CT}</b> used to generate preliminary assembly was determined automatically.</p>"
     else:
-        optimal_CT_string=f"<p>CT of <b>{optimal_CT}</b> has been defined by user.</p>"
+        optimal_CT_string=f"<p>CT of <b>{optimal_CT}</b> used to generate preliminary assembly was defined by user.</p>"
    
     n_cds= log_content["prelim"]["consensus"]["stats"].get("n_CDS")
     avg_cds_len= log_content["prelim"]["consensus"]["stats"].get("CDS_len")
