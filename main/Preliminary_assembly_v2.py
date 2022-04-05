@@ -337,8 +337,12 @@ if __name__ == "__main__":
             sys.exit(f"\nPrevious run initiated in {outputdir} has fully completed. There is nothing to run.")
         taxid, selected_accessions, outputdir, consensus_threshold, filesizelimit, threadpool,workers, kmerlen , orfminlen, geneticcode, download_method, = logfile.contents["prelim"]["run_var"].values()
         _, scientific_name, _, command_issued, init_time = logfile.contents["prelim"]["run_info"].values()
-        accessions = logfile.contents["prelim"]["total_acc"]
+        accessions = logfile.contents["prelim"].get("total_acc")
         print(f"\nPrevious incomplete run initiated on {init_time} detected:\n{command_issued}\n\nResuming run...\n")
+        
+        if threadpool % workers != 0:
+            threadpool= threadpool - (threadpool % workers)
+        threads=int(threadpool/workers)
     
     logfile.load()
     #assemble SSAs in parellel
