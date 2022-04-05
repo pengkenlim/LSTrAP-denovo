@@ -189,7 +189,7 @@ def ssa_consensus(assemblydir):
     #for auto determination of consensus_threshold
     if consensus_threshold == 0:
         target_cds= np.median([k for k in logfile.contents["prelim"]["processed_acc"].values() if type(k) is int])
-        logfile.contents["prelim"]["consensus"]["stats"]["CT"] = consensus.CT_from_target_CDS(list(logfile.contents["prelim"]["consensus"]["stats"].values()),target_cds)
+        logfile.contents["prelim"]["consensus"]["stats"]["CT"] = consensus.CT_from_target_CDS(list(logfile.contents["prelim"]["consensus"]["CDS"].values()),target_cds)
         logfile.update()
         print("Consensus threshold of " + str(logfile.contents["prelim"]["consensus"]["stats"]["CT"])+" has been determined automatically. Generating preliminary assembly....\n")
         consensus_ssa_path= os.path.join(outputdir,"ssa_concat_cds_CT"+ str(logfile.contents["prelim"]["consensus"]["stats"]["CT"])+".fasta")
@@ -285,7 +285,7 @@ if __name__ == "__main__":
         elif len(scientific_name) > 1:
             sys.exit("More than one organism found for TaxID {taxid}. Exiting...")
         scientific_name= scientific_name[0]["scientific_name"]
-        print(f"\nFetching RNA-seq accessions of {scientific_name}( NCBI TaxID: {taxid}) from ENA..\n")
+        print(f"\nFetching RNA-seq accessions of {scientific_name} (NCBI TaxID: {taxid}) from ENA..\n")
         accessions = ena.get_runs(taxid)
         random.shuffle(accessions)
         print(f"Total accessions fetched from ENA: {len(accessions)}\n")
@@ -309,7 +309,7 @@ if __name__ == "__main__":
             if logfile.contents["prelim"]["status"] == "completed":
                 sys.exit(f"Previous completed run detected in {outputdir}. Exiting...")
             else:
-                sys.exit(f"Previous incomplete run detected at {outputdir}.\n Either use -con to continue previous run or remove output directory to start a fresh run.\n Exiting...")
+                sys.exit(f"Previous incomplete run detected at {outputdir}.\nUse either -con to continue previous run or remove output directory to start a fresh run.\nExiting...")
         #clear log file and write information relavent to fresh run
         logfile.contents["prelim"]["run_var"]={"taxid":taxid,
         "selected_accessions":selected_accessions,
