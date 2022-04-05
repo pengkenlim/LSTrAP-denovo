@@ -184,12 +184,12 @@ def ssa_consensus(assemblydir):
     for n_threshold in range(1,len([cds for cds in os.listdir(assemblydir) if "cds.fasta" in cds])+1):
         seq_to_retain= consensus.cluster_seq_extractor(n_threshold,clstrinfopath)
         CT_seqid_dict[n_threshold]= seq_to_retain
-        logfile.contents["prelim"]["consensus"]["CDS"][n_threshold]=len(seq_to_retain)
+        logfile.contents["prelim"]["consensus"]["CDS"][n_threshold]=int(len(seq_to_retain))
     logfile.update()
     #for auto determination of consensus_threshold
     if consensus_threshold == 0:
         target_cds= np.median([k for k in logfile.contents["prelim"]["processed_acc"].values() if type(k) is int])
-        logfile.contents["prelim"]["consensus"]["stats"]["CT"] = consensus.CT_from_target_CDS(list(logfile.contents["prelim"]["consensus"]["CDS"].values()),target_cds)
+        logfile.contents["prelim"]["consensus"]["stats"]["CT"] = int(consensus.CT_from_target_CDS(list(logfile.contents["prelim"]["consensus"]["CDS"].values()),target_cds))
         logfile.update()
         print("Consensus threshold of " + str(logfile.contents["prelim"]["consensus"]["stats"]["CT"])+" has been determined automatically. Generating preliminary assembly....\n")
         consensus_ssa_path= os.path.join(outputdir,"ssa_concat_cds_CT"+ str(logfile.contents["prelim"]["consensus"]["stats"]["CT"])+".fasta")
