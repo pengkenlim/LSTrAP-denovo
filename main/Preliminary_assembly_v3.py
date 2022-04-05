@@ -195,7 +195,7 @@ if __name__ == "__main__":
     parser= argparse.ArgumentParser(description="LSTrAP-denovo.Preliminary_assembly: Assemble a reduced but high-confidence assembly from public RNA-seq data")
     parser.add_argument("-o", "--output_dir", type=str, metavar= "", required=True,
     help= "Directory for data output.")
-    parser.add_argument("-k", "--kmer_len", type=int, metavar="", default=35, choices=range(21, 49+1,2), 
+    parser.add_argument("-k", "--kmer_len", type=int, metavar="", default=29, choices=range(21, 49+1,2), 
     help = "Specifies K-mer length (odd integer only) for assembly using Soapdenovo-Trans. K-mer length will be set to 35 by default.")
     parser.add_argument("-ct", "--consensus_threshold", type=int ,metavar="", default=0 , choices=range(0, 10+1),
     help = "Specifies consensus threshold during filtering. Threshold will be determined automatically by default.")
@@ -212,9 +212,11 @@ if __name__ == "__main__":
     parser.add_argument("-ml", "--min_len", type=int, metavar="", default=300, choices=range(30, 500),
     help= "Minimal ORF length (nt) passed to ORFfinder during ORF extraction. Set to 300 by default.")
     parser.add_argument("-dm", "--download_method", type=str, metavar="", default="ftp", choices=["ascp","ftp"],
-    help = "Method to download accession runs. ftp/ascp.")  
+    help = "Method to download accession runs. ftp/ascp.")
+    parser.add_argument("-na", "--n_accessions", type=int, metavar="", default=10 choices=range(10,50+1), 
+    help = "Number of single-accession-assemblies to combine in order to generate the preliminary assembly.")
     parser.add_argument("-a", "--accessions", type=str, metavar="",
-    help= "User-defined list of SRA run accessions to fetch for preliminary assembly. Requires at least 10 accessions. E.g.: SRR123456,SRR654321,ERR246810,...")
+    help= "User-defined list of SRA run accessions to fetch for preliminary assembly. If insufficient accessions provided, run will be supplemented with other public accessions. E.g.: SRR123456,SRR654321,ERR246810,...")
     
     #mutually excusive args for initial run or resume incomplete run
     ME_group_1 = parser.add_mutually_exclusive_group(required=True)
@@ -250,6 +252,7 @@ if __name__ == "__main__":
         startcodon=args.start_codon
         geneticcode=args.gene_code
         download_method= args.download_method
+        n_accessions = args.n_accessions
         
         #getting sciname and accessions from ena using taxid
         scientific_name= ena.get_sciname(taxid)
@@ -281,15 +284,15 @@ if __name__ == "__main__":
                     selected_accessions_dict[accession]=(ascp_fullpath,ftp_fullpath)
                 else:
                     print(f"{accession} not included due to insufficient file size.")
-                if len(selected_accessions_dict)==10:
+                if len(selected_accessions_dict)==n_accessions:
                     break
-            if len(selected_accessions_dict)<10:
+            if len(selected_accessions_dict)<n_accessions:
                 print(f"User-provided accessions were insufficient. Will supplement with other accessions...")
                 for accession in accessions:
                     ascp_fullpath, ftp_fullpath, filesize = aspera.get_download_path(accession)
                     if filesize >= filesizelimit:
                         selected_accessions_dict[accession]=(ascp_fullpath,ftp_fullpath)
-                    if len(selected_accessions_dict)==10:
+                    if len(selected_accessions_dict)==n_accessions:
                         break
         else:
             print("Selecting accessions of appropriate file sizes to build preliminary assembly...")
@@ -298,7 +301,7 @@ if __name__ == "__main__":
                 ascp_fullpath, ftp_fullpath, filesize = aspera.get_download_path(accession)
                 if filesize >= filesizelimit:
                     selected_accessions_dict[accession]=(ascp_fullpath,ftp_fullpath)
-                if len(selected_accessions_dict)==10:
+                if len(selected_accessions_dict)==n_accessions:
                     break
                 
         if threadpool % workers != 0:
@@ -318,7 +321,8 @@ if __name__ == "__main__":
         "kmerlen": kmerlen,
         "orfminlen": orfminlen,
         "geneticcode": geneticcode,
-        "download_method":download_method}
+        "download_method":download_method,
+        "n_accessions": n_accessions}
         
         logfile.contents["prelim"]["run_info"]={"taxid":taxid,
         "sci_name": scientific_name, "n_total_acc": len(accessions), "command_issued": " ".join(sys.argv), "init_time": datetime.now().strftime("%d/%m/%Y %H:%M:%S")}
@@ -332,7 +336,7 @@ if __name__ == "__main__":
             sys.exit(f"\nNo previous run initiation detected in {outputdir}. Exiting...")
         if logfile.contents["prelim"]["status"]== "completed":
             sys.exit(f"\nPrevious run initiated in {outputdir} has fully completed. There is nothing to run.")
-        taxid, selected_accessions_dict, outputdir, consensus_threshold, filesizelimit, threadpool,workers, kmerlen , orfminlen, geneticcode, download_method, = logfile.contents["prelim"]["run_var"].values()
+        taxid, selected_accessions_dict, outputdir, consensus_threshold, filesizelimit, threadpool,workers, kmerlen , orfminlen, geneticcode, download_method, n_accessions = logfile.contents["prelim"]["run_var"].values()
         _, scientific_name, _, command_issued, init_time = logfile.contents["prelim"]["run_info"].values()
         accessions = logfile.contents["prelim"].get("total_acc")
         print(f"\nPrevious incomplete run initiated on {init_time} detected:\n{command_issued}\n\nResuming run...\n")
