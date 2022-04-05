@@ -112,6 +112,7 @@ def parellel_ssa(workers):
                 for f in concurrent.futures.as_completed(results):
                     if "processed" in f.result():
                         progress_bar.update(1)
+                        print("\n")
                         progress_bar.set_postfix_str(s=f.result())
                         print("\n")
                     else:
@@ -195,7 +196,7 @@ if __name__ == "__main__":
     parser= argparse.ArgumentParser(description="LSTrAP-denovo.Preliminary_assembly: Assemble a reduced but high-confidence assembly from public RNA-seq data")
     parser.add_argument("-o", "--output_dir", type=str, metavar= "", required=True,
     help= "Directory for data output.")
-    parser.add_argument("-k", "--kmer_len", type=int, metavar="", default=29, choices=range(21, 49+1,2), 
+    parser.add_argument("-k", "--kmer_len", type=int, metavar="", default=35, choices=range(21, 49+1,2), 
     help = "Specifies K-mer length (odd integer only) for assembly using Soapdenovo-Trans. K-mer length will be set to 35 by default.")
     parser.add_argument("-ct", "--consensus_threshold", type=int ,metavar="", default=0 , choices=range(0, 10+1),
     help = "Specifies consensus threshold during filtering. Threshold will be determined automatically by default.")
@@ -231,7 +232,7 @@ if __name__ == "__main__":
     #create outputdir , fastqdir and ssadir if not found
     if not os.path.exists(outputdir):
         os.makedirs(outputdir)    
-    fastqdir=os.path.join(outputdir,"prelim","fastq")########
+    fastqdir=os.path.join(outputdir,"prelim","fastq")
     ssadir=os.path.join(outputdir, "prelim","ssa")
     if not os.path.exists(fastqdir):
         os.makedirs(fastqdir)
