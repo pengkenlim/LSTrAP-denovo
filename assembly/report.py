@@ -128,8 +128,8 @@ def generate_from_json_log(logpath, reportpath):
 				<td>{optimal_CT}</th>	
 			</tr>
 			<tr>
-				<th>Number of CDS:</th>
-				<td style= " text-align: right; padding-left: 30px; padding-right: 30px;">{n_cds}</td>
+				<th style ="text-align: right;" >Number of CDS:</th>
+				<td style= "padding-left: 30px; padding-right: 30px;">{n_cds}</td>
 			</tr>
 			<tr>
 				<th style ="text-align: right;" >Average CDS length (nt):</th>

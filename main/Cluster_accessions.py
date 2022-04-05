@@ -24,10 +24,10 @@ if __name__ == "__main__":
     parser.add_argument("-s","--filesizelimit" , type=int, metavar="", default=500 , choices=range(100, 1500),
     help="Specifies the size limit(mb) of accession read files to partially download. Limit set to 500 (mb) by default. Has a direct impact on the download time, pseudoalignment runtime in this step of the pipeline.\
     User is advised to reduce size limit when downloading and processing >500 accessions")
-    parser.add_argument("-t", "--threads", type=int, metavar="", default=4, 
+    parser.add_argument("-t", "--threads", type=int, metavar="", default=16, 
     help = "Total thread pool for workers. Needs to be divisible by number of workers.")
-    parser.add_argument("-w", "--workers", type=int, metavar="", default=4, 
-    help= "Specify the maximum workers for running multiple download-pseudoalignment jobs in parellel. Set to 2 by default.")
+    parser.add_argument("-w", "--workers", type=int, metavar="", default=8, 
+    help= "Specify the maximum workers for running multiple download-pseudoalignment jobs in parellel. Set to 8 by default.")
     parser.add_argument("-dm", "--download_method", type=str, metavar="", default="ftp", choices=["ascp","ftp"],
     help = "Method to download accession runs. ftp/ascp.")  
     parser.add_argument("-al", "--accessions_limit", type=int, metavar="", default=500,
@@ -56,7 +56,7 @@ if __name__ == "__main__":
     #create logfile object, exit if step 1 not completed.
     logfile=misc.logfile(os.path.join(outputdir,"logs.json"))
     if  logfile["prelim"]["status"] != "complete":
-        sys.exit("Prior Preliminary_assembly.py run (step 1) was either incomplete or not started at all. \nNOTE: This is step 2 of 3 in the LSTrAP-denovo pipeline.\nExiting...")
+        sys.exit("Step 1 (Preliminary_assembly.py) was either incomplete or not started at all. \nNOTE: This is step 2 of 3 in the LSTrAP-denovo pipeline.\nExiting...")
     
     #assigning arguments to variables, writing to log OR fetching variables from log
     if conti==False:
@@ -74,3 +74,4 @@ if __name__ == "__main__":
             threadpool= threadpool - (threadpool % workers)
             print(f"Using thread pool of {threadpool} instead.\n")
         threads=int(threadpool/workers)
+    elif conti==True:
