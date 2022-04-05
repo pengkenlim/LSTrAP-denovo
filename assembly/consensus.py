@@ -26,7 +26,7 @@ def concat_rename_assemblies(assemblydir, concatpath, identifier="cds.fasta",seq
     
     
 def launch_cdhit(concatpath, similarity, outpath, threads):
-    returncode=subprocess.run([constants.cdhitpath, "-i", concatpath, "-T", str(threads), "-M", "0", "-G", "0", "-c", str(similarity), "-aS", "0.75" ,"-aL", "0.005" ,"-r","0", "-g", "1", "-o", outpath ],
+    returncode=subprocess.run([constants.cdhitpath, "-i", concatpath, "-T", str(threads), "-M", "0", "-G", "0", "-c", str(similarity), "-aS", "0.95" ,"-aL", "0.005" ,"-r","0", "-g", "1", "-o", outpath ],
     stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
     return returncode.returncode
 
@@ -58,7 +58,16 @@ def fasta_subset(inputfastapath, outputfastapath, seqid):
 def select_CT(n_seq_list):
     ''' Find best consensus threshold based on rate of seqeunce loss. 
     Returns optimal CT as an integer'''
-    a= np.array(n_seq_list)
-    percentage_decrease= list((a[1:]-a[:-1])/a[:-1])
+    array= np.array(n_seq_list)
+    percentage_decrease= list((array[1:]-array[:-1])/array[:-1])
     optimum_threshold= range(1,len(n_seq_list)+1)[ percentage_decrease.index(max(percentage_decrease))]
     return optimum_threshold
+    
+    
+def CT_from_target_CDS(n_seq_list, targetCDS):
+    ''' Find consensus threshold with n_CDS similar to target n_CDS 
+    Returns optimal CT as an integer'''
+    array= np.array(n_seq_list)
+    idx = (np.abs(array - targetCDS)).argmin()
+    return idx + 1
+    
