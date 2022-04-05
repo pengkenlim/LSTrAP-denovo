@@ -31,7 +31,7 @@ def single_sample_assembly(accession,index):
         return f"{accession} already processed. Skipping accession.."
     #to un-sync workers 
     sleep((index%workers)*5)
-    ascp_fullpath,ftp_fullpath = logfile.contents["prelim"]["run_var"]["selected_accessions"].get("accession")
+    ascp_fullpath,ftp_fullpath = logfile.contents["prelim"]["run_var"]["selected_accessions"].get(accession)
     fastqpath=os.path.join(fastqdir,accession+".fastq.gz")
     #use the appropriate download method to download accession
     if download_method == "ascp":
