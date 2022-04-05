@@ -30,10 +30,12 @@ def generate_from_json_log(logpath, reportpath):
     "Number of CDS assembled": log_content["prelim"].get("processed_acc").values()}
     processed_table= pd.DataFrame.from_dict(processed_table)
     optimal_CT= log_content["prelim"]["consensus"]["stats"].get("CT")
-    if "-ct" or "--consensus_threshold" in prelim_command:
-        optimal_CT_string=f"<p>CT of <b>{optimal_CT}</b> has been defined by user.</p>"
-    else:
+    
+    if log_content["prelim"]["run_var"]["consensus_threshold"]==0:
         optimal_CT_string=f"<p>An optimal CT of <b>{optimal_CT}</b> has been determined automatically.</p>"
+    else:
+        optimal_CT_string=f"<p>CT of <b>{optimal_CT}</b> has been defined by user.</p>"
+   
     n_cds= log_content["prelim"]["consensus"]["stats"].get("n_CDS")
     avg_cds_len= log_content["prelim"]["consensus"]["stats"].get("CDS_len")
     GC = log_content["prelim"]["consensus"]["stats"].get("GC")
@@ -56,7 +58,7 @@ def generate_from_json_log(logpath, reportpath):
 			  text-align: center;
 			}}
 			th {{
-			  text-align: right;
+			  text-align: center;
 			}}
 			tr:nth-child(even) {{
 				background-color: #dcdcdc;
@@ -92,23 +94,23 @@ def generate_from_json_log(logpath, reportpath):
 		<h3>Run Info</h3>
 		<table>
 			<tr>
-				<th>Organism NCBI TaxID:</th>
+				<th style = "text-align: right;" >Organism NCBI TaxID:</th>
 				<td>{taxid}</td>
 			</tr>
 			<tr>
-				<th>Scientific name:</th>
+				<th style = style = "text-align: right;" >Scientific name:</th>
 				<td>{sci_name}</td>
 			</tr>
 			<tr>
-				<th>Total number of RNA-seq accessions:</th>
+				<th style = "text-align: right;" >Total number of RNA-seq accessions:</th>
 				<td>{n_total_acc}</td>
 			</tr>
 			<tr>
-				<th>Command issued :</th>
+				<th style = "text-align: right;" >Command issued :</th>
 				<td>{prelim_command}</td>
 			</tr>
 			<tr>
-				<th>Initial start time:</th>
+				<th style = "text-align: right;" >Initial start time:</th>
 				<td>{prelim_start_time}</td>
 			</tr>
 		</table>
@@ -122,19 +124,19 @@ def generate_from_json_log(logpath, reportpath):
 				<th colspan="2", style = "text-align: center;">Statistics of Preliminary Assembly</th>
 			</tr>
 			<tr>
-				<th>Consensus threshold used to extract CDS:</th>
+				<th style ="text-align: right;" >Consensus threshold used to extract CDS:</th>
 				<td>{optimal_CT}</th>	
 			</tr>
 			<tr>
 				<th>Number of CDS:</th>
-				<td style= " padding-left: 30px; padding-right: 30px;">{n_cds}</td>
+				<td style= " text-align: right; padding-left: 30px; padding-right: 30px;">{n_cds}</td>
 			</tr>
 			<tr>
-				<th>Average CDS length (nt):</th>
+				<th style ="text-align: right;" >Average CDS length (nt):</th>
 				<td>{avg_cds_len}</td>
 			</tr>
 			<tr>
-				<th>GC content (%):</th>
+				<th style ="text-align: right;" >GC content (%):</th>
 				<td>{GC}</td>
 			</tr>
 			</table>
