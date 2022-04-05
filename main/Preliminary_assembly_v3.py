@@ -262,6 +262,13 @@ if __name__ == "__main__":
         accessions = ena.get_runs(taxid)
         random.shuffle(accessions)
         print(f"Total accessions fetched from ENA: {len(accessions)}\n")
+        #check if there is a previous run in the same outputdir. if so, exit and print error message
+        if logfile.contents["prelim"]["run_info"]["init_time"] is not None:
+            if logfile.contents["prelim"]["status"] == "completed":
+                sys.exit(f"Previous completed run detected in {outputdir}. Exiting...")
+            else:
+                sys.exit(f"Previous incomplete run detected at {outputdir}.\nUse either -con to continue previous run or remove output directory to start a fresh run.\nExiting...")
+        
         #check if accessions are given. if not, select accessions from total accessions.
         #check file size.
         if selected_accessions is not None:
@@ -300,12 +307,7 @@ if __name__ == "__main__":
             print(f"Using thread pool of {threadpool} instead.\n")
         threads=int(threadpool/workers)
         
-        if logfile.contents["prelim"]["run_info"]["init_time"] is not None:
-            if logfile.contents["prelim"]["status"] == "completed":
-                sys.exit(f"Previous completed run detected in {outputdir}. Exiting...")
-            else:
-                sys.exit(f"Previous incomplete run detected at {outputdir}.\nUse either -con to continue previous run or remove output directory to start a fresh run.\nExiting...")
-        #clear log file and write information relavent to fresh run
+        #write information relavent to fresh run into log file
         logfile.contents["prelim"]["run_var"]={"taxid":taxid,
         "selected_accessions":selected_accessions_dict,
         "outputdir": outputdir,
