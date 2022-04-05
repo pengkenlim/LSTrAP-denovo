@@ -269,7 +269,7 @@ if __name__ == "__main__":
             print("Checking file sizes of accessions provided by user...")
             selected_accessions_dict={}
             for accession in selected_accessions:
-                ascp_fullpath, ftp_fullpath, filesize = get_download_path(accession)
+                ascp_fullpath, ftp_fullpath, filesize = aspera.get_download_path(accession)
                 if filesize >= filesizelimit:
                     selected_accessions_dict[accession]=(ascp_fullpath,ftp_fullpath)
                 else:
@@ -279,7 +279,7 @@ if __name__ == "__main__":
             if len(selected_accessions_dict)<10:
                 print(f"User-provided accessions were insufficient. Will supplement with other accessions...")
                 for accession in accessions:
-                    ascp_fullpath, ftp_fullpath, filesize = get_download_path(accession)
+                    ascp_fullpath, ftp_fullpath, filesize = aspera.get_download_path(accession)
                     if filesize >= filesizelimit:
                         selected_accessions_dict[accession]=(ascp_fullpath,ftp_fullpath)
                     if len(selected_accessions_dict)==10:
@@ -288,7 +288,7 @@ if __name__ == "__main__":
             print("Selecting accessions of appropriate file sizes to build preliminary assembly...")
             selected_accessions_dict={}
             for accession in accessions:
-                ascp_fullpath, ftp_fullpath, filesize = get_download_path(accession)
+                ascp_fullpath, ftp_fullpath, filesize = aspera.get_download_path(accession)
                 if filesize >= filesizelimit:
                     selected_accessions_dict[accession]=(ascp_fullpath,ftp_fullpath)
                 if len(selected_accessions_dict)==10:
