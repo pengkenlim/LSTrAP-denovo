@@ -132,12 +132,13 @@ def parellel_ssa(workers):
                         print(f.result())
                 progress_bar.close()
                 logfile.load()
-                progress_bar= tqdm(total=len(logfile.contents["prelim"]["run_var"]["selected_accessions"]), desc= "Accessions processed", unit="Acsn", leave=True)
+                
                 #conditional to sense when something is really wrong (i.e. every accession fails)
                 if len([k for k in logfile.contents["prelim"]["processed_acc"].values() if type(k) is int ]) ==0:
                     sys.exit("Unexpected error occured. Exiting...")
                 #rerun to get at least 10 successful runs
                 while len([k for k in logfile.contents["prelim"]["processed_acc"].values() if type(k) is int ]) <10:
+                    progress_bar= tqdm(total=len(logfile.contents["prelim"]["run_var"]["selected_accessions"]), desc= "Accessions processed", unit="Acsn", leave=True)
                     logfile.contents["prelim"]["run_var"]["selected_accessions"] = accessions[:len(logfile.contents["prelim"]["run_var"]["selected_accessions"]) - len([k for k in logfile.contents["prelim"]["processed_acc"].values() if type(k) is int ]) +10]
                     logfile.update()
                     results= [executor.submit(single_sample_assembly, accession, index) for index, accession in enumerate(selected_accessions)]
@@ -169,7 +170,7 @@ def ssa_consensus(assemblydir):
     clstr_concatpath= os.path.join(outputdir,"ssa_concat_cds_CT1.fasta")
     result=misc.run_with_retries(retrylimit, 
     consensus.launch_cdhit, 
-    [concatpath,0.995,clstr_concatpath, threadpool],
+    [concatpath,0.998,clstr_concatpath, threadpool],
     "CD-HIT-EST failed. Retrying...\n", 
     "Running CD-HIT-EST on concatenated assembly...\n")
     if result == "failed":
@@ -187,7 +188,8 @@ def ssa_consensus(assemblydir):
     logfile.update()
     #for auto determination of consensus_threshold
     if consensus_threshold == 0:
-        logfile.contents["prelim"]["consensus"]["stats"]["CT"] = consensus.select_CT(list(logfile.contents["prelim"]["consensus"]["stats"].values()))
+        target_cds= np.median([k for k in logfile.contents["prelim"]["processed_acc"].values() if type(k) is int])
+        logfile.contents["prelim"]["consensus"]["stats"]["CT"] = consensus.CT_from_target_CDS(list(logfile.contents["prelim"]["consensus"]["stats"].values()),target_cds)
         logfile.update()
         print("Consensus threshold of " + str(logfile.contents["prelim"]["consensus"]["stats"]["CT"])+" has been determined automatically. Generating preliminary assembly....\n")
         consensus_ssa_path= os.path.join(outputdir,"ssa_concat_cds_CT"+ str(logfile.contents["prelim"]["consensus"]["stats"]["CT"])+".fasta")
