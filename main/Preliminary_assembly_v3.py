@@ -281,7 +281,7 @@ if __name__ == "__main__":
                 for accession in accessions:
                     ascp_fullpath, ftp_fullpath, filesize = get_download_path(accession)
                     if filesize >= filesizelimit:
-                        selected_accessions_dict[accession]=(ascp_fullpath,ftp_fullpath])
+                        selected_accessions_dict[accession]=(ascp_fullpath,ftp_fullpath)
                     if len(selected_accessions_dict)==10:
                         break
         else:
