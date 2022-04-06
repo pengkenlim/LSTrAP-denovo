@@ -80,11 +80,14 @@ def single_sample_assembly(accession,index):
         logfile.update()
         return f"{accession}: Aborted after {retrylimit} retries."
         
+    print(f"{accession}: Checkpoint 1")###
     #remove uncompressed and trimmed fastq file to save space
     os.system(f"rm {fastqpath}")
         
     #extract orf from assembly to get cds.fasta
-    sys.exit(outputpath_prefix,orfminlen, startcodon,  geneticcode)
+    print(f"{accession}: Checkpoint 2")###
+    print(outputpath_prefix,orfminlen, startcodon, geneticcode)########
+    print(f"{accession}: Checkpoint 3")###
     results= misc.run_with_retries(retrylimit,
     soapdenovo.extract_orf,
     [outputpath_prefix + ".fasta", outputpath_prefix + "_cds.fasta", orfminlen, startcodon , geneticcode],
