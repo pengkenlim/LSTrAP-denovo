@@ -25,8 +25,5 @@ def extract_orf(fastainputpath, fastaoutputpath, orfminlen, startcodon, geneticc
 def launch_soap(configoutpath, kmerlen, outputpath_prefix, threads):
     returncode=subprocess.run([constants.soappath, "all", "-s", configoutpath, "-o", outputpath_prefix+"_temp", "-K", str(kmerlen), "-p", str(threads), "-M", "3", "-t", "20"],
     stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
-    #renaming transcript file to keep and deleting others
-    os.system(f"mv {outputpath_prefix}_temp.scafSeq {outputpath_prefix}.fasta")
-    os.system(f"rm -r {outputpath_prefix}_temp*")
     return returncode.returncode
 

@@ -79,7 +79,10 @@ def single_sample_assembly(accession,index):
         logfile.contents["prelim"]["processed_acc"][accession]= "Assembly failed."
         logfile.update()
         return f"{accession}: Aborted after {retrylimit} retries."
-        
+    
+    #renaming transcript file to keep and deleting others
+    os.system(f"mv {outputpath_prefix}_temp.scafSeq {outputpath_prefix}.fasta")
+    os.system(f"rm -r {outputpath_prefix}_temp*")
 
     #remove uncompressed and trimmed fastq file to save space
     os.system(f"rm {fastqpath}")
