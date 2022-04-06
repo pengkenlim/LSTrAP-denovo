@@ -14,7 +14,7 @@ from setup import constants
 def make_config(fastqpath,configoutpath ):
     ''' make a config file with path to fastq.'''
     with open(configoutpath, "w") as f:
-        f.write(f"max_rd_len=100\n[LIB]\nrd_len_cutof=100\navg_ins=200\nreverse_seq=0\nasm_flags=3\nmap_len=32\nq={fastqpath}")
+        f.write(f"max_rd_len=200\n[LIB]\nreverse_seq=0\nasm_flags=3\nq={fastqpath}")
 
 def extract_orf(fastainputpath, fastaoutputpath, orfminlen, startcodon, geneticcode):
     returncode= subprocess.run([constants.orffinderpath, "-in", fastainputpath, "-out", fastaoutputpath, "-ml", str(orfminlen), "-s", str(startcodon), "-g", str(geneticcode), "-outfmt", "1"],
