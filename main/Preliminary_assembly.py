@@ -11,132 +11,127 @@ import concurrent.futures
 import random
 import numpy as np
 from time import sleep
+from datetime import datetime
 
 from tqdm import tqdm
 from download import ena
 from download import aspera
-from assembly import soapdenovo, misc , consensus
+from assembly import soapdenovo, misc , consensus, report
 from setup import constants
 from preprocess import trim
+
+
 
 
 def single_sample_assembly(accession,index):
     '''Job to generate Single-sample assembly. 
     Validate download path -> download via ftp/ascp-> read trimming by fastp -> assembly by soapdenovo-Trans'''
-    global processed_accessions
-    #check if accessions is already processed in the case of a resumed run.
-    if accession in processed_accessions:
-        return f"{accession} processed"
-    #to un-sync processes 
+    logfile.load()
+    if accession in logfile.contents["prelim"]["processed_acc"].keys():
+        return f"{accession} already processed. Skipping accession.."
+    #to un-sync workers 
     sleep((index%workers)*5)
-    #get download path and filesize of accession
-    print(f"{accession}: checking file size...")
-    ascp_fullpath, ftp_fullpath, filesize = aspera.get_download_path(accession)
-    if filesize < filesizelimit:
-        return f"{accession}:Aborted. Filesize {np.round(filesize/1000000)} mb is below limit requirements. "
-    else:
-        #download
-        fastqpath=os.path.join(fastqdir,accession+".fastq.gz")
-        if download_method == "ascp":
-            
-            result= misc.run_with_retries(retrylimit, 
-            aspera.launch_ascp, 
-            [ascp_fullpath,fastqpath,filesizelimit],
-            f"{accession}: Download failed. Retrying...", 
-            f"{accession}: downloading file via ascp...")
-            
-        elif download_method == "ftp":
-            
-            result= misc.run_with_retries(retrylimit,
-            aspera.launch_curl,
-            [ftp_fullpath,fastqpath,filesizelimit],
-            f"{accession}: Download failed. Retrying...",
-            f"{accession}: downloading file via ftp...")
-        if result == "failed":
-            return f"{accession}: aborted after {retrylimit} retries."
-
-        #trim and uncompress
+    ascp_fullpath,ftp_fullpath = logfile.contents["prelim"]["run_var"]["selected_accessions"].get(accession)
+    fastqpath=os.path.join(fastqdir,accession+".fastq.gz")
+    #use the appropriate download method to download accession
+    if download_method == "ascp":
         result= misc.run_with_retries(retrylimit,
-        trim.launch_fastp,
-        [fastqpath, fastqpath.split(".gz")[0],threads],
-        f"{accession}: Fastp trimming failed. Retrying...",
-        f"{accession}: trimming file using Fastp...")
-        if result == "failed":
-            return f"{accession}: aborted after {retrylimit} retries."
+        aspera.launch_ascp,
+        [ascp_fullpath,fastqpath,filesizelimit],
+        f"{accession}: Download failed. Retrying...",
+        f"{accession}: Downloading file via ascp...")
         
-        #make config file for soapdenovotrans to parse
-        fastqpath= fastqpath.split(".gz")[0]
-        configoutpath = os.path.join(ssadir, accession + "_temp.config")
-        soapdenovo.make_config(fastqpath,configoutpath)
-        #Single-sample-assembly process
-        outputpath_prefix= os.path.join(ssadir, accession)
-        results=misc.run_with_retries(retrylimit,
-        soapdenovo.launch_soap,
-        [configoutpath, kmerlen, outputpath_prefix, threads],
-        f"{accession}: Soapdenovo-Trans failed. Retrying...",
-        f"{accession}: Assembling transcripts with Soapdenovo-Trans...")
-        if result == "failed":
-            return f"{accession}: aborted after {retrylimit} retries."
-        
-        #remove uncompressed and trimmed fastq file to save space
-        os.system(f"rm {fastqpath}")
-        
-        #extract orf from assembly to get cds.fasta
-        results=misc.run_with_retries(retrylimit,
-        soapdenovo.extract_orf,
-        [outputpath_prefix + ".fasta", outputpath_prefix + "_cds.fasta", orfminlen, startcodon ,geneticcode],
-        f"{accession}: ORFfinder failed. Retrying...",
-        f"{accession}: Extracting CDS with ORFfinder...")
-        if result == "failed":
-            return f"{accession}: aborted after {retrylimit} retries."
-        
-        os.system(f"rm {outputpath_prefix}.fasta")
-        print(f"{accession}: Single-sample assembly completed.")
-        processed_accessions += [accession]
-        logfile.contents["prelim"]["processed"] = processed_accessions
+    elif download_method == "ftp":
+        result= misc.run_with_retries(retrylimit,
+        aspera.launch_curl,
+        [ftp_fullpath,fastqpath,filesizelimit],
+        f"{accession}: Download failed. Retrying...",
+        f"{accession}: Downloading file via ftp...")
+    if result == "failed":
+        logfile.load()
+        logfile.contents["prelim"]["processed_acc"][accession]= "Download failed."
         logfile.update()
-        return f"{accession} processed"
+    #trim and uncompress
+    result= misc.run_with_retries(retrylimit,
+    trim.launch_fastp,
+    [fastqpath, fastqpath.split(".gz")[0],threads],
+    f"{accession}: Fastp trimming failed. Retrying...",
+    f"{accession}: Trimming file using Fastp...")
+    if result == "failed":
+        logfile.load()
+        logfile.contents["prelim"]["processed_acc"][accession]= "Fastp failed."
+        logfile.update()
+        return f"{accession}: Aborted after {retrylimit} retries."
+    
+    #make config file for soapdenovotrans to parse
+    fastqpath= fastqpath.split(".gz")[0]
+    configoutpath = os.path.join(ssadir, accession + "_temp.config")
+    soapdenovo.make_config(fastqpath,configoutpath)
+    #Single-sample-assembly process
+    outputpath_prefix= os.path.join(ssadir, accession)
+    results=misc.run_with_retries(retrylimit,
+    soapdenovo.launch_soap,
+    [configoutpath, kmerlen, outputpath_prefix, threads],
+    f"{accession}: Soapdenovo-Trans failed. Retrying...",
+    f"{accession}: Assembling transcripts with Soapdenovo-Trans...")
+    if result == "failed":
+        logfile.load()
+        logfile.contents["prelim"]["processed_acc"][accession]= "Assembly failed."
+        logfile.update()
+        return f"{accession}: Aborted after {retrylimit} retries."
+        
 
-
+    #remove uncompressed and trimmed fastq file to save space
+    os.system(f"rm {fastqpath}")
+        
+    #extract orf from assembly to get cds.fasta
+    results= misc.run_with_retries(retrylimit,
+    soapdenovo.extract_orf,
+    [outputpath_prefix + ".fasta", outputpath_prefix + "_cds.fasta", orfminlen, startcodon , geneticcode],
+    f"{accession}: ORFfinder failed. Retrying...",
+    f"{accession}: Extracting CDS with ORFfinder...")
+    if result == "failed":
+        logfile.load()
+        logfile.contents["prelim"]["processed_acc"][accession]= "Assembly failed."
+        logfile.update()
+        return f"{accession}: Aborted after {retrylimit} retries."
+    os.system(f"rm {outputpath_prefix}.fasta")
+    n_cds, _, _ = misc.get_assembly_stats(outputpath_prefix + "_cds.fasta")
+    logfile.load()
+    logfile.contents["prelim"]["processed_acc"][accession]= n_cds
+    logfile.update()
+    print(f"{accession}: Single-sample assembly completed.")
+    return f"{accession} processed"    
+    
 def parellel_ssa(workers):
     ''' Wrapper to parellelize SSA jobs. 
     Includes progress bar visualisation.'''
-    global selected_accessions
-    global processed_accessions
-    progress_bar= tqdm(total=len(selected_accessions), desc= "SSA of selected accessions", unit="Acsn", leave=True)
+    logfile.load()
     with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
-                results= [executor.submit(single_sample_assembly, accession, index) for index, accession in enumerate(selected_accessions)]
+                progress_bar= tqdm(total=len(logfile.contents["prelim"]["run_var"]["selected_accessions"]), desc= "Accessions processed", unit="Acsn", leave=True)
+                results= [executor.submit(single_sample_assembly, accession, index) for index, accession in enumerate(logfile.contents["prelim"]["run_var"]["selected_accessions"])]
                 for f in concurrent.futures.as_completed(results):
                     if "processed" in f.result():
                         progress_bar.update(1)
+                        print("\n")
                         progress_bar.set_postfix_str(s=f.result())
                         print("\n")
                     else:
                         print(f.result())
+                progress_bar.close()
+                logfile.load()
                 
-                #conditional to sense when something is really wrong
-                if len(processed_accessions) <1:
+                #conditional to sense when something is really wrong (i.e. every accession fails)
+                if len([k for k in logfile.contents["prelim"]["processed_acc"].values() if type(k) is int ]) ==0:
                     sys.exit("Unexpected error occured. Exiting...")
-                #rerun to get at least 10 successful runs
-                while len(processed_accessions) <10:
-                    selected_accessions = accessions[:len(selected_accessions)- len(processed_accessions) +10]
-                    logfile.contents["prelim"]["cmd_args"]["selected_accessions"] = selected_accessions
-                    logfile.update()
-                    results= [executor.submit(single_sample_assembly, accession, index) for index, accession in enumerate(selected_accessions)]
-                    for f in concurrent.futures.as_completed(results):
-                        if "processed" in f.result():
-                            progress_bar.update(1)
-                            progress_bar.set_postfix_str(s=f.result())
-                            print("\n")
-                        else:
-                            print(f.result())
+
                     
                     
                 
 
 def ssa_consensus(assemblydir):
     """ generate consensus assembly from SSAs"""
-    global consensus_threshold
+    logfile.load()
     print("\nConcatenating all Single-sample assemblies...\n")
     #make subdir within assemblydir to store consensus assemblies
     outputdir=os.path.join(assemblydir, "concat")
@@ -150,7 +145,7 @@ def ssa_consensus(assemblydir):
     clstr_concatpath= os.path.join(outputdir,"ssa_concat_cds_CT1.fasta")
     result=misc.run_with_retries(retrylimit, 
     consensus.launch_cdhit, 
-    [concatpath,0.995,clstr_concatpath, threadpool],
+    [concatpath,0.998,clstr_concatpath, threadpool],
     "CD-HIT-EST failed. Retrying...\n", 
     "Running CD-HIT-EST on concatenated assembly...\n")
     if result == "failed":
@@ -158,24 +153,35 @@ def ssa_consensus(assemblydir):
     clstrinfopath = clstr_concatpath + ".clstr" 
     print("Parsing output from CD-HIT-EST and writing to log...\n")
     #extract sequence IDs to retain for each consensus threshold
-    CT_seqid_dict={}
-    logfile.contents["prelim"]["consensus"]["stats"]={}
-    for n_threshold in range(1,len(selected_accessions)+1):
+    CT_seqid_dict={} #to hold SeqIDs for each threshold
+    logfile.contents["prelim"]["consensus"]["CDS"]={}
+    logfile.update()
+    for n_threshold in range(1,len([cds for cds in os.listdir(assemblydir) if "cds.fasta" in cds])+1):
         seq_to_retain= consensus.cluster_seq_extractor(n_threshold,clstrinfopath)
-        CT_seqid_dict[f"CT{n_threshold}"]= seq_to_retain
-        logfile.contents["prelim"]["consensus"]["stats"][f"CT{n_threshold}"]=len(seq_to_retain)
+        CT_seqid_dict[n_threshold]= seq_to_retain
+        logfile.contents["prelim"]["consensus"]["CDS"][n_threshold]=len(seq_to_retain)
     logfile.update()
     #for auto determination of consensus_threshold
     if consensus_threshold == 0:
-        print("Determining consensus threshold automatically...\n")
-        consensus_threshold = consensus.select_CT(list(logfile.contents["prelim"]["consensus"]["stats"].values()))
-        logfile.contents["prelim"]["cmd_args"]["consensus_threshold"]= consensus_threshold
-        logfile.update()  
-    consensus_ssa_path= os.path.join(outputdir,f"ssa_concat_cds_CT{consensus_threshold}.fasta")
-    logfile.contents["prelim"]["consensus"]["path"]= consensus_ssa_path
+        target_cds= np.median([k for k in logfile.contents["prelim"]["processed_acc"].values() if type(k) is int])
+        logfile.contents["prelim"]["consensus"]["stats"]["CT"] = int(consensus.CT_from_target_CDS(list(logfile.contents["prelim"]["consensus"]["CDS"].values()),target_cds))
+        logfile.update()
+        print("Consensus threshold of " + str(logfile.contents["prelim"]["consensus"]["stats"]["CT"])+" has been determined automatically. Generating preliminary assembly....\n")
+        consensus_ssa_path= os.path.join(outputdir,"ssa_concat_cds_CT"+ str(logfile.contents["prelim"]["consensus"]["stats"]["CT"])+".fasta")
+        consensus.fasta_subset(clstr_concatpath, consensus_ssa_path, CT_seqid_dict[logfile.contents["prelim"]["consensus"]["stats"]["CT"]])
+    else:
+         print(f"Using user-defined consensus threshold of {consensus_threshold} to generate preliminary assembly....\n")
+         logfile.contents["prelim"]["consensus"]["stats"]["CT"] = consensus_threshold
+         consensus_ssa_path= os.path.join(outputdir,f"ssa_concat_cds_CT{consensus_threshold}.fasta")
+         consensus.fasta_subset(clstr_concatpath, consensus_ssa_path, CT_seqid_dict[f"CT{consensus_threshold}"])
+    logfile.contents["prelim"]["consensus"]["stats"]["path"]= consensus_ssa_path
+    print("Calculating preliminary assembly statistics...\n")
+    n_cds, avg_cds_len, GC = misc.get_assembly_stats(consensus_ssa_path)
+    logfile.contents["prelim"]["consensus"]["stats"]["n_CDS"] = n_cds
+    logfile.contents["prelim"]["consensus"]["stats"]["CDS_len"] = avg_cds_len
+    logfile.contents["prelim"]["consensus"]["stats"]["GC"] = GC
     logfile.update()
-    print(f"Consensus-SSA assembly with a consensus threshold of {consensus_threshold} created.")
-    consensus.fasta_subset(clstr_concatpath, consensus_ssa_path, CT_seqid_dict[f"CT{consensus_threshold}"]) 
+     
     
         
         
@@ -196,7 +202,7 @@ if __name__ == "__main__":
     parser.add_argument("-ct", "--consensus_threshold", type=int ,metavar="", default=0 , choices=range(0, 10+1),
     help = "Specifies consensus threshold during filtering. Threshold will be determined automatically by default.")
     parser.add_argument("-s","--filesizelimit" , type=int, metavar="", default=1500, 
-    help="Specifies the size limit(mb) of accession read files to partially download. Limit set to 1500 (mb) by default.")
+    help="Specifies the parital download limit/ file size requirement(mb) of accession read files. Limit set to 1500 (mb) by default.")
     parser.add_argument("-t", "--threads", type=int, metavar="", default=4, 
     help = "Total thread pool for workers. Needs to be divisible by number of workers.")
     parser.add_argument("-w", "--workers", type=int, metavar="", default=2, 
@@ -208,9 +214,11 @@ if __name__ == "__main__":
     parser.add_argument("-ml", "--min_len", type=int, metavar="", default=300, choices=range(30, 500),
     help= "Minimal ORF length (nt) passed to ORFfinder during ORF extraction. Set to 300 by default.")
     parser.add_argument("-dm", "--download_method", type=str, metavar="", default="ftp", choices=["ascp","ftp"],
-    help = "Method to download accession runs. ftp/ascp.")  
+    help = "Method to download accession runs. ftp/ascp.")
+    parser.add_argument("-na", "--n_accessions", type=int, metavar="", default=10, choices=range(10,50+1), 
+    help = "Number of single-accession-assemblies to combine in order to generate the preliminary assembly.")
     parser.add_argument("-a", "--accessions", type=str, metavar="",
-    help= "User-defined list of SRA run accessions to fetch for preliminary assembly. Requires at least 10 accessions. E.g.: SRR123456,SRR654321,ERR246810,...")
+    help= "User-defined list of SRA run accessions to fetch for preliminary assembly. If insufficient accessions provided, run will be supplemented with other public accessions. E.g.: SRR123456,SRR654321,ERR246810,...")
     
     #mutually excusive args for initial run or resume incomplete run
     ME_group_1 = parser.add_mutually_exclusive_group(required=True)
@@ -225,8 +233,8 @@ if __name__ == "__main__":
     #create outputdir , fastqdir and ssadir if not found
     if not os.path.exists(outputdir):
         os.makedirs(outputdir)    
-    fastqdir=os.path.join(outputdir,"fastq")
-    ssadir=os.path.join(outputdir, "ssa")
+    fastqdir=os.path.join(outputdir,"prelim","fastq")
+    ssadir=os.path.join(outputdir, "prelim","ssa")
     if not os.path.exists(fastqdir):
         os.makedirs(fastqdir)
     if not os.path.exists(ssadir):
@@ -246,6 +254,7 @@ if __name__ == "__main__":
         startcodon=args.start_codon
         geneticcode=args.gene_code
         download_method= args.download_method
+        n_accessions = args.n_accessions
         
         #getting sciname and accessions from ena using taxid
         scientific_name= ena.get_sciname(taxid)
@@ -254,19 +263,48 @@ if __name__ == "__main__":
         elif len(scientific_name) > 1:
             sys.exit("More than one organism found for TaxID {taxid}. Exiting...")
         scientific_name= scientific_name[0]["scientific_name"]
-        print(f"\nFetching RNA-seq accessions of {scientific_name}( NCBI TaxID: {taxid}) from ENA..\n")
+        print(f"\nFetching RNA-seq accessions of {scientific_name} (NCBI TaxID: {taxid}) from ENA..\n")
         accessions = ena.get_runs(taxid)
         random.shuffle(accessions)
         print(f"Total accessions fetched from ENA: {len(accessions)}\n")
-        #check if accessions are given. if not, select accessions from total accessions
+        #check if there is a previous run in the same outputdir. if so, exit and print error message
+        if logfile.contents["prelim"]["run_info"]["init_time"] is not None:
+            if logfile.contents["prelim"]["status"] == "completed":
+                sys.exit(f"Previous completed run detected in {outputdir}. Exiting...")
+            else:
+                sys.exit(f"Previous incomplete run detected at {outputdir}.\nUse either -con to continue previous run or remove output directory to start a fresh run.\nExiting...")
+        
+        #check if accessions are given. if not, select accessions from total accessions.
+        #check file size.
         if selected_accessions is not None:
             selected_accessions = selected_accessions.split(",")
-            if len(selected_accessions) < 10:
-                sys.exit("Not enough accessions provided. Refer to --help for more information.")
-            #bring selected accessions to the front of the total accessions list
-            accessions = list(set(selected_accessions + accessions))
+            print("Checking file sizes of accessions provided by user...")
+            selected_accessions_dict={}
+            for accession in selected_accessions:
+                ascp_fullpath, ftp_fullpath, filesize = aspera.get_download_path(accession)
+                if filesize >= filesizelimit:
+                    selected_accessions_dict[accession]=(ascp_fullpath,ftp_fullpath)
+                else:
+                    print(f"{accession} not included due to insufficient file size.")
+                if len(selected_accessions_dict)==n_accessions:
+                    break
+            if len(selected_accessions_dict)<n_accessions:
+                print(f"User-provided accessions were insufficient. Will supplement with other accessions...")
+                for accession in accessions:
+                    ascp_fullpath, ftp_fullpath, filesize = aspera.get_download_path(accession)
+                    if filesize >= filesizelimit:
+                        selected_accessions_dict[accession]=(ascp_fullpath,ftp_fullpath)
+                    if len(selected_accessions_dict)==n_accessions:
+                        break
         else:
-            selected_accessions= accessions[:10]
+            print("Selecting accessions with appropriate file sizes to build preliminary assembly...")
+            selected_accessions_dict={}
+            for accession in accessions:
+                ascp_fullpath, ftp_fullpath, filesize = aspera.get_download_path(accession)
+                if filesize >= filesizelimit:
+                    selected_accessions_dict[accession]=(ascp_fullpath,ftp_fullpath)
+                if len(selected_accessions_dict)==n_accessions:
+                    break
                 
         if threadpool % workers != 0:
             print(f"Specified thread pool of {threadpool} is not divisible by number of workers.")
@@ -274,10 +312,9 @@ if __name__ == "__main__":
             print(f"Using thread pool of {threadpool} instead.\n")
         threads=int(threadpool/workers)
         
-        #clear log file and write information relavent to fresh run
-        logfile.clear()
-        logfile.contents["prelim"]["cmd_args"]={"taxid":taxid,
-        "selected_accessions":selected_accessions,
+        #write information relavent to fresh run into log file
+        logfile.contents["prelim"]["run_var"]={"taxid":taxid,
+        "selected_accessions":selected_accessions_dict,
         "outputdir": outputdir,
         "consensus_threshold": consensus_threshold,
         "filesizelimit":filesizelimit,
@@ -286,26 +323,38 @@ if __name__ == "__main__":
         "kmerlen": kmerlen,
         "orfminlen": orfminlen,
         "geneticcode": geneticcode,
-        "download_method":download_method}
+        "startcodon": startcodon,
+        "download_method":download_method,
+        "n_accessions": n_accessions}
         
-        logfile.contents["prelim"]["ena"]={"assessions":accessions,
-        "scientific_name": scientific_name}
+        logfile.contents["prelim"]["run_info"]={"taxid":taxid,
+        "sci_name": scientific_name, "n_total_acc": len(accessions), "command_issued": " ".join(sys.argv), "init_time": datetime.now().strftime("%d/%m/%Y %H:%M:%S")}
+        logfile.contents["prelim"]["total_acc"]= accessions
+        logfile.contents["prelim"]["processed_acc"]={}
         logfile.update()
 
     elif conti==True:
         #exit if log file contains command args
-        if logfile.contents["prelim"]["cmd_args"]=={}:
+        if logfile.contents["prelim"]["run_info"]["init_time"]==None:
             sys.exit(f"\nNo previous run initiation detected in {outputdir}. Exiting...")
         if logfile.contents["prelim"]["status"]== "completed":
             sys.exit(f"\nPrevious run initiated in {outputdir} has fully completed. There is nothing to run.")
-        print(f"\nPrevious incomplete run detected. Resuming run...\n")
-        taxid, selected_accessions, outputdir, consensus_threshold, filesizelimit, threadpool,workers, kmerlen , orfminlen, geneticcode, download_method, = logfile.contents["prelim"]["cmd_args"].values()
-        accessions, scientific_name = logfile.contents["prelim"]["ena"].values()
+        taxid, selected_accessions_dict, outputdir, consensus_threshold, filesizelimit, threadpool, workers, kmerlen , orfminlen, geneticcode, startcodon ,download_method, n_accessions = logfile.contents["prelim"]["run_var"].values()
+        _, scientific_name, _, command_issued, init_time = logfile.contents["prelim"]["run_info"].values()
+        accessions = logfile.contents["prelim"].get("total_acc")
+        print(f"\nPrevious incomplete run initiated on {init_time} detected:\n{command_issued}\n\nResuming run...\n")
+        
+        if threadpool % workers != 0:
+            threadpool= threadpool - (threadpool % workers)
+        threads=int(threadpool/workers)
     
-    processed_accessions= logfile.contents["prelim"]["processed"]
+    logfile.load()
     #assemble SSAs in parellel
     parellel_ssa(workers)   
     ssa_consensus(ssadir)
+    logfile.load()
     logfile.contents["prelim"]["status"]= "completed"
     logfile.update()
+    print("LSTrAP-denovo.Preliminary_assembly.py completed.\nGenerating html report...")
+    report.generate_from_json_log(logfile.path, os.path.join(outputdir, "LSTrAP-denovo.html"))
     
