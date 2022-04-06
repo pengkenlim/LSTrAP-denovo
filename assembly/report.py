@@ -98,7 +98,7 @@ def generate_from_json_log(logpath, reportpath):
 				<td>{taxid}</td>
 			</tr>
 			<tr>
-				<th style = style = "text-align: right;" >Scientific name:</th>
+				<th style = "text-align: right;" >Scientific name:</th>
 				<td>{sci_name}</td>
 			</tr>
 			<tr>
