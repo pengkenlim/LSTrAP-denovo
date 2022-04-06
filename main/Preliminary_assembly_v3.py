@@ -337,8 +337,8 @@ if __name__ == "__main__":
             sys.exit(f"\nNo previous run initiation detected in {outputdir}. Exiting...")
         if logfile.contents["prelim"]["status"]== "completed":
             sys.exit(f"\nPrevious run initiated in {outputdir} has fully completed. There is nothing to run.")
-        taxid, selected_accessions_dict, outputdir, consensus_threshold, filesizelimit, threadpool,workers, kmerlen , orfminlen, geneticcode, download_method, n_accessions = logfile.contents["prelim"]["run_var"].values()
-        print(logfile.contents["prelim"]["run_var"].values())### remove
+        taxid, selected_accessions_dict, outputdir, consensus_threshold, filesizelimit, threadpool, workers, kmerlen , orfminlen, geneticcode, download_method, n_accessions = logfile.contents["prelim"]["run_var"].values()
+        print(orfminlen, geneticcode, download_method, n_accessions)### remove
         sys.exit("end of test") ### remove
         _, scientific_name, _, command_issued, init_time = logfile.contents["prelim"]["run_info"].values()
         accessions = logfile.contents["prelim"].get("total_acc")
