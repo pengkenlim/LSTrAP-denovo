@@ -84,9 +84,10 @@ def single_sample_assembly(accession,index):
     os.system(f"rm {fastqpath}")
         
     #extract orf from assembly to get cds.fasta
-    results=misc.run_with_retries(retrylimit,
+    sys.exit(outputpath_prefix,orfminlen, startcodon,  geneticcode)
+    results= misc.run_with_retries(retrylimit,
     soapdenovo.extract_orf,
-    [outputpath_prefix + ".fasta", outputpath_prefix + "_cds.fasta", orfminlen, startcodon ,geneticcode],
+    [outputpath_prefix + ".fasta", outputpath_prefix + "_cds.fasta", orfminlen, startcodon , geneticcode],
     f"{accession}: ORFfinder failed. Retrying...",
     f"{accession}: Extracting CDS with ORFfinder...")
     if result == "failed":
@@ -338,8 +339,6 @@ if __name__ == "__main__":
         if logfile.contents["prelim"]["status"]== "completed":
             sys.exit(f"\nPrevious run initiated in {outputdir} has fully completed. There is nothing to run.")
         taxid, selected_accessions_dict, outputdir, consensus_threshold, filesizelimit, threadpool, workers, kmerlen , orfminlen, geneticcode, download_method, n_accessions = logfile.contents["prelim"]["run_var"].values()
-        print(orfminlen, geneticcode, download_method, n_accessions)### remove
-        sys.exit("end of test") ### remove
         _, scientific_name, _, command_issued, init_time = logfile.contents["prelim"]["run_info"].values()
         accessions = logfile.contents["prelim"].get("total_acc")
         print(f"\nPrevious incomplete run initiated on {init_time} detected:\n{command_issued}\n\nResuming run...\n")
