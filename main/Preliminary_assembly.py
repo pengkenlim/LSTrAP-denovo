@@ -28,7 +28,8 @@ def single_sample_assembly(accession,index):
     Validate download path -> download via ftp/ascp-> read trimming by fastp -> assembly by soapdenovo-Trans'''
     logfile.load()
     if accession in logfile.contents["prelim"]["processed_acc"].keys():
-        return f"{accession} already processed. Skipping accession.."
+        print(f"{accession} already processed. Skipping accession...")
+        return f"{accession} already processed."
     #to un-sync workers 
     sleep((index%workers)*5)
     ascp_fullpath,ftp_fullpath = logfile.contents["prelim"]["run_var"]["selected_accessions"].get(accession)
@@ -39,14 +40,14 @@ def single_sample_assembly(accession,index):
         aspera.launch_ascp,
         [ascp_fullpath,fastqpath,filesizelimit],
         f"{accession}: Download failed. Retrying...",
-        f"{accession}: Downloading file via ascp...")
+        f"{accession}: Downloading file via ascp...\n")
         
     elif download_method == "ftp":
         result= misc.run_with_retries(retrylimit,
         aspera.launch_curl,
         [ftp_fullpath,fastqpath,filesizelimit],
         f"{accession}: Download failed. Retrying...",
-        f"{accession}: Downloading file via ftp...")
+        f"{accession}: Downloading file via ftp...\n")
     if result == "failed":
         logfile.load()
         logfile.contents["prelim"]["processed_acc"][accession]= "Download failed."
@@ -56,7 +57,7 @@ def single_sample_assembly(accession,index):
     trim.launch_fastp,
     [fastqpath, fastqpath.split(".gz")[0],threads],
     f"{accession}: Fastp trimming failed. Retrying...",
-    f"{accession}: Trimming file using Fastp...")
+    f"{accession}: Trimming file using Fastp...\n")
     if result == "failed":
         logfile.load()
         logfile.contents["prelim"]["processed_acc"][accession]= "Fastp failed."
@@ -73,7 +74,7 @@ def single_sample_assembly(accession,index):
     soapdenovo.launch_soap,
     [configoutpath, kmerlen, outputpath_prefix, threads],
     f"{accession}: Soapdenovo-Trans failed. Retrying...",
-    f"{accession}: Assembling transcripts with Soapdenovo-Trans...")
+    f"{accession}: Assembling transcripts with Soapdenovo-Trans...\n")
     if result == "failed":
         logfile.load()
         logfile.contents["prelim"]["processed_acc"][accession]= "Assembly failed."
@@ -92,7 +93,7 @@ def single_sample_assembly(accession,index):
     soapdenovo.extract_orf,
     [outputpath_prefix + ".fasta", outputpath_prefix + "_cds.fasta", orfminlen, startcodon , geneticcode],
     f"{accession}: ORFfinder failed. Retrying...",
-    f"{accession}: Extracting CDS with ORFfinder...")
+    f"{accession}: Extracting CDS with ORFfinder...\n")
     if result == "failed":
         logfile.load()
         logfile.contents["prelim"]["processed_acc"][accession]= "Assembly failed."
@@ -116,7 +117,7 @@ def parellel_ssa(workers):
                 for f in concurrent.futures.as_completed(results):
                     if "processed" in f.result():
                         progress_bar.update(1)
-                        print("\n")
+                        #print("\n")
                         progress_bar.set_postfix_str(s=f.result())
                         print("\n")
                     else:
