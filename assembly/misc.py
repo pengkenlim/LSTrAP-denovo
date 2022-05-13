@@ -30,7 +30,18 @@ class logfile:
     def __init__(self, path):
         self.path= path
         self.template={"prelim":{"run_info":{"taxid":None, "sci_name":None, "n_total_acc":None, "command_issued": None, "init_time": None}, 
-        "run_var":None ,"total_acc": None,"processed_acc":None, "consensus":{"CDS":None,"stats":{"CT":None, "path":None, "n_CDS": None ,"CDS_len":None, "GC": None }}, "status":"incomplete"}, "cluster":None, "modular_assembly":None}
+        "run_var":None ,
+        "total_acc": None,
+        "processed_acc":None, 
+        "consensus":{"CDS":None,"stats":{"CT":None, "path":None, "n_CDS": None ,"CDS_len":None, "GC": None }}, 
+        "status":"incomplete"},
+        "cluster":{"run_info":{"command_issued":None, "init_time":None},
+        "run_var":None,
+        "processed_acc": None,
+        "qc":{"threshold":None, "pass":None, "fail":None},
+        "kmeans":{"s_coeficient":None, "cluster_acc_dict":None},
+        "status": "incomplete"},
+        "modular_assembly":None}
         if not os.path.exists(path):
             with open(path, "w") as f:
                 json.dump(self.template,f, indent=2)
@@ -67,9 +78,12 @@ def get_assembly_stats(pathtofasta):
     n_cds=fasta.count(">")
     fasta_lines= fasta.split("\n")
     seq_concat= "".join([k  for k in fasta_lines if ">" not in k])
-    avg_cds_len = int(len(seq_concat)/n_cds)
-    GC= np.round((seq_concat.count("G") + seq_concat.count("C"))/len(seq_concat)*100,2)
-    
+    if n_cds !=0:
+        avg_cds_len = int(len(seq_concat)/n_cds)
+        GC= np.round((seq_concat.count("G") + seq_concat.count("C"))/len(seq_concat)*100,2)
+    else:
+        avg_cds_len= "NA"
+        GC= "NA"
     return n_cds, avg_cds_len, GC
         
     
