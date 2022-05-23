@@ -26,19 +26,26 @@ def get_download_path(accession):
     http_fullpath_1 = os.path.join(http_dirpath,accession+".fastq.gz")
     http_fullpath_2 = os.path.join(http_dirpath,accession+"_1.fastq.gz")
     filesize_1 = check_filesize(http_fullpath_1)
+    if filesize_1 is None:
+        filesize_1=0
     filesize_2 = check_filesize(http_fullpath_2)
+    if filesize_1 is None:
+        filesize_2 =0
     if  filesize_1 > filesize_2:
         filesize= filesize_1
         ascp_fullpath=  os.path.join("era-fasp@fasp.sra.ebi.ac.uk:" +path, accession+".fastq.gz")
         ftp_fullpath= os.path.join("ftp://ftp.sra.ebi.ac.uk" + path, accession+".fastq.gz")
+        #ftp_fullpath= os.path.join("http://ftp.sra.ebi.ac.uk" + path, accession+".fastq.gz")#remove 
     elif filesize_1 < filesize_2:
         filesize= filesize_2
         ascp_fullpath=  os.path.join("era-fasp@fasp.sra.ebi.ac.uk:" +path, accession+"_1.fastq.gz")
         ftp_fullpath= os.path.join("ftp://ftp.sra.ebi.ac.uk" + path, accession+"_1.fastq.gz")
+        #ftp_fullpath= os.path.join("http://ftp.sra.ebi.ac.uk" + path, accession+"_1.fastq.gz")#remove
     else:
         filesize= filesize_1
         ascp_fullpath=  os.path.join("era-fasp@fasp.sra.ebi.ac.uk:" +path, accession+".fastq.gz")
         ftp_fullpath= os.path.join("ftp://ftp.sra.ebi.ac.uk" + path, accession+".fastq.gz")
+        #ftp_fullpath= os.path.join("http://ftp.sra.ebi.ac.uk" + path, accession+".fastq.gz")#remove
     return ascp_fullpath, ftp_fullpath, filesize
 
 def check_filesize(http_fullpath):
@@ -54,6 +61,7 @@ def launch_ascp(ascp_fullpath, outputdir, filesizelimit=1500000000):
     stdout=subprocess.DEVNULL, 
     stderr=subprocess.STDOUT)
     return returncode.returncode
+
 def launch_curl(ftp_fullpath, outputdir, filesizelimit=1500000000):
     returncode= subprocess.run(["curl", "-r", f"0-{str(filesizelimit)}","-o", outputdir, ftp_fullpath ],
     stdout=subprocess.DEVNULL,
