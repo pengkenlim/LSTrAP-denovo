@@ -33,13 +33,13 @@ class logfile:
         "run_var":None ,
         "total_acc": None,
         "processed_acc":None, 
-        "consensus":{"CDS":None,"stats":{"CT":None, "path":None, "n_CDS": None ,"CDS_len":None, "GC": None }}, 
+        "consensus":{"stats":None, "optimal":None}, 
         "status":"incomplete"},
         "cluster":{"run_info":{"command_issued":None, "init_time":None},
         "run_var":None,
         "processed_acc": None,
-        "qc":{"threshold":None, "pass":None, "fail":None},
-        "kmeans":{"s_coeficient":None, "cluster_acc_dict":None},
+        "qc":{"threshold":None, "passed":None, "failed":None, "total":None},
+        "kmeans":{"s_coeficient":None, "cluster_assignment_dict":None},
         "status": "incomplete"},
         "modular_assembly":None}
         if not os.path.exists(path):
