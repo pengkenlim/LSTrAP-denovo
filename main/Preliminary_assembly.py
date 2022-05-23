@@ -107,8 +107,8 @@ def single_sample_assembly(accession,index):
     print(f"{accession}: Single-sample assembly completed.")
     return f"{accession} processed"    
     
-def parellel_ssa(workers):
-    ''' Wrapper to parellelize SSA jobs. 
+def parallel_ssa(workers):
+    ''' Wrapper to parallelize SSA jobs. 
     Includes progress bar visualisation.'''
     logfile.load()
     with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
@@ -155,36 +155,28 @@ def ssa_consensus(assemblydir):
     if result == "failed":
         sys.exit(f"CD-HIT-EST aborted after aborted after {retrylimit} retries. Exiting...")
     clstrinfopath = clstr_concatpath + ".clstr" 
-    print("Parsing output from CD-HIT-EST and writing to log...\n")
+    print("Parsing output from CD-HIT-EST and extracting sequences...\n")
     #extract sequence IDs to retain for each consensus threshold
-    CT_seqid_dict={} #to hold SeqIDs for each threshold
-    logfile.contents["prelim"]["consensus"]["CDS"]={}
+    logfile.contents["prelim"]["consensus"]["stats"]={}
     logfile.update()
+    #temporary list to hold n_CDS
+    temp_list=[]
     for n_threshold in range(1,len([cds for cds in os.listdir(assemblydir) if "cds.fasta" in cds])+1):
         seq_to_retain= consensus.cluster_seq_extractor(n_threshold,clstrinfopath)
-        CT_seqid_dict[n_threshold]= seq_to_retain
-        logfile.contents["prelim"]["consensus"]["CDS"][n_threshold]=len(seq_to_retain)
+        consensus_ssa_path= os.path.join(outputdir,f"ssa_concat_cds_CT{n_threshold}.fasta")
+        consensus.fasta_subset(clstr_concatpath, consensus_ssa_path, seq_to_retain)
+        print(f"Preliminary assembly generated at {consensus_ssa_path} using consensus threshold of {n_threshold}.")
+        n_cds, avg_cds_len, GC = misc.get_assembly_stats(consensus_ssa_path)
+        print(f"No. of CDS: {n_cds}\nAvg. CDS len: {avg_cds_len}\nGC content: {GC}%\n")
+        logfile.contents["prelim"]["consensus"]["stats"][n_threshold]= [n_cds, avg_cds_len ,GC, consensus_ssa_path]
+        temp_list+=[n_cds]
     logfile.update()
-    #for auto determination of consensus_threshold
-    if consensus_threshold == 0:
-        target_cds= np.median([k for k in logfile.contents["prelim"]["processed_acc"].values() if type(k) is int])
-        logfile.contents["prelim"]["consensus"]["stats"]["CT"] = int(consensus.CT_from_target_CDS(list(logfile.contents["prelim"]["consensus"]["CDS"].values()),target_cds))
-        logfile.update()
-        print("Consensus threshold of " + str(logfile.contents["prelim"]["consensus"]["stats"]["CT"])+" has been determined automatically. Generating preliminary assembly....\n")
-        consensus_ssa_path= os.path.join(outputdir,"ssa_concat_cds_CT"+ str(logfile.contents["prelim"]["consensus"]["stats"]["CT"])+".fasta")
-        consensus.fasta_subset(clstr_concatpath, consensus_ssa_path, CT_seqid_dict[logfile.contents["prelim"]["consensus"]["stats"]["CT"]])
-    else:
-         print(f"Using user-defined consensus threshold of {consensus_threshold} to generate preliminary assembly....\n")
-         logfile.contents["prelim"]["consensus"]["stats"]["CT"] = consensus_threshold
-         consensus_ssa_path= os.path.join(outputdir,f"ssa_concat_cds_CT{consensus_threshold}.fasta")
-         consensus.fasta_subset(clstr_concatpath, consensus_ssa_path, CT_seqid_dict[f"CT{consensus_threshold}"])
-    logfile.contents["prelim"]["consensus"]["stats"]["path"]= consensus_ssa_path
-    print("Calculating preliminary assembly statistics...\n")
-    n_cds, avg_cds_len, GC = misc.get_assembly_stats(consensus_ssa_path)
-    logfile.contents["prelim"]["consensus"]["stats"]["n_CDS"] = n_cds
-    logfile.contents["prelim"]["consensus"]["stats"]["CDS_len"] = avg_cds_len
-    logfile.contents["prelim"]["consensus"]["stats"]["GC"] = GC
+    target_cds= np.median([k for k in logfile.contents["prelim"]["processed_acc"].values() if type(k) is int])
+    logfile.contents["prelim"]["consensus"]["optimal"]= int(consensus.CT_from_target_CDS(temp_list,target_cds))
     logfile.update()
+    print("Consensus threshold of " + str(logfile.contents["prelim"]["consensus"]["optimal"])+" has been determined to be optimal.\n")
+
+
      
     
         
@@ -203,14 +195,14 @@ if __name__ == "__main__":
     help= "Directory for data output.")
     parser.add_argument("-k", "--kmer_len", type=int, metavar="", default=35, choices=range(21, 49+1,2), 
     help = "Specifies K-mer length (odd integer only) for assembly using Soapdenovo-Trans. K-mer length will be set to 35 by default.")
-    parser.add_argument("-ct", "--consensus_threshold", type=int ,metavar="", default=0 , choices=range(0, 10+1),
-    help = "Specifies consensus threshold during filtering. Threshold will be determined automatically by default.")
+    ##parser.add_argument("-ct", "--consensus_threshold", type=int ,metavar="", default=0 , choices=range(0, 10+1),
+    ##help = "Specifies consensus threshold during filtering. Threshold will be determined automatically by default.")
     parser.add_argument("-s","--filesizelimit" , type=int, metavar="", default=1500, 
     help="Specifies the parital download limit/ file size requirement(mb) of accession read files. Limit set to 1500 (mb) by default.")
     parser.add_argument("-t", "--threads", type=int, metavar="", default=4, 
     help = "Total thread pool for workers. Needs to be divisible by number of workers.")
     parser.add_argument("-w", "--workers", type=int, metavar="", default=2, 
-    help= "Specifies the maximum workers for running multiple download-assembly jobs in parellel. Set to 2 by default.")
+    help= "Specifies the maximum workers for running multiple download-assembly jobs in parallel. Set to 2 by default.")
     parser.add_argument("-g", "--gene_code", type=int, metavar="", default=1, choices=range(1, 31), 
     help= "Genetic code (codon table) passed to ORFfinder during ORF extraction. Set to 1 (universal) by default. Refer to https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi for more information.")
     parser.add_argument("-sc", "--start_codon", type=int, metavar="", default=0, choices=range(0, 2+1),
@@ -249,7 +241,7 @@ if __name__ == "__main__":
     if conti==False:
         taxid= args.id
         selected_accessions= args.accessions
-        consensus_threshold= args.consensus_threshold
+        ##consensus_threshold= args.consensus_threshold
         filesizelimit= args.filesizelimit * 1000000
         threadpool= args.threads
         workers=args.workers
@@ -293,7 +285,7 @@ if __name__ == "__main__":
                 if len(selected_accessions_dict)==n_accessions:
                     break
             if len(selected_accessions_dict)<n_accessions:
-                print(f"User-provided accessions were insufficient. Will supplement with other accessions...")
+                print(f"User-provided accessions are insufficient. Will supplement with other accessions...")
                 for accession in accessions:
                     ascp_fullpath, ftp_fullpath, filesize = aspera.get_download_path(accession)
                     if filesize >= filesizelimit:
@@ -320,7 +312,7 @@ if __name__ == "__main__":
         logfile.contents["prelim"]["run_var"]={"taxid":taxid,
         "selected_accessions":selected_accessions_dict,
         "outputdir": outputdir,
-        "consensus_threshold": consensus_threshold,
+        ##"consensus_threshold": consensus_threshold,
         "filesizelimit":filesizelimit,
         "threadpool":threadpool,
         "workers":workers,
@@ -343,7 +335,8 @@ if __name__ == "__main__":
             sys.exit(f"\nNo previous run initiation detected in {outputdir}. Exiting...")
         if logfile.contents["prelim"]["status"]== "completed":
             sys.exit(f"\nPrevious run initiated in {outputdir} has fully completed. There is nothing to run.")
-        taxid, selected_accessions_dict, outputdir, consensus_threshold, filesizelimit, threadpool, workers, kmerlen , orfminlen, geneticcode, startcodon ,download_method, n_accessions = logfile.contents["prelim"]["run_var"].values()
+        #taxid, selected_accessions_dict, outputdir, consensus_threshold, filesizelimit, threadpool, workers, kmerlen , orfminlen, geneticcode, startcodon ,download_method, n_accessions = logfile.contents["prelim"]["run_var"].values()
+        taxid, selected_accessions_dict, outputdir, filesizelimit, threadpool, workers, kmerlen , orfminlen, geneticcode, startcodon ,download_method, n_accessions = logfile.contents["prelim"]["run_var"].values()
         _, scientific_name, _, command_issued, init_time = logfile.contents["prelim"]["run_info"].values()
         accessions = logfile.contents["prelim"].get("total_acc")
         print(f"\nPrevious incomplete run initiated on {init_time} detected:\n{command_issued}\n\nResuming run...\n")
@@ -353,8 +346,8 @@ if __name__ == "__main__":
         threads=int(threadpool/workers)
     
     logfile.load()
-    #assemble SSAs in parellel
-    parellel_ssa(workers)   
+    #assemble SSAs in parallel
+    parallel_ssa(workers)   
     ssa_consensus(ssadir)
     logfile.load()
     logfile.contents["prelim"]["status"]= "completed"
