@@ -33,13 +33,13 @@ def download_PS_job(accession, index):
         if download_method == "ascp":
             result= misc.run_with_retries(retrylimit,
             aspera.launch_ascp,
-            [ascp_fullpath,fastqpath,filesizelimit],
+            [ascp_fullpath,fastqpath,min([filesizelimit,filesize])],
             f"{accession}: Download failed. Retrying...",
             f"{accession}: Downloading file via ascp...\n")
         elif download_method == "ftp":
             result= misc.run_with_retries(retrylimit,
             aspera.launch_curl,
-            [ftp_fullpath,fastqpath,filesizelimit],
+            [ftp_fullpath,fastqpath,min([filesizelimit,filesize])],
             f"{accession}: Download failed. Retrying...",
             f"{accession}: Downloading file via ftp...\n")
         if result == "failed":
