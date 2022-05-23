@@ -9,4 +9,5 @@ aspera_ssh_key= os.path.join(programdir,"aspera","cli","etc","asperaweb_id_dsa.o
 soappath= os.path.join(programdir,"SOAPdenovo-Trans-1.0.4", "SOAPdenovo-Trans-127mer" )
 orffinderpath= os.path.join(programdir,"ORFfinder")
 cdhitpath= os.path.join(programdir,"CD-HIT", "cd-hit-est")
+kallistopath= os.path.join(programdir, "kallisto", "kallisto")
 __all__=["asperapath", "aspera_ssh_key", "fastppath", "soappath", "orffinderpath"]
