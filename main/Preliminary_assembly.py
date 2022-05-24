@@ -255,9 +255,9 @@ if __name__ == "__main__":
         #getting sciname and accessions from ena using taxid
         scientific_name= ena.get_sciname(taxid)
         if type(scientific_name) is  not list:
-            sys.exit("TaxID {taxid} is invalid/not found. Exiting...")
+            sys.exit(f"TaxID {taxid} is invalid/not found. Exiting...")
         elif len(scientific_name) > 1:
-            sys.exit("More than one organism found for TaxID {taxid}. Exiting...")
+            sys.exit(f"More than one organism found for TaxID {taxid}. Exiting...")
         scientific_name= scientific_name[0]["scientific_name"]
         print(f"\nFetching RNA-seq accessions of {scientific_name} (NCBI TaxID: {taxid}) from ENA..\n")
         accessions = ena.get_runs(taxid)
