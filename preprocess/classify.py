@@ -38,8 +38,8 @@ def thresholder(maprate_dict, cutoff):
     if cutoff==0:
         cutoff= kdecutoff(list(maprate_dict.values()))
     total= list(maprate_dict.keys())
-    failed= [accession for accession, maprate in maprate_dict.items() if maprate < cutoff]
-    passed= [accession for accession, maprate in maprate_dict.items() if maprate > cutoff or maprate == cutoff]
+    failed= [accession for accession, maprate in maprate_dict.items() if maprate < cutoff or maprate == cutoff]
+    passed= [accession for accession, maprate in maprate_dict.items() if maprate > cutoff ]
     return total, failed, passed, cutoff
 
 def kmeans_kwalk(data, k_min, k_max):
@@ -89,7 +89,7 @@ def report_cluster_assignment_stats(cluster_assignment_dict):
     n_accession_list= [len(val) for val in cluster_assignment_dict.values()]
     median_stat = np.median(n_accession_list)
     mean_stat = np.mean(n_accession_list)
-    min_stat = np.max(n_accession_list)
-    max_stat = np.min(n_accession_list)
+    min_stat = np.min(n_accession_list)
+    max_stat = np.max(n_accession_list)
     return int(median_stat) , int(mean_stat), int(min_stat) , int(max_stat)
     
