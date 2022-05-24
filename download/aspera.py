@@ -82,6 +82,7 @@ def launch_ffq_ftp(accession):
 def get_download_path_ffq(accession):
     """wrapper for launch_ffq_ftp(). Parse json output to return download links of largest read file"""
     ftp_metadata = launch_ffq_ftp(accession)
+    print(ftp_metadata) #remove when done
     filesizes = [datadict.get("filesize") for datadict in ftp_metadata]
     ftp_fullpath =  ftp_metadata[filesizes.index(max(filesizes))].get("url")
     ascp_fullpath = ftp_fullpath.replace("ftp://ftp.sra.ebi.ac.uk/", "era-fasp@fasp.sra.ebi.ac.uk:")
