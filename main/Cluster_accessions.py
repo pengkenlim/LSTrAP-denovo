@@ -117,7 +117,7 @@ if __name__ == "__main__":
     help = "Total thread pool for workers. Needs to be divisible by number of workers.")
     parser.add_argument("-w", "--workers", type=int, metavar="", default=8, 
     help= "Specify the maximum workers for running multiple download-pseudoalignment jobs in parallel. Set to 8 by default.")
-    parser.add_argument("-dm", "--download_method", type=str, metavar="", default="ftp", choices=["ascp","ftp"],
+    parser.add_argument("-dm", "--download_method", type=str, metavar="", default="ascp", choices=["ascp","ftp"],
     help = "Method to download accession runs. ftp/ascp.")  
     parser.add_argument("-al", "--accessions_limit", type=int, metavar="", default=500,
     help= "Specifies the upper limit for number of accessions to download and process. Accessions will be selected from a pre-randomised list that was fetched during Preliminary_assembly.py run and stored in in the logs.json file.\
@@ -169,7 +169,7 @@ if __name__ == "__main__":
 
         #assign argument vars
         pseudoalignment_threshold = args.pseudoalignment_threshold
-        filesizelimit= args.filesizelimit * 1000000
+        filesizelimit= args.filesizelimit * 1048576
         threadpool= args.threads
         workers=args.workers
         download_method= args.download_method
@@ -244,7 +244,7 @@ if __name__ == "__main__":
             os.system(f"cp {os.path.join(P_fastqdir , file)} {C_fastqdir}")
             if os.path.getsize(os.path.join(C_fastqdir, file)) > filesizelimit:
                 os.system(f"truncate -s {filesizelimit}  {os.path.join(C_fastqdir, file)}")
-                print(f"{file} transfered and truncated to file size limit of {filesizelimit/1000000} mb")
+                print(f"{file} transfered and truncated to file size limit of {filesizelimit/1048576} mb")
             else:
                 print(f"{file} transfered.")
             logfile.contents["cluster"]["processed_acc"][file.split(".")[0]]="Downloaded"
