@@ -29,6 +29,11 @@ def download_PS_job(accession, index):
     if accession not in logfile.contents["cluster"]["processed_acc"].keys() or logfile.contents["cluster"]["processed_acc"].get(accession) == "Download failed": #check if accession has been downloaded/processed. Proceed with download if not.
         ascp_fullpath, ftp_fullpath, filesize = aspera.get_download_path_ffq(accession)
         fastqpath =os.path.join(C_fastqdir,accession+".fastq.gz")
+        if ascp_fullpath == "NA":
+            logfile.load()
+            logfile.contents["cluster"]["processed_acc"][accession]= "Download link not found"
+            logfile.update()
+            return f"{accession}: Aborted. Download link not found."
         #download
         if download_method == "ascp":
             result= misc.run_with_retries(retrylimit,
