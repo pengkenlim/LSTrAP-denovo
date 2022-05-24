@@ -50,7 +50,7 @@ def get_download_path(accession):
     return ascp_fullpath, ftp_fullpath, filesize
 
 def check_filesize(http_fullpath):
-"""deprecated, replaced by launch_ffq_ftp()"""
+    """deprecated, replaced by launch_ffq_ftp()"""
     header= subprocess.check_output(f"curl -sI {http_fullpath}", shell=True).decode("utf-8")
     if "404 Not Found" in header:
         return 0
