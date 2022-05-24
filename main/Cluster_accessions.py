@@ -221,6 +221,7 @@ if __name__ == "__main__":
             sys.exit(f"\nPrevious run initiated in {outputdir} has fully completed. There is nothing to run. Use --force to delete all previous run data in order to restart run.")
         #inherit run variables from previous run using logfile contents
         pseudoalignment_threshold, filesizelimit, threadpool, workers, download_method, accessions_limit, k_range, consensus_threshold = logfile.contents["cluster"]["run_var"].values()
+        threads=int(threadpool/workers)
 
 
         
