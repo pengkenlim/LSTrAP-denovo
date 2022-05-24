@@ -8,12 +8,13 @@ if __name__ == "__main__":
  
 
 import subprocess
-
+import json
 
 from setup import constants
 
 #returns paths of ftp and ascp directories where reads for a particular SRR accession can be found
 def get_download_path(accession):
+    """deprecated, replaced by get_download_path_ffq()"""
     if len(accession) ==9:
         path =f"/vol1/fastq/{accession[:6]}/{accession}/"
     elif len(accession) ==10:
@@ -49,6 +50,7 @@ def get_download_path(accession):
     return ascp_fullpath, ftp_fullpath, filesize
 
 def check_filesize(http_fullpath):
+"""deprecated, replaced by launch_ffq_ftp()"""
     header= subprocess.check_output(f"curl -sI {http_fullpath}", shell=True).decode("utf-8")
     if "404 Not Found" in header:
         return 0
@@ -67,4 +69,22 @@ def launch_curl(ftp_fullpath, outputdir, filesizelimit=1500000000):
     stdout=subprocess.DEVNULL,
     stderr=subprocess.STDOUT)
     return returncode.returncode
-__all__=["get_download_path", "check_filesize", "launch_ascp","launch_curl" ]
+    
+    
+
+def launch_ffq_ftp(accession):
+    """CLI command to fetch accession metadata. This function captures the stdout stream, decode into json and load as list"""
+    completedprocess = subprocess.run(["ffq" ,"--ftp", accession], capture_output=True)
+    returncode= completedprocess.returncode
+    stdout= completedprocess.stdout.decode("utf-8")
+    return json.loads(stdout)
+
+def get_download_path_ffq(accession):
+    """wrapper for launch_ffq_ftp(). Parse json output to return download links of largest read file"""
+    ftp_metadata = launch_ffq_ftp(accession)
+    filesizes = [datadict.get("filesize") for datadict in ftp_metadata]
+    ftp_fullpath =  ftp_metadata[filesizes.index(max(filesizes))].get("url")
+    ascp_fullpath = ftp_fullpath.replace("ftp://ftp.sra.ebi.ac.uk/", "era-fasp@fasp.sra.ebi.ac.uk:")
+    return ascp_fullpath , ftp_fullpath, max(filesizes)
+    
+__all__=["get_download_path", "check_filesize", "launch_ascp","launch_curl" , "get_download_path_ffq"]

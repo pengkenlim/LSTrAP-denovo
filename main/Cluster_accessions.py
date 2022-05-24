@@ -27,7 +27,7 @@ def download_PS_job(accession, index):
     if index < workers:
         sleep((index%workers)*5)
     if accession not in logfile.contents["cluster"]["processed_acc"].keys() or logfile.contents["cluster"]["processed_acc"].get(accession) == "Download failed": #check if accession has been downloaded/processed. Proceed with download if not.
-        ascp_fullpath, ftp_fullpath, filesize = aspera.get_download_path(accession)
+        ascp_fullpath, ftp_fullpath, filesize = aspera.get_download_path_ffq(accession)
         fastqpath =os.path.join(C_fastqdir,accession+".fastq.gz")
         #download
         if download_method == "ascp":
