@@ -267,13 +267,14 @@ if __name__ == "__main__":
     
     fastapath=  logfile.contents["prelim"]["consensus"]["stats"].get(str(CT_int))[-1]
     indexpath= os.path.join(kaldir, fastapath.split("/")[-1] + ".index")
-    result= misc.run_with_retries(retrylimit,
-            read_map.launch_kallisto_index,
-            [fastapath,indexpath],
-            f"Kallisto index failed. Retrying...",
-            f"\nContructing Kallisto index using Preliminary Assembly (CT={str(CT_int)}) generated from step 1...\n")
-    if result == "failed":
-        sys.exit(f"Kallisto index step failed after {retrylimit} retries. Exiting...")
+    if not os.path.exists(indexpath):
+        result= misc.run_with_retries(retrylimit,
+                read_map.launch_kallisto_index,
+                [fastapath,indexpath],
+                f"Kallisto index failed. Retrying...",
+                f"\nContructing Kallisto index using Preliminary Assembly (CT={str(CT_int)}) generated from step 1...\n")
+        if result == "failed":
+            sys.exit(f"Kallisto index step failed after {retrylimit} retries. Exiting...")
     
     
     print(f"Initiating parallel download and pseudoalignment of {min(accessions_limit, len(accessions))} accessions...\n")
