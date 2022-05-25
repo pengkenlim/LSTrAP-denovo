@@ -129,7 +129,7 @@ if __name__ == "__main__":
     Default set to 500.")
     parser.add_argument("-kr", "--k_range", type=str, metavar="", default="auto",
     help = "Specifies the range of k (number of clusters) to iterate through during k-means clustering. Lower and upper limit seperated by colon(:). \
-    Set to auto(2:n where n ≈ number of accessions/20) by default. Increasing the upper limit for high-resolution clustering is advised when downloading and processing > 500 accessions or if accessions are expected to have various experimental permutations (genotypes, pertubations, tissue-types) ." )    
+    Set to auto(2:n where n ≈ number of accessions that passed qc/20) by default." )    
     parser.add_argument("-ct", "--consensus_threshold", type=int ,metavar="", default=0 , choices=range(0, 50+1),
     help = "Specifies consensus threshold of preliminary assembly. Default set to 0 where optimal threshold determined automatically in step 1 will be used.")
     parser.add_argument("-con", "--conti", action="store_true",
@@ -312,7 +312,7 @@ if __name__ == "__main__":
     #extract k-means minimum and maximum values from range k_range variable parsed from arguments
     if k_range == "auto":
         kmin = 2
-        kmax= int((len(accessions) - (len(accessions)%20))/20) +1
+        kmax= int(np.round((len(passed) / 20)) +1
     else:
         kmin = int(k_range.split(":")[0])
         kmax= int(k_range.split(":")[1])+1 #non-inclusive
