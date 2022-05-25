@@ -20,13 +20,14 @@ from preprocess import read_map, classify
 
 def download_PS_job(accession, index):
     '''Job to validate download path -> download via FTP/ascp -> Peudoalignment(PS) by Kallisto'''
+    #to slow down jobs
+    sleep(2)
     logfile.load()
     #to unsync workers
     if index < workers:
-        sleep((index%workers)*30)
+        sleep((index%workers)*5)
     if type(logfile.contents["cluster"]["processed_acc"].get(accession)) == float:
         return f"{accession} already processed."
-        
     if accession not in logfile.contents["cluster"]["processed_acc"].keys() or logfile.contents["cluster"]["processed_acc"].get(accession) == "Download failed": #check if accession has been downloaded/processed. Proceed with download if not.
         ascp_fullpath, ftp_fullpath, filesize = aspera.get_download_path_ffq(accession)
         fastqpath =os.path.join(C_fastqdir,accession+".fastq.gz")
@@ -94,8 +95,6 @@ def parallel_job(workers):
                 progress_bar.update(1)
                 progress_bar.set_postfix_str(s=f.result())
                 print("\n")
-            else:
-                print(f.result())
         progress_bar.close()
         logfile.load()
 
@@ -128,9 +127,9 @@ if __name__ == "__main__":
     parser.add_argument("-al", "--accessions_limit", type=int, metavar="", default=500,
     help= "Specifies the upper limit for number of accessions to download and process. Accessions will be selected from a pre-randomised list that was fetched during Preliminary_assembly.py run and stored in in the logs.json file.\
     Default set to 500.")
-    parser.add_argument("-kr", "--k_range", type=str, metavar="", default="2:30",
+    parser.add_argument("-kr", "--k_range", type=str, metavar="", default="auto",
     help = "Specifies the range of k (number of clusters) to iterate through during k-means clustering. Lower and upper limit seperated by colon(:). \
-    Set to 2:30 by default. Increasing the upper limit for high-resolution clustering is advised when downloading and processing > 500 accessions or if accessions are expected to have various experimental permutations (genotypes, pertubations, tissue-types) ." )    
+    Set to auto(2:n where n ≈ number of accessions/20) by default. Increasing the upper limit for high-resolution clustering is advised when downloading and processing > 500 accessions or if accessions are expected to have various experimental permutations (genotypes, pertubations, tissue-types) ." )    
     parser.add_argument("-ct", "--consensus_threshold", type=int ,metavar="", default=0 , choices=range(0, 50+1),
     help = "Specifies consensus threshold of preliminary assembly. Default set to 0 where optimal threshold determined automatically in step 1 will be used.")
     parser.add_argument("-con", "--conti", action="store_true",
@@ -309,8 +308,12 @@ if __name__ == "__main__":
     print(f"PCA-transformation complete with {np.round(sum(pc_variances))}% of variance retained. (PC1= {pc_variances[0]}%)\n")
     
     #extract k-means minimum and maximum values from range k_range variable parsed from arguments
-    kmin = int(k_range.split(":")[0])
-    kmax= int(k_range.split(":")[1])+1 #non-inclusive
+    if k_range == "auto":
+        kmin = 2
+        kmax= int((len(accessions) - (len(accessions)%20))/20) +1
+    else:
+        kmin = int(k_range.split(":")[0])
+        kmax= int(k_range.split(":")[1])+1 #non-inclusive
     print(f"Initiating k-means clustering of accesions based on PCA data.\nClustering iterations will walk from k={kmin} to k={kmax-1} to determine optimal number of clusters(k)...\n")
     
     #k-means walk proper
