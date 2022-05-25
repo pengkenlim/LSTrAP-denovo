@@ -91,10 +91,10 @@ def parallel_job(workers):
         progress_bar= tqdm(total=len(accessions), desc="Accessions processed", unit="Acsn", leave=True)
         results= [executor.submit(download_PS_job, accession, index) for index, accession in enumerate(accessions)]
         for f in concurrent.futures.as_completed(results):
-            if "processed" in f.result() or "Aborted" in f.result():
-                progress_bar.update(1)
-                progress_bar.set_postfix_str(s=f.result())
-                print("\n")
+            #if "processed" in f.result() or "Aborted" in f.result():
+            progress_bar.update(1)
+            progress_bar.set_postfix_str(s=f.result())
+            print("\n")
         progress_bar.close()
         logfile.load()
 
