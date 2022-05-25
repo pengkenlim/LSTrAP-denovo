@@ -82,10 +82,8 @@ def launch_ffq_ftp(accession):
 def get_download_path_ffq(accession):
     """wrapper for launch_ffq_ftp(). Parse json output to return download links of largest read file"""
     ftp_metadata = launch_ffq_ftp(accession)
-    #hard-coded to retry fetching metadata twice ## this is a quick fix to occational failure of ffq
-    if type(ftp_metadata) != list:
-        ftp_metadata = launch_ffq_ftp(accession)
-    if type(ftp_metadata) != list:
+    #hard-coded to retry fetching metadata ## this is a quick fix to occational failure of ffq
+    while type(ftp_metadata) != list:
         ftp_metadata = launch_ffq_ftp(accession)
     if ftp_metadata== []:
         return "NOT_FOUND", "NOT_FOUND",0   
