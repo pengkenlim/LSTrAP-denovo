@@ -13,9 +13,11 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 import pandas as pd
+from scipy.stats import iqr
 
 def kdecutoff(mappingvalues):
-    """Used to determine minimum mapping rate cutoff (threshold) for quality control based on their distribution (more specifically, estimated kernel density)."""
+    """Used to determine minimum mapping rate cutoff (threshold) for quality control based on their distribution (more specifically, estimated kernel density).
+    DEPRECATED"""
     valuearray= np.array(mappingvalues).reshape(-1,1)
     #init kde object using mapping values
     kde = KernelDensity(kernel='gaussian', bandwidth= 5).fit(valuearray)
@@ -31,12 +33,18 @@ def kdecutoff(mappingvalues):
     #else: return value of the first valley as threshold
     else:
         return intervals[minima][-1]
+        
+def lowerfence_iqr_cutoff(mappingvalues):
+    '''replaces kdecutoff (more reliable and is a well established statistical method to look for outliers). Basically returns the lower fence (Q1 - 1.5*IQR) using the interquartile range (IQR) '''
+    return np.percentile(mappingvalues, 25) - 1.5*iqr(mappingvalues)
+    
 
 def thresholder(maprate_dict, cutoff):
     """wrapper function for kdecutoff(). takes in the dictionary of {accession:PS%,...} in log file.
     upacks the dictionary and return lists of total, failed and passed accession as well"""
     if cutoff==0:
-        cutoff= kdecutoff(list(maprate_dict.values()))
+        #cutoff= kdecutoff(list(maprate_dict.values()))
+        cutoff= lowerfence_iqr_cutoff(list(maprate_dict.values()))
     total= list(maprate_dict.keys())
     failed= [accession for accession, maprate in maprate_dict.items() if maprate < cutoff or maprate == cutoff]
     passed= [accession for accession, maprate in maprate_dict.items() if maprate > cutoff ]
