@@ -21,7 +21,7 @@ from preprocess import read_map, classify
 def download_PS_job(accession, index):
     '''Job to validate download path -> download via FTP/ascp -> Peudoalignment(PS) by Kallisto'''
     #to slow down jobs
-    sleep(2)
+    sleep(1)
     logfile.load()
     #to unsync workers
     if index < workers:
@@ -328,7 +328,6 @@ if __name__ == "__main__":
         else:
             cluster_assignment_dict[int(cluster)]+= [accession]
     silhouette_coefficients_dict = {int(k): sc for k , sc in zip(range(kmin,kmax +1), silhouette_coefficients)}
-    print(cluster_assignment_dict)
     #write cluster assignments to log
     logfile.contents["cluster"]["kmeans"]["s_coeficient"]= silhouette_coefficients_dict
     logfile.contents["cluster"]["kmeans"]["cluster_assignment_dict"]= cluster_assignment_dict
