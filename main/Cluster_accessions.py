@@ -21,11 +21,12 @@ from preprocess import read_map, classify
 def download_PS_job(accession, index):
     '''Job to validate download path -> download via FTP/ascp -> Peudoalignment(PS) by Kallisto'''
     logfile.load()
-    if type(logfile.contents["cluster"]["processed_acc"].get(accession)) == float:
-        return f"{accession} already processed."
-    #to un-sync workers
+    #to unsync workers
     if index < workers:
         sleep((index%workers)*30)
+    if type(logfile.contents["cluster"]["processed_acc"].get(accession)) == float:
+        return f"{accession} already processed."
+        
     if accession not in logfile.contents["cluster"]["processed_acc"].keys() or logfile.contents["cluster"]["processed_acc"].get(accession) == "Download failed": #check if accession has been downloaded/processed. Proceed with download if not.
         ascp_fullpath, ftp_fullpath, filesize = aspera.get_download_path_ffq(accession)
         fastqpath =os.path.join(C_fastqdir,accession+".fastq.gz")
