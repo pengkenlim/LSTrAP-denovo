@@ -28,7 +28,7 @@ def download_PS_job(accession, index):
         sleep((index%workers)*5)
     if type(logfile.contents["cluster"]["processed_acc"].get(accession)) == float:
         return f"{accession} already processed."
-    if accession not in logfile.contents["cluster"]["processed_acc"].keys() or logfile.contents["cluster"]["processed_acc"].get(accession) == "Download failed": #check if accession has been downloaded/processed. Proceed with download if not.
+    if accession not in logfile.contents["cluster"]["processed_acc"].keys() or logfile.contents["cluster"]["processed_acc"].get(accession) == "Download failed" or logfile.contents["cluster"]["processed_acc"].get(accession) == "Download link not found": #check if accession has been downloaded/processed. Proceed with download if not.
         ascp_fullpath, ftp_fullpath, filesize = aspera.get_download_path_ffq(accession)
         fastqpath =os.path.join(C_fastqdir,accession+".fastq.gz")
         if ascp_fullpath == "NOT_FOUND":
@@ -287,7 +287,7 @@ if __name__ == "__main__":
     
     logfile.load()
     #Quality control of accessions bassed on user-defined/ automatically determined PS threshold
-    total, failed, passed, cutoff= classify.thresholder({key:val for key, val in logfile.contents["cluster"].get("processed_acc").items() if val is not str}, pseudoalignment_threshold)
+    total, failed, passed, cutoff= classify.thresholder({key:val for key, val in logfile.contents["cluster"].get("processed_acc").items() if type(val) is not str}, pseudoalignment_threshold)
     if pseudoalignment_threshold ==0:
         print(f"A total of {len(total)} accessions has been downloaded and pseudoaligned.\n{len(failed)} accessions failed QC based on auto-determined psedoalignment threshold of {cutoff}%\n")
     elif pseudoalignment_threshold > 0:
