@@ -58,7 +58,7 @@ def download_PS_job(accession, index):
         logfile.contents["cluster"]["processed_acc"][accession]= "Downloaded"
         logfile.update()
     
-    if  logfile.contents["cluster"]["processed_acc"].get(accession)== "Downloaded" or logfile.contents["cluster"]["processed_acc"].get(accession) == "Kallisto failed":
+    if  logfile.contents["cluster"]["processed_acc"].get(accession)== "Downloaded" or logfile.contents["cluster"]["processed_acc"].get(accession) == "PS failed":
         fastqpath =os.path.join(C_fastqdir,accession+".fastq.gz")
         kaloutdir= os.path.join(kaldir, accession)
         result= misc.run_with_retries(retrylimit,
@@ -120,8 +120,8 @@ if __name__ == "__main__":
     User is advised to reduce size limit when downloading and processing >500 accessions")
     parser.add_argument("-t", "--threads", type=int, metavar="", default=16, 
     help = "Total thread pool for workers. Needs to be divisible by number of workers.")
-    parser.add_argument("-w", "--workers", type=int, metavar="", default=8, 
-    help= "Specify the maximum workers for running multiple download-pseudoalignment jobs in parallel. Set to 8 by default.")
+    parser.add_argument("-w", "--workers", type=int, metavar="", default=4, 
+    help= "Specify the maximum workers for running multiple download-pseudoalignment jobs in parallel. Set to 4 by default.")
     parser.add_argument("-dm", "--download_method", type=str, metavar="", default="ascp", choices=["ascp","ftp"],
     help = "Method to download accession runs. ftp/ascp.")  
     parser.add_argument("-al", "--accessions_limit", type=int, metavar="", default=500,
@@ -156,7 +156,7 @@ if __name__ == "__main__":
     #create logfile object, exit if step 1 not completed.
     logfile=misc.logfile(os.path.join(outputdir,"logs.json"))
     if  logfile.contents["prelim"]["status"] != "completed":
-        sys.exit("Step 1 (Preliminary_assembly.py) was either incomplete or not started at all. \nNOTE: This is step 2 of 3 in the LSTrAP-denovo pipeline.\nExiting...")
+        sys.exit("Step 1 (Preliminary_assembly.py) is either incomplete or not started at all. \nNOTE: This is step 2 of 3 in the LSTrAP-denovo pipeline.\nExiting...")
 
     
     #assigning arguments to variables, writing to log OR fetching variables from log
@@ -227,6 +227,7 @@ if __name__ == "__main__":
         #inherit run variables from previous run using logfile contents
         pseudoalignment_threshold, filesizelimit, threadpool, workers, download_method, accessions_limit, k_range, consensus_threshold = logfile.contents["cluster"]["run_var"].values()
         threads=int(threadpool/workers)
+        print("\n--conti argument has been specified by user. Inheriting arguments from previous run ....\n")
 
 
         
