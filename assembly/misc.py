@@ -41,7 +41,7 @@ class logfile:
         "qc":{"threshold":None, "passed":None, "failed":None, "total":None},
         "kmeans":{"s_coeficient":None, "cluster_assignment_dict":None},
         "status": "incomplete"},
-        "modular_assembly":None}
+        "final":{"run_info":{"command_issued":None, "init_time":None}}}
         if not os.path.exists(path):
             with open(path, "w") as f:
                 json.dump(self.template,f, indent=2)
