@@ -10,4 +10,6 @@ soappath= os.path.join(programdir,"SOAPdenovo-Trans-1.0.4", "SOAPdenovo-Trans-12
 orffinderpath= os.path.join(programdir,"ORFfinder")
 cdhitpath= os.path.join(programdir,"CD-HIT", "cd-hit-est")
 kallistopath= os.path.join(programdir, "kallisto", "kallisto")
-__all__=["asperapath", "aspera_ssh_key", "fastppath", "soappath", "orffinderpath"]
+ORNApath = os.path.join(programdir, "ORNA","build","bin", "ORNA")
+
+__all__=["asperapath", "aspera_ssh_key", "fastppath", "soappath", "orffinderpath", "kallistopath","ORNApath"]
