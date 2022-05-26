@@ -123,7 +123,7 @@ if __name__ == "__main__":
     parser.add_argument("-w", "--workers", type=int, metavar="", default=4, 
     help= "Specify the maximum workers for running multiple download-pseudoalignment jobs in parallel. Set to 4 by default.")
     parser.add_argument("-dm", "--download_method", type=str, metavar="", default="ascp", choices=["ascp","ftp"],
-    help = "Method to download accession runs. ftp/ascp.")  
+    help = "Method to download accession runs. ftp/ascp. Set to aspera download (ascp) by default.")  
     parser.add_argument("-al", "--accessions_limit", type=int, metavar="", default=500,
     help= "Specifies the upper limit for number of accessions to download and process. Accessions will be selected from a pre-randomised list that was fetched during Preliminary_assembly.py run and stored in in the logs.json file.\
     Default set to 500.")
@@ -312,7 +312,7 @@ if __name__ == "__main__":
     #extract k-means minimum and maximum values from range k_range variable parsed from arguments
     if k_range == "auto":
         kmin = 2
-        kmax= int(np.round((len(passed) / 5))) +1
+        kmax= int(np.round((len(passed) / 10))) +1
     else:
         kmin = int(k_range.split(":")[0])
         kmax= int(k_range.split(":")[1])+1 #non-inclusive

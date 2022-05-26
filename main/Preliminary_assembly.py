@@ -210,7 +210,7 @@ if __name__ == "__main__":
     parser.add_argument("-ml", "--min_len", type=int, metavar="", default=300, choices=range(30, 500),
     help= "Minimal ORF length (nt) passed to ORFfinder during ORF extraction. Set to 300 by default.")
     parser.add_argument("-dm", "--download_method", type=str, metavar="", default="ascp", choices=["ascp","ftp"],
-    help = "Method to download accession runs. ftp/ascp.")
+    help = "Method to download accession runs. ftp/ascp. Set to aspera download (ascp) by default.")
     parser.add_argument("-na", "--n_accessions", type=int, metavar="", default=10, choices=range(10,50+1), 
     help = "Number of single-accession-assemblies to combine in order to generate the preliminary assembly.")
     parser.add_argument("-a", "--accessions", type=str, metavar="",
