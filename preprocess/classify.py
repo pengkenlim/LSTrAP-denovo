@@ -91,10 +91,12 @@ def mat_parser(pathtomat, accessions):
     return Matrix
     
 def optimal_k_silhouette(k_min, k_max, silhouette_coefficients, k_cluster_assignment_dict):
-    """Determine the optimal k based on silhouette score. Returns optimal k and respective list of cluster_labels"""
-    optimal_k = [k for k in range(k_min,k_max)][silhouette_coefficients.index(max(silhouette_coefficients))]
+    """Determine the optimal k based on silhouette score. Returns optimal k and respective list of cluster_labels.
+    Optimal K is defined as the lowest k  within 0.01 range of max silhoette score"""
+    sc_rounded= [np.round(sc, 2) for sc in silhouette_coefficients] 
+    optimal_k = [k for k in range(k_min,k_max)][sc_rounded.index(max(sc_rounded))]
     cluster_assignment = k_cluster_assignment_dict.get(optimal_k)
-    return optimal_k, cluster_assignment , max(silhouette_coefficients)
+    return optimal_k, cluster_assignment , silhouette_coefficients[sc_rounded.index(max(sc_rounded))]
 
 def report_cluster_assignment_stats(cluster_assignment_dict):
     n_accession_list= [len(val) for val in cluster_assignment_dict.values()]
