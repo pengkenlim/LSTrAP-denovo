@@ -41,7 +41,16 @@ class logfile:
         "qc":{"threshold":None, "passed":None, "failed":None, "total":None},
         "kmeans":{"s_coeficient":None, "cluster_assignment_dict":None},
         "status": "incomplete"},
-        "final":{"run_info":{"command_issued":None, "init_time":None}}}
+        "final":{"run_info":{"command_issued":None, "init_time":None},
+        "run_var": None,
+        "progress":{
+        "size_check":None, #{cluster_0:"pass", cluster_1: "truncated",...}
+        "fastp": None, #{cluster_0:"done", cluster_1: "done",...}
+        "ORNA": None, #{cluster_0:"done", cluster_1: "done",...}
+        "assembly":None, #{cluster_0:{25:"done", 31: "done",...}, cluster_1:{...},...}
+        "CPC2":None, #{cluster_0:"done", cluster_1: "done",...}
+        "remap": None}, #{cluster_0:"done", cluster_1: "done",...}
+        "status": "incomplete"}} 
         if not os.path.exists(path):
             with open(path, "w") as f:
                 json.dump(self.template,f, indent=2)
@@ -66,8 +75,8 @@ class logfile:
             self.contents["prelim"]=self.template["prelim"]
         elif step == "cluster":
             self.contents["cluster"]= self.template["cluster"]
-        elif step == "modular_assembly":
-            self.contents["modular_assembly"]= self.template["modular_assembly"]
+        elif step == "final":
+            self.contents["final"]= self.template["final"]
         with open(path, "w") as f:
             json.dump(self.contents,f, indent=2)
 
@@ -86,4 +95,18 @@ def get_assembly_stats(pathtofasta):
         GC= "NA"
     return n_cds, avg_cds_len, GC
         
+
+def get_truncate_sizes(accessions, fastqdir ,lib_limit):
+    """get sizes to truncate files based on target lib size
+    Returns array of target sizes to truncate"""
+    sizes = [os.path.getsize(os.path.join(fastqdir, f"{acc}.fastq.gz")) for acc in accessions]
+    cap = max(sizes)
+    if sum(sizes) < lib_limit:
+        return "NA" , "NA"
+    while sum(sizes) > lib_limit:
+        cap+= -1
+        sizes= [min([size, cap]) for size in sizes]
+        
+    return sizes, cap
+    
     
