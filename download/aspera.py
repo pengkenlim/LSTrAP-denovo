@@ -85,7 +85,7 @@ def get_download_path_ffq(accession):
     #hard-coded to retry fetching metadata ## this is a quick fix to occational failure of ffq
     while type(ftp_metadata) != list:
         ftp_metadata = launch_ffq_ftp(accession)
-    if ftp_metadata== []:
+    if ftp_metadata == []:
         return "NOT_FOUND", "NOT_FOUND",0   
     filesizes = [datadict.get("filesize") for datadict in ftp_metadata]
     ftp_fullpath =  ftp_metadata[filesizes.index(max(filesizes))].get("url")

@@ -285,8 +285,9 @@ if __name__ == "__main__":
             n_cds, avg_cds_len, GC = misc.get_assembly_stats(os.path.join(cluster_assemblydir, "CPC2", f"c{cluster}_CPC2_cds.fasta"))
             
             logfile.contents["final"]["progress"]["CPC2"][cluster] = [n_cds, avg_cds_len, GC]
+            logfile.update()
         print(f"Cluster {cluster}: CDS with coding potential extracted.\n")
-    print(f"Cluster {cluster}: CDS-mining partially complete.\n")
+        print(f"Cluster {cluster}: CDS-mining partially complete.\n")
         #if cluster not in logfile.contents["final"]["progress"]["CPC2"].keys():
             #print(f"Cluster {cluster}: Remapping reads from ")
         

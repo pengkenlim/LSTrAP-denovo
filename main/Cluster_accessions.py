@@ -77,6 +77,7 @@ def download_PS_job(accession, index):
         logfile.update()
         print(f"{accession}: Pseudoalignment completed.")
         return f"{accession}: processed."
+    return f"{accession}: Unknown exception occurred."
     
     
     
