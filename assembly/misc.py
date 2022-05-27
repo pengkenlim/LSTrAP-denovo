@@ -23,7 +23,7 @@ def run_with_retries(retry_limit,func,arg_list,retry_message,run_message):
             retries+=1
         if retries > retry_limit:
             return "failed"        
-    return "succeeded"
+    return ""
 
 class logfile:
     ''' logfile object to store, retrieve and update checkpoint information'''
@@ -44,12 +44,12 @@ class logfile:
         "final":{"run_info":{"command_issued":None, "init_time":None},
         "run_var": None,
         "progress":{
-        "size_check":None, #{cluster_0:"pass", cluster_1: "truncated",...}
-        "fastp": None, #{cluster_0:"done", cluster_1: "done",...}
-        "ORNA": None, #{cluster_0:"done", cluster_1: "done",...}
-        "assembly":None, #{cluster_0:{25:"done", 31: "done",...}, cluster_1:{...},...}
-        "CPC2":None, #{cluster_0:"done", cluster_1: "done",...}
-        "remap": None}, #{cluster_0:"done", cluster_1: "done",...}
+        "size_check":{}, #{cluster_0:"pass", cluster_1: "truncated",...}
+        "fastp": {}, #{cluster_0:"done", cluster_1: "done",...}
+        "ORNA": {}, #{cluster_0:"done", cluster_1: "done",...}
+        "assembly":{}, #{cluster_0:{25:"done", 31: "done",...}, cluster_1:{...},...}
+        "CPC2":{}, #{cluster_0:"done", cluster_1: "done",...}
+        "remap": {}}, #{cluster_0:"done", cluster_1: "done",...}
         "status": "incomplete"}} 
         if not os.path.exists(path):
             with open(path, "w") as f:

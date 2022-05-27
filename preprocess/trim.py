@@ -16,6 +16,13 @@ def launch_fastp(inputpath,outputpath,threads):
     stdout=subprocess.DEVNULL, 
     stderr=subprocess.STDOUT)
     return returncode.returncode
+
+def launch_ORNA(inputpath, outputpathprefix, threads):
+    returncode=subprocess.run([constants.ORNApath, "-type","fastq", "-input", inputpath, "-nb-cores", str(threads), "-kmer", "29", "-output",outputpathprefix])
+    return returncode.returncode
     
+
+    
+
 
 __all__=["launch_fastp"]

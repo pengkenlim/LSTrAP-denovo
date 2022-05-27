@@ -11,5 +11,5 @@ orffinderpath= os.path.join(programdir,"ORFfinder")
 cdhitpath= os.path.join(programdir,"CD-HIT", "cd-hit-est")
 kallistopath= os.path.join(programdir, "kallisto", "kallisto")
 ORNApath = os.path.join(programdir, "ORNA","build","bin", "ORNA")
-
+CPC2path= os.path.join(programdir, "CPC2","bin","CPC2.py")
 __all__=["asperapath", "aspera_ssh_key", "fastppath", "soappath", "orffinderpath", "kallistopath","ORNApath"]

@@ -71,4 +71,23 @@ def CT_from_target_CDS(n_seq_list, targetCDS):
     array= np.array(n_seq_list)
     idx = (np.abs(array - targetCDS)).argmin()
     return idx + 1
-    
+
+
+def launch_CPC2(inputpath, outputpathprefix):
+    """Outputpath prefix is without file extention. Outputfile will be in .txt format"""
+    returncode=subprocess.run(["python", constants.CPC2path, "-i",inputpath,"-o",outputpathprefix],
+    stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+    return returncode.returncode
+
+def parse_CPC2_output(path):
+    """Returns sequence IDs lists of cds and non-coding sequences. To to passed into fasta subset."""
+    with open(path, "r") as f:
+        contents= f.read().split("\n")
+    cds=[]
+    ncds=[]
+    for line in contents:
+        if line.split("\t")[-1] == "noncoding":
+            ncds+=[line.split("\t")[0]]
+        elif line.split("\t")[-1] == "coding":
+            cds+=[line.split("\t")[0]]
+    return cds, ncds
