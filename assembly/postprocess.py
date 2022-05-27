@@ -57,7 +57,8 @@ def fasta_subset(inputfastapath, outputfastapath, seqid):
 
 def select_CT(n_seq_list):
     ''' Find best consensus threshold based on rate of seqeunce loss. 
-    Returns optimal CT as an integer'''
+    Returns optimal CT as an integer.
+    Deprecated. Replaced by  CT_from_target_CDS()'''
     array= np.array(n_seq_list)
     percentage_decrease= list((array[1:]-array[:-1])/array[:-1])
     optimum_threshold= range(1,len(n_seq_list)+1)[ percentage_decrease.index(max(percentage_decrease))]

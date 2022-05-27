@@ -16,7 +16,7 @@ from datetime import datetime
 from tqdm import tqdm
 from download import ena
 from download import aspera
-from assembly import soapdenovo, misc , consensus, report
+from assembly import soapdenovo, misc , postprocess, report
 from setup import constants
 from preprocess import trim
 
@@ -144,11 +144,11 @@ def ssa_consensus(assemblydir):
     #concatenate and rename transcript ids
     concatname="ssa_concat_cds.fasta"
     concatpath=os.path.join(outputdir,concatname)
-    consensus.concat_rename_assemblies(assemblydir,concatpath)
+    postprocess.concat_rename_assemblies(assemblydir,concatpath)
     #launch CD-HIT in shell with retry wrapper
     clstr_concatpath= os.path.join(outputdir,"ssa_concat_cds_CT1.fasta")
     result=misc.run_with_retries(retrylimit, 
-    consensus.launch_cdhit, 
+    postprocess.launch_cdhit, 
     [concatpath,0.998,clstr_concatpath, threadpool],
     "CD-HIT-EST failed. Retrying...\n", 
     "Running CD-HIT-EST on concatenated assembly...\n")
@@ -162,9 +162,9 @@ def ssa_consensus(assemblydir):
     #temporary list to hold n_CDS
     temp_list=[]
     for n_threshold in range(1,len([cds for cds in os.listdir(assemblydir) if "cds.fasta" in cds])+1):
-        seq_to_retain= consensus.cluster_seq_extractor(n_threshold,clstrinfopath)
+        seq_to_retain= postprocess.cluster_seq_extractor(n_threshold,clstrinfopath)
         consensus_ssa_path= os.path.join(outputdir,f"ssa_concat_cds_CT{n_threshold}.fasta")
-        consensus.fasta_subset(clstr_concatpath, consensus_ssa_path, seq_to_retain)
+        postprocess.fasta_subset(clstr_concatpath, consensus_ssa_path, seq_to_retain)
         print(f"Preliminary assembly generated at {consensus_ssa_path} using consensus threshold of {n_threshold}.")
         n_cds, avg_cds_len, GC = misc.get_assembly_stats(consensus_ssa_path)
         print(f"No. of CDS: {n_cds}\nAvg. CDS len: {avg_cds_len}\nGC content: {GC}%\n")
@@ -172,7 +172,7 @@ def ssa_consensus(assemblydir):
         temp_list+=[n_cds]
     logfile.update()
     target_cds= np.median([k for k in logfile.contents["prelim"]["processed_acc"].values() if type(k) is int])
-    logfile.contents["prelim"]["consensus"]["optimal"]= int(consensus.CT_from_target_CDS(temp_list,target_cds))
+    logfile.contents["prelim"]["consensus"]["optimal"]= int(postprocess.CT_from_target_CDS(temp_list,target_cds))
     logfile.update()
     print("Consensus threshold of " + str(logfile.contents["prelim"]["consensus"]["optimal"])+" has been determined to be optimal.\n")
 
