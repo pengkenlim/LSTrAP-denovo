@@ -178,7 +178,9 @@ if __name__ == "__main__":
         
         ##check size. Truncate libary if >10gb
         if cluster not in logfile.contents["final"]["progress"]["size_check"].keys():
+            print("line 181") # remove
             sizes_to_truncate , cap_size = misc.get_truncate_sizes(accessions, C_fastqdir, 10737418240 ) #10gb total lib limit per cluster
+            print("line 183")# remove
             if sizes_to_truncate == "NA":  
                 logfile.contents["final"]["progress"]["size_check"][cluster] = "pass"
             else:
