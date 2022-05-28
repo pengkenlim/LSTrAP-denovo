@@ -183,7 +183,7 @@ if __name__ == "__main__":
             if sizes_to_truncate == "NA":  
                 logfile.contents["final"]["progress"]["size_check"][cluster] = "pass"
             else:
-                print(f"Cluster {cluster}: Truncate accession read files to fit libarary limit...\n")
+                print(f"Cluster {cluster}: Truncating accession read files to fit library limit...\n")
                 for acc , size in zip(accessions, sizes_to_truncate):
                     sourcepath= os.path.join(C_fastqdir,f"{acc}.fastq.gz")
                     targetpath= os.path.join(cluster_tempdir,f"{acc}.fastq.gz")
