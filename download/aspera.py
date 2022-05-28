@@ -87,7 +87,9 @@ def get_download_path_ffq(accession):
         ftp_metadata = launch_ffq_ftp(accession)
     if ftp_metadata == []:
         return "NOT_FOUND", "NOT_FOUND",0   
-    filesizes = [datadict.get("filesize") for datadict in ftp_metadata]
+    filesizes = [datadict.get("filesize") for datadict in ftp_metadata if datadict.get("filetype") == "fastq"]
+    if ftp_metadata == []:
+        return "NOT_FOUND", "NOT_FOUND",0
     ftp_fullpath =  ftp_metadata[filesizes.index(max(filesizes))].get("url")
     ascp_fullpath = ftp_fullpath.replace("ftp://ftp.sra.ebi.ac.uk/", "era-fasp@fasp.sra.ebi.ac.uk:")
     return ascp_fullpath , ftp_fullpath, max(filesizes)
