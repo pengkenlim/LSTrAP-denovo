@@ -26,8 +26,8 @@ def parallel_fastp(threadpool, accessions, sourcedir, targetdir, cluster):
     '''wrapper to praallelize fastp trimming of accessions. All input should be strings'''
     with concurrent.futures.ProcessPoolExecutor(max_workers=threadpool) as executor:
         progress_bar= tqdm(total=len(accessions), desc= f"Cluster {cluster}: Trimming accessions", unit="Acsn", leave=True)
-        results = [executor.submit(misc.run_with_retries, retrylimit, trim.launch_fastp,[os.path.join(sourcedir, accession+".fastq.gz"), os.path.join(targetdir, accession + ".fastq"), 1], f"{accession}: Fastp failed. retrying", "") for accession in accessions]
-        #results = [executor.submit(trim.launch_fastp, os.path.join(sourcedir, accession+".fastq.gz"), os.path.join(targetdir, accession + ".fastq"), 1) for accession in accessions]
+        #results = [executor.submit(misc.run_with_retries, retrylimit, trim.launch_fastp,[os.path.join(sourcedir, accession+".fastq.gz"), os.path.join(targetdir, accession + ".fastq"), 1], f"{accession}: Fastp failed. retrying", "") for accession in accessions]#
+        results = [executor.submit(trim.launch_fastp, os.path.join(sourcedir, accession+".fastq.gz"), os.path.join(targetdir, accession + ".fastq"), 1) for accession in accessions]
         for f in concurrent.futures.as_completed(results):
             print(f.result())
             progress_bar.update(1)
