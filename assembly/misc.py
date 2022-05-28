@@ -104,7 +104,7 @@ def get_truncate_sizes(accessions, fastqdir ,lib_limit):
     if sum(sizes) < lib_limit:
         return "NA" , "NA"
     while sum(sizes) > lib_limit:
-        cap+= -1
+        cap+= -10485760 #10mb
         sizes= [min([size, cap]) for size in sizes]
         
     return sizes, cap
