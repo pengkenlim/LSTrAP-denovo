@@ -63,6 +63,10 @@ def single_sample_assembly(accession,index):
         logfile.contents["prelim"]["processed_acc"][accession]= "Fastp failed."
         logfile.update()
         return f"{accession}: Aborted after {retrylimit} retries."
+    #sometimes formating errors in the read files can result in Fastp error which outputs an empty read file.
+    #In that case, simple unzipping will be done and fastp trimming will be skipped
+    if os.path.getsize(fastqpath.split(".gz")[0]) < 100:
+        os.system(f"zcat {fastqpath} > " + fastqpath.split(".gz")[0])
     
     #make config file for soapdenovotrans to parse
     fastqpath= fastqpath.split(".gz")[0]
