@@ -27,7 +27,7 @@ def concat_rename_assemblies(assemblydir, concatpath, identifier="cds.fasta",seq
     
 def launch_cdhit(concatpath, similarity, outpath, threads):
     #returncode=subprocess.run([constants.cdhitpath, "-i", concatpath, "-T", str(threads), "-M", "0", "-G", "0", "-c", str(similarity), "-aS", "0.95" ,"-aL", "0.005" ,"-r","0", "-g", "1", "-o", outpath ],
-    returncode=subprocess.run([constants.cdhitpath, "-i", concatpath, "-T", str(threads), "-M", "0", "-G", "0", "-c", str(similarity),"-r","0", "-g", "1", "-o", outpath ],
+    returncode=subprocess.run([constants.cdhitpath, "-i", concatpath, "-T", str(threads), "-M", "0", "-G", "1", "-c", str(similarity),"-r","0", "-g", "1", "-o", outpath ],
     stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
     return returncode.returncode
 
