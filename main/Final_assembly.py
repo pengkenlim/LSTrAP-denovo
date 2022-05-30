@@ -262,7 +262,7 @@ if __name__ == "__main__":
             os.path.join(cluster_assemblydir, "combined", f"c{cluster}_mk_nr_cds.fasta"),
             threadpool)
             #extract Clstr file
-            seqtoretain = postprocess.cluster_seq_extractor(2,os.path.join(cluster_assemblydir, "combined", f"c{cluster}_mk_nr_cds.fasta.clstr"))
+            seqtoretain = postprocess.cluster_seq_extractor(1,os.path.join(cluster_assemblydir, "combined", f"c{cluster}_mk_nr_cds.fasta.clstr"))
             #subset nr fasta from CDHIT output
             postprocess.fasta_subset(os.path.join(cluster_assemblydir, "combined", f"c{cluster}_mk_nr_cds.fasta"),
             os.path.join(cluster_assemblydir, "combined", f"c{cluster}_mk_cds.fasta"),
