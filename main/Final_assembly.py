@@ -179,7 +179,7 @@ if __name__ == "__main__":
         ##check size. Truncate libary if >10gb
         if cluster not in logfile.contents["final"]["progress"]["size_check"].keys():
             print(f"Cluster {cluster}: Checking size of total libarary...\n")
-            sizes_to_truncate , cap_size = misc.get_truncate_sizes(accessions, C_fastqdir, 10737418240 ) #10gb total lib limit per cluster
+            sizes_to_truncate , cap_size = misc.get_truncate_sizes(accessions, C_fastqdir, 10737418240 ) #10gb total lib limit per cluster # I might change this to 5GB
             if sizes_to_truncate == "NA":  
                 logfile.contents["final"]["progress"]["size_check"][cluster] = "pass"
             else:
@@ -262,7 +262,7 @@ if __name__ == "__main__":
             os.path.join(cluster_assemblydir, "combined", f"c{cluster}_mk_nr_cds.fasta"),
             threadpool)
             #extract Clstr file
-            seqtoretain = postprocess.cluster_seq_extractor(1,os.path.join(cluster_assemblydir, "combined", f"c{cluster}_mk_nr_cds.fasta.clstr"))
+            seqtoretain = postprocess.cluster_seq_extractor(2,os.path.join(cluster_assemblydir, "combined", f"c{cluster}_mk_nr_cds.fasta.clstr")) ##CT2 when extracting consensus sequences so as to manage false positives
             #subset nr fasta from CDHIT output
             postprocess.fasta_subset(os.path.join(cluster_assemblydir, "combined", f"c{cluster}_mk_nr_cds.fasta"),
             os.path.join(cluster_assemblydir, "combined", f"c{cluster}_mk_cds.fasta"),
@@ -289,7 +289,7 @@ if __name__ == "__main__":
             logfile.contents["final"]["progress"]["CPC2"][cluster] = [n_cds, avg_cds_len, GC]
             logfile.update()
         print(f"Cluster {cluster}: CDS with coding potential extracted.\n")
-       # print(f"Cluster {cluster}: CDS-mining partially complete.\n")
+
         
     #all v all re-mapping
     for cluster in clusters:
@@ -297,7 +297,7 @@ if __name__ == "__main__":
         if cluster not in logfile.contents["final"]["progress"]["remap"].keys():
             assemblydir = os.path.join(outputdir, "final" ,f"cluster_{cluster}","assembly")
             print(f"Cluster {cluster}: Re-mapping reads to mined CDS...\n")
-            seqtoretain, total_genes , after_zero_removal, after_threshold = read_map.re_mapping(assemblydir, cluster, clusters , threadpool, basedir, 70)
+            seqtoretain, total_genes , after_zero_removal, after_threshold = read_map.re_mapping(assemblydir, cluster, clusters , threadpool, basedir, 70)## ranking threshold. lower = stricter
             postprocess.fasta_subset(os.path.join(assemblydir, "CPC2", f"c{cluster}_CPC2_cds.fasta"),
             os.path.join(assemblydir, "remap", f"c{cluster}_remap_cds.fasta"),
             seqtoretain)
