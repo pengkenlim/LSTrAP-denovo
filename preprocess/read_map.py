@@ -10,6 +10,7 @@ import subprocess
 from setup import constants
 import shutil
 import pandas as pd
+import numpy as np
 
 def launch_kallisto_index(fastapath,indexpath):
     """Contruct a kallisto index using assemnbly fasta"""
@@ -43,6 +44,37 @@ def write_quant_info(accession ,outdirpath, tpm_matpath):
     
     #shutil.rmtree(outdirpath) ###might include this to remove kallisto output directory
     return map_rate
+
+
+def re_mapping(assemblydir, cluster, cluster_list, threads, basedir, rankingthreshold):
+    '''outputdir = assemblydir (i.e. final/cluster_{cluster}/assembly/) . Cluster the assembly to map against. Cluster_list holds the list of clusters
+    basdir = .../final/'''
+    if not os.path.exists(os.path.join(assemblydir, "remap")):
+        os.makedirs(os.path.join(assemblydir, "remap"))
+    #build index    
+    launch_kallisto_index(os.path.join(assemblydir, "CPC2", f"c{cluster}_CPC2_cds.fasta"), os.path.join(assemblydir, "remap", f"c{cluster}_CPC2_cds.index"))
+    #map every single concat read from each accession cluster to the index
+    
+    for i in cluster_list:
+        launch_kallisto_quant(threads, os.path.join(assemblydir, "remap", f"c{cluster}_CPC2_cds.index") , os.path.join(assemblydir, "remap", f"AC{i}"), os.path.join(basedir, f"cluster_{i}" ,"fastq", "concat.fq"))
+    tpm_df = pd.DataFrame()
+    for i in cluster_list:
+        tpm_data= pd.read_csv(os.path.join(assemblydir, "remap", f"AC{i}", "abundance.tsv") , sep="\t").set_index("target_id")["tpm"]
+        tpm_df[f"AC{i}"] = tpm_data   
+    tpm_df.to_csv(os.path.join(assemblydir, "remap", "tpm_mat.tsv") , sep= "\t")
+    print(f"Cluster {cluster}: Removing CDSs with poor mapping...\n ")
+    seqtoretain=[]
+    total=len(tpm_df)
+    tpm_df = tpm_df[tpm_df[f"AC{cluster}"] != 0.0] #remove CDSs with TPM 0 when read lib of respective AC is aligned
+    total2 =len(tpm_df)
+    for column in list(tpm_df.columns):
+        tpm_df.sort_values(by=[column], axis=0, ascending=False, inplace=True) #sort CDS from highest TPM to lowest for each liibrary
+        sorted_genes= list(tpm_df.index)
+        seqtoretain += sorted_genes[:int(np.round(len(sorted_genes)*((rankingthreshold)/100)))]
+    seqtoretain = list(set(seqtoretain))
+    total3= len(seqtoretain)
+    return seqtoretain , total, total2, total3
+    
 
 
 __all__=["launch_kallisto_index", "launch_kallisto_quant", "write_quant_info"]

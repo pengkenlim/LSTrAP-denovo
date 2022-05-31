@@ -15,7 +15,7 @@ from tqdm import tqdm
 
 from assembly import soapdenovo, misc , postprocess, report
 from setup import constants
-from preprocess import trim
+from preprocess import trim , read_map
 
 #retry limit determines the number of retries before aborting
 retrylimit=2
@@ -258,7 +258,7 @@ if __name__ == "__main__":
             postprocess.concat_rename_assemblies(os.path.join(cluster_assemblydir, "raw"), os.path.join(cluster_assemblydir, "combined", f"c{cluster}_mk_red_cds.fasta"))
             #launch CDhit
             postprocess.launch_cdhit(os.path.join(cluster_assemblydir, "combined", f"c{cluster}_mk_red_cds.fasta"), 
-            0.98,
+            1,
             os.path.join(cluster_assemblydir, "combined", f"c{cluster}_mk_nr_cds.fasta"),
             threadpool)
             #extract Clstr file
@@ -289,10 +289,38 @@ if __name__ == "__main__":
             logfile.contents["final"]["progress"]["CPC2"][cluster] = [n_cds, avg_cds_len, GC]
             logfile.update()
         print(f"Cluster {cluster}: CDS with coding potential extracted.\n")
-        print(f"Cluster {cluster}: CDS-mining partially complete.\n")
-        #if cluster not in logfile.contents["final"]["progress"]["CPC2"].keys():
-            #print(f"Cluster {cluster}: Remapping reads from ")
+       # print(f"Cluster {cluster}: CDS-mining partially complete.\n")
+        
+    #all v all re-mapping
+    for cluster in clusters:
+        basedir= os.path.join(outputdir, "final")
+        if cluster not in logfile.contents["final"]["progress"]["remap"].keys():
+            assemblydir = os.path.join(outputdir, "final" ,f"cluster_{cluster}","assembly")
+            print(f"Cluster {cluster}: Re-mapping reads to mined CDS...\n")
+            seqtoretain, total_genes , after_zero_removal, after_threshold = read_map.re_mapping(assemblydir, cluster, clusters , threadpool, basedir, 70)
+            postprocess.fasta_subset(os.path.join(assemblydir, "CPC2", f"c{cluster}_CPC2_cds.fasta"),
+            os.path.join(assemblydir, "remap", f"c{cluster}_remap_cds.fasta"),
+            seqtoretain)
+            print(f"Total CDS: {total_genes}\nZero-mapped CDSs removed: {total_genes- after_zero_removal} \nLow-mapped CDSs removed: {after_zero_removal - after_threshold }\nSurviving CDSs: {after_threshold}\n")
+            n_cds, avg_cds_len, GC = misc.get_assembly_stats(os.path.join(assemblydir, "remap", f"c{cluster}_remap_cds.fasta"))
+            logfile.contents["final"]["progress"]["remap"][cluster] = [n_cds, avg_cds_len, GC]
+            logfile.update()
+        print(f"Cluster {cluster}: CDS-mining complete.\n")
+    
+    #combining fasta from each accession
+    temppath = os.path.join(outputdir, "final" ,"cluster_*", "assembly", "remap","c*_remap_cds.fasta")
+    finalassemblypath = os.path.join(outputdir, "final", "Final_assembly_red.fasta")
+    os.system(f"cat {temppath} > {finalassemblypath}")
+    postprocess.launch_cdhit(finalassemblypath, 
+    1,
+    os.path.join(outputdir, "final", "Final_assembly.fasta"),
+    threadpool)
+    n_cds, avg_cds_len, GC = misc.get_assembly_stats(os.path.join(outputdir, "final", "Final_assembly.fasta")) 
+    logfile.contents["final"]["CDS"]= [n_cds, avg_cds_len, GC]    
+    logfile.contents["final"]["status"]= "completed" 
+    print(f"Statistics of final mined CDS:\nNo. CDSs: {n_cds}\nMean CDS length: {avg_cds_len}nt\nGC content: {GC}%\n")
+    print(f"CDS is available at "+ os.path.join(outputdir, "final", "Final_assembly.fasta")+"\n")
+    print("LSTrAP-denovo.Preliminary_assembly.py completed.\nGenerating html report...<------ This function is not completed yet :(")
         
         
-        
-        #print(f"Cluster {cluster}: CDS-mining complete.\n")
+
