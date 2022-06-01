@@ -262,7 +262,7 @@ if __name__ == "__main__":
             os.path.join(cluster_assemblydir, "combined", f"c{cluster}_mk_nr_cds.fasta"),
             threadpool)
             #extract Clstr file
-            seqtoretain = postprocess.cluster_seq_extractor(2,os.path.join(cluster_assemblydir, "combined", f"c{cluster}_mk_nr_cds.fasta.clstr")) ##CT2 when extracting consensus sequences so as to manage false positives
+            seqtoretain = postprocess.cluster_seq_extractor( np.round((kmer_max - kmer_min) / (kmer_step*2) ) ,os.path.join(cluster_assemblydir, "combined", f"c{cluster}_mk_nr_cds.fasta.clstr")) #consensus threshold = number of kmers/2. rounded up 
             #subset nr fasta from CDHIT output
             postprocess.fasta_subset(os.path.join(cluster_assemblydir, "combined", f"c{cluster}_mk_nr_cds.fasta"),
             os.path.join(cluster_assemblydir, "combined", f"c{cluster}_mk_cds.fasta"),
@@ -297,7 +297,7 @@ if __name__ == "__main__":
         if cluster not in logfile.contents["final"]["progress"]["remap"].keys():
             assemblydir = os.path.join(outputdir, "final" ,f"cluster_{cluster}","assembly")
             print(f"Cluster {cluster}: Re-mapping reads to mined CDS...\n")
-            seqtoretain, total_genes , after_zero_removal, after_threshold = read_map.re_mapping(assemblydir, cluster, clusters , threadpool, basedir, 70)## ranking threshold. lower = stricter
+            seqtoretain, total_genes , after_zero_removal, after_threshold = read_map.re_mapping(assemblydir, cluster, clusters , threadpool, basedir, 50)## ranking threshold. lower = stricter
             postprocess.fasta_subset(os.path.join(assemblydir, "CPC2", f"c{cluster}_CPC2_cds.fasta"),
             os.path.join(assemblydir, "remap", f"c{cluster}_remap_cds.fasta"),
             seqtoretain)
