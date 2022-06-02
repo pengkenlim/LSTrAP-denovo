@@ -48,9 +48,9 @@ if __name__ == "__main__":
     help= "ORF start codon passed to ORFfinder during ORF extraction. Set to 0 (ATG only) by default. Refer to ORFfinder usage https://ftp.ncbi.nlm.nih.gov/genomes/TOOLS/ORFfinder/USAGE.txt for more information")
     parser.add_argument("-ml", "--min_len", type=int, metavar="", default=300, choices=range(30, 500),
     help= "Minimal ORF length (nt) passed to ORFfinder during ORF extraction. Set to 300 by default.")
-    parser.add_argument("-kmr", "--kmer_range", type=str, metavar="", default="25:49:6",
+    parser.add_argument("-kmr", "--kmer_range", type=str, metavar="", default="25:49:4",
     help= "K-mer lengths for assembly. Lower limit , upper limit(inclusive) and step size seperated by colon(:). \
-    Set to 25:49:6 by default (k-mer lengths of 25 , 31, 37, 43 and 49). NOTE: upper and lower limit must be odd integers while step size be an even integer. Range window (upper - lower) must be divisible by step size. Users are not advised to change this parameter.")
+    Set to 25:49:6 by default (k-mer lengths of 25, 29 ,33, 37, 41, 45 and 49). NOTE: upper and lower limit must be odd integers while step size be an even integer. Range window (upper - lower) must be divisible by step size. Users are not advised to change this parameter.")
     parser.add_argument("-con", "--conti", action="store_true",
     help = "Resume incomplete run based on output directory. Only requires -o to run.")
     parser.add_argument("-f", "--force", action="store_true",
@@ -179,7 +179,7 @@ if __name__ == "__main__":
         ##check size. Truncate libary if >10gb
         if cluster not in logfile.contents["final"]["progress"]["size_check"].keys():
             print(f"Cluster {cluster}: Checking size of total libarary...\n")
-            sizes_to_truncate , cap_size = misc.get_truncate_sizes(accessions, C_fastqdir, 10737418240 ) #10gb total lib limit per cluster # I might change this to 5GB
+            sizes_to_truncate , cap_size = misc.get_truncate_sizes(accessions, C_fastqdir, 1073741824*200 ) #200gb total lib limit per cluster. Essentially no limit!
             if sizes_to_truncate == "NA":  
                 logfile.contents["final"]["progress"]["size_check"][cluster] = "pass"
             else:

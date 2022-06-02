@@ -116,8 +116,8 @@ if __name__ == "__main__":
     help= "Directory for data output. Directory needs to be same as for step 1 (Preliminary_assembly.py).")
     parser.add_argument("-ps", "--pseudoalignment_threshold", type=int ,metavar="", default=0 , choices=range(0, 70+1),
     help = "Specifies pseudoalignment threshold (%%PS) during quality control. Accessions that do not meet this threshold will be discarded and not be clustered. Threshold will be determined automatically based on kernel-density minima of %%PS by default.")
-    parser.add_argument("-s","--filesizelimit" , type=int, metavar="", default=500 , choices=range(100, 1500),
-    help="Specifies the size limit(mb) of accession read files to partially download. Limit set to 500 (mb) by default. Has a direct impact on the download time and pseudoalignment runtime in this step of the pipeline.\
+    parser.add_argument("-s","--filesizelimit" , type=int, metavar="", default=2000 , choices=range(500, 5000),
+    help="Specifies the size limit(mb) of accession read files to partially download. Limit set to 2000 (mb) by default. Has a direct impact on the download time and pseudoalignment runtime in this step of the pipeline.\
     User is advised to reduce size limit when downloading and processing >500 accessions")
     parser.add_argument("-t", "--threads", type=int, metavar="", default=16, 
     help = "Total thread pool for workers. Needs to be divisible by number of workers.")
