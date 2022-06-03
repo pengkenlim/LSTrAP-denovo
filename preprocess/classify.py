@@ -51,10 +51,10 @@ def thresholder(maprate_dict, cutoff):
     passed= [accession for accession, maprate in maprate_dict.items() if maprate > cutoff ]
     return total, failed, passed, cutoff
 
-def kmeans_kwalk(data, k_min, k_max):
+def kmeans_kwalk(data, k_min, k_max, threads):
     """do kmeans iteration walk"""
     #kmeans_kwargs = {"init": "k-means++", "n_init": 100,"max_iter": 2000,"random_state": 42} #remove random state (seed) after development
-    kmeans_kwargs = {"init": "k-means++", "n_init": 100,"max_iter": 2000,"random_state": 42, "size_min": 20}
+    kmeans_kwargs = {"init": "k-means++", "n_init": 100,"max_iter": 2000,"random_state": 42, "size_min": 10, "n_jobs": threads}
     silhouette_coefficients = []
     k_cluster_assignment_dict={}
     for k in range(k_min,k_max):
