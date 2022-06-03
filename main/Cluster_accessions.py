@@ -313,7 +313,7 @@ if __name__ == "__main__":
     #extract k-means minimum and maximum values from range k_range variable parsed from arguments
     if k_range == "auto":
         kmin = 2
-        kmax= int(np.round((len(passed) / 10))) +1
+        kmax= int(np.round((len(passed) / 20))) +1
     else:
         kmin = int(k_range.split(":")[0])
         kmax= int(k_range.split(":")[1])+1 #non-inclusive
