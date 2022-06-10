@@ -2,7 +2,7 @@ import sys
 import os
 if __name__ == "__main__":
         abspath= os.getcwd()
-        parent_module= os.path.join(abspath.split("LSTrAP-denovo")[0], "LSTrAP-denovo")
+        parent_module= os.path.join(abspath.split("HSS-Trans")[0], "HSS-Trans")
         sys.path.insert(0, parent_module)
 
 import numpy as np        
@@ -53,13 +53,13 @@ def thresholder(maprate_dict, cutoff):
 
 def kmeans_kwalk(data, k_min, k_max, threads):
     """do kmeans iteration walk"""
-    #kmeans_kwargs = {"init": "k-means++", "n_init": 100,"max_iter": 2000,"random_state": 42} #remove random state (seed) after development
-    kmeans_kwargs = {"init": "k-means++", "n_init": 100,"max_iter": 2000,"random_state": 42, "size_min": 10, "n_jobs": threads}
+    kmeans_kwargs = {"init": "k-means++", "n_init": 100,"max_iter": 2000,"random_state": 42, "n_jobs": threads} #remove random state (seed) after development
+    #kmeans_kwargs = {"init": "k-means++", "n_init": 100,"max_iter": 2000,"random_state": 42, "size_min": 10, "n_jobs": threads} #for kmeans constrained
     silhouette_coefficients = []
     k_cluster_assignment_dict={}
     for k in range(k_min,k_max):
-        #kmeans = KMeans(n_clusters=k, **kmeans_kwargs)
-        kmeans = KMeansConstrained(n_clusters=k, **kmeans_kwargs)
+        kmeans = KMeans(n_clusters=k, **kmeans_kwargs)
+        #kmeans = KMeansConstrained(n_clusters=k, **kmeans_kwargs)
         kmeans.fit(data)
         silhouette_coefficients.append(silhouette_score(data, kmeans.labels_))
         k_cluster_assignment_dict[k]= kmeans.labels_

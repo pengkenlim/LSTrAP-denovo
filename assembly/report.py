@@ -3,7 +3,7 @@ import os
 import sys
 if __name__ == "__main__":
         abspath= os.getcwd()
-        parent_module= os.path.join(abspath.split("LSTrAP-denovo")[0], "LSTrAP-denovo")
+        parent_module= os.path.join(abspath.split("HSS-Trans")[0], "HSS-Trans")
         sys.path.insert(0, parent_module)
         
 import json
@@ -20,23 +20,23 @@ def generate_from_json_log(logpath, reportpath,step=1):
     
     #extracting info from log.json's dictionary and assigning them as variables
     
-    #information relavent to prelim
-    consensus_v_cds_data= [['Consensus theshold', 'Number of CDS']] + [[idx+1, n_cds] for idx, n_cds in enumerate([stats[0] for stats in log_content["prelim"]["consensus"]["stats"].values()])]
-    taxid = log_content["prelim"]["run_info"].get("taxid")
-    sci_name = log_content["prelim"]["run_info"].get("sci_name")
-    n_total_acc = log_content["prelim"]["run_info"].get("n_total_acc")
-    prelim_command= log_content["prelim"]["run_info"].get("command_issued")
-    prelim_start_time= log_content["prelim"]["run_info"].get("init_time")
-    processed_table= {"Accession processed" :log_content["prelim"].get("processed_acc").keys(), 
-    "Number of CDS assembled": log_content["prelim"].get("processed_acc").values()}
+    #information relavent to Step_1
+    consensus_v_cds_data= [['Consensus theshold', 'Number of CDS']] + [[idx+1, n_cds] for idx, n_cds in enumerate([stats[0] for stats in log_content["Step_1"]["consensus"]["stats"].values()])]
+    taxid = log_content["Step_1"]["run_info"].get("taxid")
+    sci_name = log_content["Step_1"]["run_info"].get("sci_name")
+    n_total_acc = log_content["Step_1"]["run_info"].get("n_total_acc")
+    prelim_command= log_content["Step_1"]["run_info"].get("command_issued")
+    prelim_start_time= log_content["Step_1"]["run_info"].get("init_time")
+    processed_table= {"Accession processed" :log_content["Step_1"].get("processed_acc").keys(), 
+    "Number of CDS assembled": log_content["Step_1"].get("processed_acc").values()}
     processed_table= pd.DataFrame.from_dict(processed_table)
     
-    CT_table= {"Consensus threshold": list(log_content["prelim"]["consensus"]["stats"].keys()),
-    "Number of CDS" : [stats[0] for stats in log_content["prelim"]["consensus"]["stats"].values()], 
-    "Average CDS length": [stats[1] for stats in log_content["prelim"]["consensus"]["stats"].values()],
-    "GC content (%)": [stats[2] for stats in log_content["prelim"]["consensus"]["stats"].values()]}
+    CT_table= {"Consensus threshold": list(log_content["Step_1"]["consensus"]["stats"].keys()),
+    "Number of CDS" : [stats[0] for stats in log_content["Step_1"]["consensus"]["stats"].values()], 
+    "Average CDS length": [stats[1] for stats in log_content["Step_1"]["consensus"]["stats"].values()],
+    "GC content (%)": [stats[2] for stats in log_content["Step_1"]["consensus"]["stats"].values()]}
     CT_table= pd.DataFrame.from_dict(CT_table)
-    optimal_CT= log_content["prelim"]["consensus"].get("optimal")
+    optimal_CT= log_content["Step_1"]["consensus"].get("optimal")
     
     optimal_CT_string=f"<p>User is reccomended to use <b>CT{optimal_CT}</b> as preliminary assembly for step 2.</p>"
     
@@ -52,25 +52,25 @@ def generate_from_json_log(logpath, reportpath,step=1):
         cluster_size_data= "NA"
     elif step == 2:
         #information relavent to cluster_accession.py
-        Consensus_threshold_for_preliminary_assembly =  log_content["cluster"]["run_info"].get("Consensus_threshold_for_preliminary_assembly")
-        cluster_command = log_content["cluster"]["run_info"].get("command_issued")
-        cluster_start_time = log_content["cluster"]["run_info"].get("init_time")
-        ps_cutoff = round(log_content["cluster"]["qc"].get("threshold"), 2)
-        n_failed = len(log_content["cluster"]["qc"].get("failed"))
-        n_total = len(log_content["cluster"]["qc"].get("total"))
+        Consensus_threshold_for_preliminary_assembly =  log_content["Step_2"]["run_info"].get("Consensus_threshold_for_preliminary_assembly")
+        cluster_command = log_content["Step_2"]["run_info"].get("command_issued")
+        cluster_start_time = log_content["Step_2"]["run_info"].get("init_time")
+        ps_cutoff = round(log_content["Step_2"]["qc"].get("threshold"), 2)
+        n_failed = len(log_content["Step_2"]["qc"].get("failed"))
+        n_total = len(log_content["Step_2"]["qc"].get("total"))
     
-        processed_acc = log_content["cluster"].get("processed_acc")
+        processed_acc = log_content["Step_2"].get("processed_acc")
         histo_data = [["Accession",'Pseudoalignment rate (%)'] ]+ [[key,val] for key, val in processed_acc.items() if type(val)==float ]
     
-        k_sc = log_content["cluster"]["kmeans"].get("s_coeficient")
+        k_sc = log_content["Step_2"]["kmeans"].get("s_coeficient")
         sc_data = [["k","Silhouette coefficient"]] + [[int(key), val] for key, val in k_sc.items()]
     
-        optimal_k= log_content["cluster"]["kmeans"].get("cluster_assignment_stats")[0]
-        sc_max = round(log_content["cluster"]["kmeans"].get("cluster_assignment_stats")[1], 2)
-        med_cluster_size=log_content["cluster"]["kmeans"].get("cluster_assignment_stats")[2]
-        mean_cluster_size = log_content["cluster"]["kmeans"].get("cluster_assignment_stats")[3]
-        min_cluster_size = log_content["cluster"]["kmeans"].get("cluster_assignment_stats")[4]
-        max_cluster_size = log_content["cluster"]["kmeans"].get("cluster_assignment_stats")[5]
+        optimal_k= log_content["Step_2"]["kmeans"].get("cluster_assignment_stats")[0]
+        sc_max = round(log_content["Step_2"]["kmeans"].get("cluster_assignment_stats")[1], 2)
+        med_cluster_size=log_content["Step_2"]["kmeans"].get("cluster_assignment_stats")[2]
+        mean_cluster_size = log_content["Step_2"]["kmeans"].get("cluster_assignment_stats")[3]
+        min_cluster_size = log_content["Step_2"]["kmeans"].get("cluster_assignment_stats")[4]
+        max_cluster_size = log_content["Step_2"]["kmeans"].get("cluster_assignment_stats")[5]
 
         cluster_size_data = [["Cluster", "Number of accessions", { "role": "style" }]]
         for i in range(0,optimal_k):
@@ -85,7 +85,7 @@ def generate_from_json_log(logpath, reportpath,step=1):
     html_string= f'''
             <html>
 	<head>
-		<title>LSTrAP-denovo report</title>
+		<title>HSS-Trans report</title>
 		<style>
 			table, td, th {{
 			  border: 1px solid black;
@@ -183,10 +183,10 @@ def generate_from_json_log(logpath, reportpath,step=1):
 	</script>
 	</head>
 	<body>
-		<h1 style="background-color:#D6EEEE;">LSTrAP-<i>denovo</i> Report</h1>
-		<h2><u>L</u>arge <u>S</u>cale (<i>de novo</i>) <u>T</u>ranscriptome <u>A</u>ssembly <u>P</u>ipeline using publicly available RNA-seq data.</h2>
-		<p>For more information, please visit our <a href="https://github.com/pengkenlim/LSTrAP-denovo">GitHub repository</a>.</p>
-		<h2 style="background-color:#D6EEEE;" >Step 1. Generating a Preliminary Assembly.</h2>
+		<h1 style="background-color:#D6EEEE;">HSS-Trans Report</h1>
+		<h2><u>H</u>igh-throughput <u>S</u>ample <u>S</u>election pipeline for <u>Trans</u>criptome assembly</h2>
+		<p>For more information, please visit our <a href="https://github.com/pengkenlim/HSS-Trans">GitHub repository</a>.</p>
+		<h2 style="background-color:#D6EEEE;" >Step 1. Assembling Draft CDSs (reduced but high-confidence assembly)</h2>
 		<h3>Run Info</h3>
 		<table>
 			<tr>
@@ -216,7 +216,7 @@ def generate_from_json_log(logpath, reportpath,step=1):
 		<div id="curve_chart" style="width: 900px; height: 500px"></div>
 		{optimal_CT_string}
         {CT_table.to_html(index=False)}
-		<h2 style="background-color:#D6EEEE;">Step 2. Large-scale Download, Quality Control and Transcriptome-profile-based Clustering of Accessions.</h2>
+		<h2 style="background-color:#D6EEEE;">Step 2. Selection of representative accessions for transcriptome assembly</h2>
         <h3>Run Info</h3>
 		<table>
 			<tr>

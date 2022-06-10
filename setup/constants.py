@@ -1,7 +1,7 @@
 import os
 import sys
 abspath=os.getcwd()
-programdir= os.path.join(abspath.split("LSTrAP-denovo")[0], "LSTrAP-denovo","programs")
+programdir= os.path.join(abspath.split("HSS-Trans")[0], "HSS-Trans","programs")
 
 fastppath= os.path.join(programdir,"fastp")
 asperapath=os.path.join(programdir,"aspera","cli", "bin", "ascp")

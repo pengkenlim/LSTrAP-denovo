@@ -3,7 +3,7 @@ import os
 import sys
 if __name__ == "__main__":
         abspath= os.getcwd()
-        parent_module= os.path.join(abspath.split("HSS-Trans")[0], "HSS-Trans")
+        parent_module= os.path.join(abspath.split("LSTrAP-denovo")[0], "LSTrAP-denovo")
         sys.path.insert(0, parent_module)
         
 
@@ -29,19 +29,28 @@ class logfile:
     ''' logfile object to store, retrieve and update checkpoint information'''
     def __init__(self, path):
         self.path= path
-        self.template={"Step_1":{"run_info":{"taxid":None, "sci_name":None, "n_total_acc":None, "command_issued": None, "init_time": None}, 
+        self.template={"prelim":{"run_info":{"taxid":None, "sci_name":None, "n_total_acc":None, "command_issued": None, "init_time": None}, 
         "run_var":None ,
         "total_acc": None,
         "processed_acc":None, 
         "consensus":{"stats":None, "optimal":None}, 
         "status":"incomplete"},
-        "Step_2":{"run_info":{"command_issued":None, "init_time":None},
+        "cluster":{"run_info":{"command_issued":None, "init_time":None},
         "run_var":None,
         "processed_acc": None,
         "qc":{"threshold":None, "passed":None, "failed":None, "total":None},
         "kmeans":{"s_coeficient":None, "cluster_assignment_dict":None},
-        "status": "incomplete"}}
-
+        "status": "incomplete"},
+        "final":{"run_info":{"command_issued":None, "init_time":None},
+        "run_var": None,
+        "progress":{
+        "size_check":{}, #{cluster_0:"pass", cluster_1: "truncated",...}
+        "fastp": {}, #{cluster_0:"done", cluster_1: "done",...}
+        "ORNA": {}, #{cluster_0:"done", cluster_1: "done",...}
+        "assembly":{}, #{cluster_0:{25:"done", 31: "done",...}, cluster_1:{...},...}
+        "CPC2":{}, #{cluster_0:"done", cluster_1: "done",...}
+        "remap": {}}, #{cluster_0:"done", cluster_1: "done",...}
+        "status": "incomplete"}} 
         if not os.path.exists(path):
             with open(path, "w") as f:
                 json.dump(self.template,f, indent=2)
@@ -62,10 +71,12 @@ class logfile:
     
     def clear(self,step):
         path= self.path
-        if step == "step_1":
-            self.contents["step_1"]=self.template["step_1"]
-        elif step == "step_2":
-            self.contents["step_2"]= self.template["step_2"]
+        if step == "prelim":
+            self.contents["prelim"]=self.template["prelim"]
+        elif step == "cluster":
+            self.contents["cluster"]= self.template["cluster"]
+        elif step == "final":
+            self.contents["final"]= self.template["final"]
         with open(path, "w") as f:
             json.dump(self.contents,f, indent=2)
 
