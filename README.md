@@ -1,6 +1,8 @@
-# LSTrAP-denovo
- Large Scale Transcriptome Assembly Pipeline
- Note: Pipeline is still under active development.
+# HSS-Trans
+ **H**igh-throughput **S**ample **S**election for **Trans**criptome assembly
+An automated pipeline to quality control and select public RNA-seq accessions for transcriptome assembly for species without reference genomes using unsupervised machine learning    
+
+
 
 # Setup
 **clone repository to local machine**
@@ -22,9 +24,9 @@ python3 ./setup/install.py
 
 # Running the pipeline
 
-**Step 1. Generating a preliminary assembly (reduced but high-confidence assembly)**
+**Step 1. Assembling Draft CDSs (reduced but high-confidence assembly)**
 
-Note: Not in active development. All functionalities are fully fleshed-out.
+
 
 Simplest implementation is as follows
 ```
