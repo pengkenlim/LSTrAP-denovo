@@ -34,7 +34,7 @@ python3 ./setup/install.py
 ```
 
 # Running the pipeline
-The pipeline is split into two steps.
+The pipeline is split into two steps.  
 **Step 1. Assembling Draft CDSs (reduced but high-confidence assembly)**
 
 
