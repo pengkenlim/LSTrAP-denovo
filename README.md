@@ -1,5 +1,6 @@
 # HSS-Trans
- **H**igh-throughput **S**ample **S**election for **Trans**criptome assembly  
+ **High-throughput Sample Selection for Transcriptome assembly**  
+   
  **Features**  
  - Simplest implementation of HSS-Trans only requires taxonomic id of species of interest
  - Construction of high confidence draft coding sequences (CDSs) using an efficient *de novo* assembler (SOAPdenovo-Trans) coupled with a novel consensus-based approach to retain CDSs assembled independently in multiple RNA-seq accessions
