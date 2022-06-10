@@ -17,7 +17,7 @@ For more information refer to: *Place-holder for publication DOI*
 # Setup
 **clone repository to local machine**
 ```
-git clone https://github.com/pengkenlim/LSTrAP-denovo.git
+git clone https://github.com/pengkenlim/HSS-Trans.git
 ```
 **Create environment**
 ```
