@@ -111,20 +111,20 @@ def download_job(link, index):
     if index < workers:
         sleep((index%workers)*5)
     if filename in logfile.contents["Step_2"]["selected_accessions"]["download_progress"].keys():
-        if logfile.contents["final"]["downloaded"].get(filename) == "downloaded":
+        if logfile.contents["Step_2"]["download_progress"].get(filename) == "downloaded":
             return f"Skipping {filename} as it had already been downloaded."
     fastqpath= os.path.join(F_fastqdir, filename)
     if download_method == "ascp":
         ascp_fullpath = link.replace("ftp://ftp.sra.ebi.ac.uk/", "era-fasp@fasp.sra.ebi.ac.uk:")
         result= misc.run_with_retries(2,
         aspera.launch_ascp,
-        [ascp_fullpath,fastqpath,1000000000*10],#set to ~10gb, essentially no limit
+        [ascp_fullpath,fastqpath,0],#0 = no limit
         f"{filename}: Download failed. Retrying...",
         f"{filename}: Downloading file via ascp...\n")
     elif download_method == "ftp":
          result= misc.run_with_retries(2,
             aspera.launch_curl,
-            [link,fastqpath,1000000000*10], #set to ~10gb, essentially no limit
+            [link,fastqpath,0], #0 = no limit
             f"{filename}: Download failed. Retrying...",
             f"{filename}: Downloading file via ftp...\n")
     if result == "failed":
@@ -400,16 +400,18 @@ if __name__ == "__main__":
         optimal_k, sc_max, median_stat , mean_stat, min_stat , max_stat = logfile.contents["Step_2"]["kmeans"]["cluster_assignment_stats"]
         cluster_assignment_dict = logfile.contents["Step_2"]["kmeans"]["cluster_assignment_dict"]
         silhouette_coefficients_dict = logfile.contents["Step_2"]["kmeans"]["s_coeficient"]
-        cluster_assignment_dict= {int(key): val for key, val in cluster_assignment_dict.items()}
     
     #report kmeans stats to user
     print(f"\nOptimal K-means iteration determined to be at k={optimal_k} with a silhouette coefficient of {sc_max}.\n\nAverage cluster size: {mean_stat} accessions\nMedian cluster size: {median_stat} accessions\nSize of largest cluster: {max_stat} accessions\nSize of smallest cluster: {min_stat} accessions\n")
-    print(f"Selecting representative accessions from each cluster based on target library size....\n")
-    clusters = list(cluster_assignment_dict.keys())
+    print(f"Selecting representative accessions from each cluster based on target library size....\n\
+    Note: Fetching metadata might take some time.")
+    clusters = [ int(k) for k in list(cluster_assignment_dict.keys())]
     clusters.sort()
+    clusters= [str(k) for k in clusters]
     processed_acc_dict = logfile.contents["Step_2"].get("processed_acc")
     if "FTP_links" not in logfile.contents["Step_2"]["selected_accessions"].keys():
         logfile.contents["Step_2"]["selected_accessions"]["FTP_links"]=[]
+        logfile.update()
     for cluster in clusters:
         #check if selection is complete for cluster
         if cluster in logfile.contents["Step_2"]["selected_accessions"].keys():
@@ -451,10 +453,11 @@ if __name__ == "__main__":
             print(f"Cluster{cluster}: cluster representatives selected.\n")
     
     FTP_links = logfile.contents["Step_2"]["selected_accessions"]["FTP_links"]
-    print(f"A total of {len(FTP_links)/2} accessions have been selected.\nInitiating download...\n")
+    print(f"A total of {int(len(FTP_links)/2)} accessions have been selected.\nInitiating download...\n")
     #prepare to track download progress
     if "download_progress" not in logfile.contents["Step_2"]["selected_accessions"].keys():
         logfile.contents["Step_2"]["selected_accessions"]["download_progress"] = {}
+        logfile.update()
     
     F_fastqdir=os.path.join(outputdir,"Step_2","selected_accessions")
     if not os.path.exists(F_fastqdir):
@@ -462,10 +465,10 @@ if __name__ == "__main__":
      
     parallel_download(workers)
     
-    #logfile.contents["Step_2"]["status"]= "completed"
+    logfile.contents["Step_2"]["status"]= "completed"
     logfile.update()
     print("HSS-Trans.SelectAccessions.py completed.\nGenerating html report...")
-    #report.generate_from_json_log(logfile.path, os.path.join(outputdir, "HSS-Trans.html"), 2)
+    report.generate_from_json_log(logfile.path, os.path.join(outputdir, "HSS-Trans.html"), 2)
     
     
     
