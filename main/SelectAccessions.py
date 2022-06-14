@@ -135,6 +135,13 @@ def download_job(link, index):
         logfile.update()
         return f"{filename}: Download aborted after {2} retries."
     else:
+        #unzip and rename headers (because trinity sometimes have issues with fastq directly downloaded from ENA)
+        unzippedfastqpath= fastqpath.split(".gz")[0]
+        if "_1" in unzippedfastqpath:
+            os.system(f"zcat {fastqpath} | awk \'{{print (NR%4 == 1) ? \"@1_\" ++i \"/1\": $0}}\' > {unzippedfastqpath}")
+        elif "_2" in unzippedfastqpath:
+            os.system(f"zcat {fastqpath} | awk \'{{print (NR%4 == 1) ? \"@1_\" ++i \"/1\": $0}}\' > {unzippedfastqpath}")
+        os.system(f"rm {fastqpath}")
         logfile.load()
         logfile.contents["Step_2"]["selected_accessions"]["download_progress"][filename]= "Downloaded"
         logfile.update()
@@ -466,6 +473,20 @@ if __name__ == "__main__":
         os.makedirs(F_fastqdir)
      
     parallel_download(workers)
+    
+    #make samples_file for trinity
+    with open(os.path.join(F_fastqdir, "Samples_for_trinity.tsv")) as f:
+        for cluster in clusters:
+            condition= f"Cluster_{cluster}"
+            for accession , index in enumerate(logfile.contents["Step_2"]["selected_accessions"][cluster]):
+                replicate=  f"Cluster_{cluster}_rep{index}"
+                forwardpath , reversepath = os.path.join(F_fastqdir,accession+"_1.fastq"), os.path.join(F_fastqdir,accession+"_2.fastq")
+                f.write(f"{condition}\t{replicate}\t{forwardpath}\t{reversepath}")
+                
+                
+    print("Trinity sample file have been created at "+ os.path.join(F_fastqdir, "Samples_for_trinity.tsv"))
+    print("Install Trinity (https://github.com/trinityrnaseq/), edit and run Run_Trinity.py to start de novo/ genome-guided transcriptome assembly.")
+        
     
     logfile.contents["Step_2"]["status"]= "completed"
     logfile.update()
