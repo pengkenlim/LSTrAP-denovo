@@ -1,6 +1,6 @@
 # HSS-Trans
  **High-throughput Sample Selection for Transcriptome assembly**  
- An automated pipeline to quality control and select public RNA-seq accessions for transcriptome assembly of species without reference genomes using unsupervised machine learning
+ An automated pipeline to quality control and select public RNA-seq accessions for the transcriptome assembly of species without reference genomes using unsupervised machine learning
  
  **Features**  
  - Simplest implementation of HSS-Trans only requires taxonomic id for species of interest
