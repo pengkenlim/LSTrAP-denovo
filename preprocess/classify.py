@@ -36,8 +36,9 @@ def kdecutoff(mappingvalues):
         return intervals[minima][-1]
         
 def lowerfence_iqr_cutoff(mappingvalues):
-    '''replaces kdecutoff (more reliable and is a well established statistical method to look for outliers). Basically returns the lower fence (Q1 - 1.5*IQR) using the interquartile range (IQR) '''
-    return np.percentile(mappingvalues, 25) - 1.5*iqr(mappingvalues)
+    '''replaces kdecutoff (more reliable and is a well established statistical method to look for outliers). Basically returns the lower fence (Q1 - 1.5*IQR) using the interquartile range (IQR)
+    if lower fence is lower than 10%, return 10 % instead'''
+    return max([np.percentile(mappingvalues, 25) - 1.5*iqr(mappingvalues), 10])
     
 
 def thresholder(maprate_dict, cutoff):
@@ -51,10 +52,10 @@ def thresholder(maprate_dict, cutoff):
     passed= [accession for accession, maprate in maprate_dict.items() if maprate > cutoff ]
     return total, failed, passed, cutoff
 
-def kmeans_kwalk(data, k_min, k_max, threads):
+def kmeans_kwalk(data, k_min, k_max):
     """do kmeans iteration walk"""
-    kmeans_kwargs = {"init": "k-means++", "n_init": 100,"max_iter": 2000,"random_state": 42, "n_jobs": threads} #remove random state (seed) after development
-    #kmeans_kwargs = {"init": "k-means++", "n_init": 100,"max_iter": 2000,"random_state": 42, "size_min": 10, "n_jobs": threads} #for kmeans constrained
+    kmeans_kwargs = {"init": "k-means++", "n_init": 100,"max_iter": 2000,"random_state": 42} #remove random state (seed) after development
+    #kmeans_kwargs = {"init": "k-means++", "n_init": 100,"max_iter": 2000,"random_state": 42, "size_min": 10} #for kmeans constrained
     silhouette_coefficients = []
     k_cluster_assignment_dict={}
     for k in range(k_min,k_max):

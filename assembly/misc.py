@@ -40,6 +40,7 @@ class logfile:
         "processed_acc": None,
         "qc":{"threshold":None, "passed":None, "failed":None, "total":None},
         "kmeans":{"s_coeficient":None, "cluster_assignment_dict":None},
+        "selected_accessions": {},
         "status": "incomplete"}}
 
         if not os.path.exists(path):

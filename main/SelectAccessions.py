@@ -12,6 +12,7 @@ from time import sleep
 from datetime import datetime
 from tqdm import tqdm
 import numpy as np
+from threadpoolctl import threadpool_limits
 
 from assembly import misc , report
 from download import aspera
@@ -98,24 +99,81 @@ def parallel_job(workers):
             print("\n")
         progress_bar.close()
         logfile.load()
+        
+
+def download_job(link, index):
+    '''Job to download accessions'''
+    #to slow down jobs
+    sleep(1)
+    logfile.load()
+    filename= link.split("/")[-1]
+    #to unsync workers
+    if index < workers:
+        sleep((index%workers)*5)
+    if filename in logfile.contents["Step_2"]["selected_accessions"]["download_progress"].keys():
+        if logfile.contents["final"]["downloaded"].get(filename) == "downloaded":
+            return f"Skipping {filename} as it had already been downloaded."
+    fastqpath= os.path.join(F_fastqdir, filename)
+    if download_method == "ascp":
+        ascp_fullpath = link.replace("ftp://ftp.sra.ebi.ac.uk/", "era-fasp@fasp.sra.ebi.ac.uk:")
+        result= misc.run_with_retries(2,
+        aspera.launch_ascp,
+        [ascp_fullpath,fastqpath,1000000000*10],#set to ~10gb, essentially no limit
+        f"{filename}: Download failed. Retrying...",
+        f"{filename}: Downloading file via ascp...\n")
+    elif download_method == "ftp":
+         result= misc.run_with_retries(2,
+            aspera.launch_curl,
+            [link,fastqpath,1000000000*10], #set to ~10gb, essentially no limit
+            f"{filename}: Download failed. Retrying...",
+            f"{filename}: Downloading file via ftp...\n")
+    if result == "failed":
+        logfile.load()
+        logfile.contents["Step_2"]["selected_accessions"]["download_progress"][filename]= "Download failed"
+        logfile.update()
+        return f"{filename}: Download aborted after {2} retries."
+    else:
+        logfile.load()
+        logfile.contents["Step_2"]["selected_accessions"]["download_progress"][filename]= "Downloaded"
+        logfile.update()
+        print(f"{filename}: Downloaded.")
+        return f"{filename}: Downloaded."
+    return f"{filename}: Unexpected error."
+    
+    
+def parallel_download(workers):
+    '''Wrapper to parallelize download each file'''
+    logfile.load()
+    with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
+        progress_bar= tqdm(total=len(FTP_links), desc="Fastq Downloaded", unit="fq", leave=True)
+        results= [executor.submit(download_job, link, index) for index, link in enumerate(FTP_links)]
+        for f in concurrent.futures.as_completed(results):
+            #if "processed" in f.result() or "Aborted" in f.result():
+            progress_bar.update(1)
+            progress_bar.set_postfix_str(s=f.result())
+            print("\n")
+        progress_bar.close()
+        logfile.load()
 
 
 if __name__ == "__main__":
     #retry limit determines the number of retries before aborting
     retrylimit= 2
     #arguments
-    parser= argparse.ArgumentParser(description="HSS-Trans.SelectAccessions.py:Selection of representative accessions for transcriptome assembly.\n \
+    parser= argparse.ArgumentParser(description="HSS-Trans.SelectAccessions.py: Selection of representative accessions for transcriptome assembly.\n \
     NOTE: This is step 2 of 2 in the HSS-Trans pipeline. Requires prior run of step 1: MakeDraftCDS.py. \n\
     Refer to https://github.com/pengkenlim/HSS-Trans for more information on pipeline usage and implmentation")
     parser.add_argument("-o", "--output_dir", type=str, metavar= "", required=True,
     help= "Directory for data output. Directory needs to be same as for step 1 (MakeDraftCDS.py).")
     parser.add_argument("-ps", "--pseudoalignment_threshold", type=int ,metavar="", default=0 , choices=range(0, 70+1),
-    help = "Specifies pseudoalignment threshold (%%PS) during quality control. Accessions that do not meet this threshold will be discarded and not be clustered. Threshold will be determined automatically based on kernel-density minima of %%PS by default.")
-    parser.add_argument("-s","--filesizelimit" , type=int, metavar="", default=500 , choices=range(500, 5000),
-    help="Specifies the size limit(mb) of accession read files to partially download. Limit set to 500 (mb) by default. Has a direct impact on the download time and pseudoalignment runtime in this step of the pipeline.\
-    User is advised to reduce size limit when downloading and processing >500 accessions")
-    parser.add_argument("-t", "--threads", type=int, metavar="", default=16, 
-    help = "Total thread pool for workers. Needs to be divisible by number of workers.")
+    help = "Specifies pseudoalignment (%%PS) threshold during quality control. Expression data of accessions that do not meet this threshold will be excluded as features in k-means clustering.\
+    By default(0), %%PS to threshold will be determined automatically to be the lower bound of the %%PS distribution (Q1 - 1.5 *IQR) or 10%%, whichever is higher.")
+    parser.add_argument("-s","--filesizelimit" , type=int, metavar="", default=500 , choices=range(100, 1000),
+    help="Specifies the size limit(mb) for the partial download of accession read files (gzip compressed) for pseudoalignment. Limit set to 500 (mb) by default. \
+    Size maybe decreased to improve the overall runtime (Download and Psudoalignment) and storage used in this step of the pipeline.\
+    However, doing so might compromise accurate gene expression quantification as a result of limited sequencing depth.")
+    parser.add_argument("-t", "--threads", type=int, metavar="", default=8, 
+    help = "Total thread pool for workers. Needs to be divisible by number of workers.\n")
     parser.add_argument("-w", "--workers", type=int, metavar="", default=4, 
     help= "Specify the maximum workers for running multiple download-pseudoalignment jobs in parallel. Set to 4 by default.")
     parser.add_argument("-dm", "--download_method", type=str, metavar="", default="ascp", choices=["ascp","ftp"],
@@ -125,13 +183,15 @@ if __name__ == "__main__":
     Default set to 500.")
     parser.add_argument("-kr", "--k_range", type=str, metavar="", default="auto",
     help = "Specifies the range of k (number of clusters) to iterate through during k-means clustering. Lower and upper limit seperated by colon(:). \
-    Set to auto(2:n where n ≈ number of accessions that passed qc/5) by default.")    
+    Set to auto(2:n where n ≈ number of accessions that passed qc / 10) by default.")    
     parser.add_argument("-ct", "--consensus_threshold", type=int ,metavar="", default=0 , choices=range(0, 50+1),
     help = "Specifies consensus threshold of preliminary assembly. Default set to 0 where optimal threshold determined automatically in step 1 will be used.")
+    parser.add_argument("-clib", "--cluster_lib_size", type=int ,metavar="", default=2000 , choices=range(500, 10*1000),
+    help = "Specifies the minimum library size (mb) for each cluster to guide the selection of representative accessions to download. Total file sizes of read files (gzipped) to download for each cluster is used as an approximation of libary size instead of number of reads.")
     parser.add_argument("-con", "--conti", action="store_true",
     help = "Resume incomplete run based on output directory. Only requires -o to run.")
     parser.add_argument("-f", "--force", action="store_true",
-    help = "Delete data from previous SelectAccessions.py run.")
+    help = "Delete data from previous SelectAccessions.py run and start a fresh SelectAccessions.py in output directory.")
     
     #parse args
     args=parser.parse_args()
@@ -177,6 +237,7 @@ if __name__ == "__main__":
         accessions_limit= args.accessions_limit
         k_range= args.k_range
         consensus_threshold = args.consensus_threshold
+        cluster_lib_size = args.cluster_lib_size
         #check if threads/worker arguments are logical. Correct if necessary.
         if threadpool % workers != 0:
             print(f"Specified thread pool of {threadpool} is not divisible by number of workers.")
@@ -209,7 +270,7 @@ if __name__ == "__main__":
         "accessions_limit": accessions_limit,
         "k_range": k_range,
         "consensus_threshold" : consensus_threshold,
-        }
+        "cluster_lib_size" : cluster_lib_size}
         logfile.contents["Step_2"]["processed_acc"]={}
         logfile.update()
         
@@ -221,7 +282,7 @@ if __name__ == "__main__":
         if logfile.contents["Step_2"]["status"]== "completed":
             sys.exit(f"\nPrevious run initiated in {outputdir} has fully completed. There is nothing to run. Use --force to delete all previous run data in order to restart run.")
         #inherit run variables from previous run using logfile contents
-        pseudoalignment_threshold, filesizelimit, threadpool, workers, download_method, accessions_limit, k_range, consensus_threshold = logfile.contents["Step_2"]["run_var"].values()
+        pseudoalignment_threshold, filesizelimit, threadpool, workers, download_method, accessions_limit, k_range, consensus_threshold , cluster_lib_size= logfile.contents["Step_2"]["run_var"].values()
         threads=int(threadpool/workers)
         print("\n--conti argument has been specified by user. Inheriting arguments from previous run ....\n")
 
@@ -308,40 +369,105 @@ if __name__ == "__main__":
     #extract k-means minimum and maximum values from range k_range variable parsed from arguments
     if k_range == "auto":
         kmin = 2
-        kmax= int(np.round((len(passed) / 10))) +1
+        kmax= int(np.round((len(passed) /10))) +1
     else:
         kmin = int(k_range.split(":")[0])
         kmax= int(k_range.split(":")[1])+1 #non-inclusive
-    print(f"Initiating k-means clustering of accesions based on PCA data.\nClustering iterations will walk from k={kmin} to k={kmax-1} to determine optimal number of clusters(k)...\n")
     
-    #k-means walk proper
-    k_cluster_assignment_dict, silhouette_coefficients = classify.kmeans_kwalk(pca_data, kmin, kmax, threadpool)
-    #feed silhouette_coefficients and cluster assignments at different ks into function that determines optimal k 
-    optimal_k, cluster_assignment , sc_max = classify.optimal_k_silhouette(kmin, kmax, silhouette_coefficients, k_cluster_assignment_dict)
-    
-    cluster_assignment_dict = {}
-    for accession , cluster in zip(passed ,cluster_assignment):
-        if cluster not in cluster_assignment_dict.keys():
-            cluster_assignment_dict[int(cluster)] = [accession]
-        else:
-            cluster_assignment_dict[int(cluster)]+= [accession]
-    silhouette_coefficients_dict = {int(k): sc for k , sc in zip(range(kmin,kmax +1), silhouette_coefficients)}
-    #write cluster assignments to log
-    logfile.contents["Step_2"]["kmeans"]["s_coeficient"]= silhouette_coefficients_dict
-    logfile.contents["Step_2"]["kmeans"]["cluster_assignment_dict"]= cluster_assignment_dict
-    
-    #get some stats on cluster assignments
-    median_stat , mean_stat, min_stat , max_stat = classify.report_cluster_assignment_stats(cluster_assignment_dict)
-    logfile.contents["Step_2"]["kmeans"]["cluster_assignment_stats"]= [optimal_k, sc_max, median_stat , mean_stat, min_stat , max_stat]
-    logfile.update()
+    if "cluster_assignment_stats" not in logfile.contents["Step_2"]["kmeans"].keys():
+        print(f"Initiating k-means clustering of accesions based on PCA data.\nClustering iterations will walk from k={kmin} to k={kmax-1} to determine optimal number of clusters(k)...\n")
+        #k-means walk proper under context manager (threadpool_limits) to limit core usage. kmeans package uses all available cores by default.
+        with threadpool_limits(user_api="openmp", limits=threadpool):
+            k_cluster_assignment_dict, silhouette_coefficients = classify.kmeans_kwalk(pca_data, kmin, kmax)
+        #feed silhouette_coefficients and cluster assignments at different ks into function that determines optimal k 
+        optimal_k, cluster_assignment , sc_max = classify.optimal_k_silhouette(kmin, kmax, silhouette_coefficients, k_cluster_assignment_dict)
+        
+        cluster_assignment_dict = {}
+        for accession , cluster in zip(passed ,cluster_assignment):
+            if cluster not in cluster_assignment_dict.keys():
+                cluster_assignment_dict[int(cluster)] = [accession]
+            else:
+                cluster_assignment_dict[int(cluster)]+= [accession]
+        silhouette_coefficients_dict = {int(k): sc for k , sc in zip(range(kmin,kmax +1), silhouette_coefficients)}
+        #write cluster assignments to log
+        logfile.contents["Step_2"]["kmeans"]["s_coeficient"]= silhouette_coefficients_dict
+        logfile.contents["Step_2"]["kmeans"]["cluster_assignment_dict"]= cluster_assignment_dict
+        #get some stats on cluster assignments
+        median_stat , mean_stat, min_stat , max_stat = classify.report_cluster_assignment_stats(cluster_assignment_dict)
+        logfile.contents["Step_2"]["kmeans"]["cluster_assignment_stats"]= [optimal_k, sc_max, median_stat , mean_stat, min_stat , max_stat]
+        logfile.update()
+    else:
+        optimal_k, sc_max, median_stat , mean_stat, min_stat , max_stat = logfile.contents["Step_2"]["kmeans"]["cluster_assignment_stats"]
+        cluster_assignment_dict = logfile.contents["Step_2"]["kmeans"]["cluster_assignment_dict"]
+        silhouette_coefficients_dict = logfile.contents["Step_2"]["kmeans"]["s_coeficient"]
+        cluster_assignment_dict= {int(key): val for key, val in cluster_assignment_dict.items()}
     
     #report kmeans stats to user
     print(f"\nOptimal K-means iteration determined to be at k={optimal_k} with a silhouette coefficient of {sc_max}.\n\nAverage cluster size: {mean_stat} accessions\nMedian cluster size: {median_stat} accessions\nSize of largest cluster: {max_stat} accessions\nSize of smallest cluster: {min_stat} accessions\n")
+    print(f"Selecting representative accessions from each cluster based on target library size....\n")
+    clusters = list(cluster_assignment_dict.keys())
+    clusters.sort()
+    processed_acc_dict = logfile.contents["Step_2"].get("processed_acc")
+    if "FTP_links" not in logfile.contents["Step_2"]["selected_accessions"].keys():
+        logfile.contents["Step_2"]["selected_accessions"]["FTP_links"]=[]
+    for cluster in clusters:
+        #check if selection is complete for cluster
+        if cluster in logfile.contents["Step_2"]["selected_accessions"].keys():
+            print(f"Cluster{cluster}: cluster representatives selected.\n")
+        else:    
+            accessions= cluster_assignment_dict.get(cluster)
+
+            #this dict shall accessions as key and PS% stats as values
+            accession_dict = {acc: processed_acc_dict.get(acc) for acc in accessions}
+
+            ranked_ps = list(accession_dict.values())
+            ranked_ps.sort()
+
+            accession_dict_sorted={}
+            #brute force using nested loop to sort the dictionary based on %PS values
+            for ps in ranked_ps:
+                for key, val in accession_dict.items():
+                    if ps == val:
+                        accession_dict_sorted[key]= val
+            
+            print(accession_dict_sorted)
+            logfile.contents["Step_2"]["selected_accessions"][cluster]={}
+            libsize=0
+            for accession in accession_dict_sorted.keys():
+                if libsize < (cluster_lib_size * 1048*1048*1048): #minimum library size of 2gb (forward + reverse, gunzipped) per cluster
+                    forward, reverse = "ERR", "ERR"
+                    ftp_links= aspera.launch_ffq_ftp(accession)
+                        #check if paired end
+                    if len(ftp_links) > 1:
+                        for file in ftp_links:
+                            if file["filenumber"] == 1:
+                                forward = file
+                            elif file["filenumber"] == 2:
+                                reverse = file
+                        #add read files to total libary size
+                        if forward != "ERR" and  reverse != "ERR":
+                            libsize+= forward.get("filesize") + reverse.get("filesize")
+                            logfile.contents["Step_2"]["selected_accessions"][cluster][accession]={"Library_size": forward.get("filesize") + reverse.get("filesize")}
+                            logfile.contents["Step_2"]["selected_accessions"]["FTP_links"] += [forward.get("url") ,reverse.get("url")]
+                            logfile.update()
+            print(f"Cluster{cluster}: cluster representatives selected.\n")
     
-    logfile.contents["Step_2"]["status"]= "completed"
+    FTP_links = logfile.contents["Step_2"]["selected_accessions"]["FTP_links"]
+    print(f"A total of {len(FTP_links)/2} accessions have been selected.\nInitiating download...\n")
+    #prepare to track download progress
+    if "download_progress" not in logfile.contents["Step_2"]["selected_accessions"].keys():
+        logfile.contents["Step_2"]["selected_accessions"]["download_progress"] = {}
+    
+    F_fastqdir=os.path.join(outputdir,"Step_2","selected_accessions")
+    if not os.path.exists(F_fastqdir):
+        os.makedirs(F_fastqdir)
+     
+    parallel_download(workers)
+    
+    #logfile.contents["Step_2"]["status"]= "completed"
     logfile.update()
     print("HSS-Trans.SelectAccessions.py completed.\nGenerating html report...")
-    report.generate_from_json_log(logfile.path, os.path.join(outputdir, "HSS-Trans.html"), 2)
+    #report.generate_from_json_log(logfile.path, os.path.join(outputdir, "HSS-Trans.html"), 2)
     
     
     
