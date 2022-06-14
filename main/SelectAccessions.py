@@ -429,12 +429,10 @@ if __name__ == "__main__":
                 for key, val in accession_dict.items():
                     if ps == val:
                         accession_dict_sorted[key]= val
-            
-            print(accession_dict_sorted)
             logfile.contents["Step_2"]["selected_accessions"][cluster]={}
             libsize=0
             for accession in accession_dict_sorted.keys():
-                if libsize < (cluster_lib_size * 1048*1048*1048): #minimum library size of 2gb (forward + reverse, gunzipped) per cluster
+                if libsize < (cluster_lib_size * 1048*1048): #minimum library size of 2gb (forward + reverse, gunzipped) per cluster
                     forward, reverse = "ERR", "ERR"
                     ftp_links= aspera.launch_ffq_ftp(accession)
                         #check if paired end
