@@ -111,7 +111,7 @@ def download_job(link, index):
     if index < workers:
         sleep((index%workers)*5)
     if filename in logfile.contents["Step_2"]["selected_accessions"]["download_progress"].keys():
-        if logfile.contents["Step_2"]["download_progress"].get(filename) == "downloaded":
+        if logfile.contents["Step_2"]["download_progress"].get(filename) == "Downloaded":
             return f"Skipping {filename} as it had already been downloaded."
     fastqpath= os.path.join(F_fastqdir, filename)
     if download_method == "ascp":
