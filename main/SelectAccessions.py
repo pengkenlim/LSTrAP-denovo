@@ -475,22 +475,22 @@ if __name__ == "__main__":
     parallel_download(workers)
     
     #make samples_file for trinity
-    with open(os.path.join(F_fastqdir, "Samples_for_trinity.tsv")) as f:
+    with open(os.path.join(F_fastqdir, "Samples_for_trinity.tsv"), "w") as f:
         for cluster in clusters:
             condition= f"Cluster_{cluster}"
-            for accession , index in enumerate(logfile.contents["Step_2"]["selected_accessions"][cluster]):
+            for index , accession in enumerate(logfile.contents["Step_2"]["selected_accessions"][cluster]):
                 replicate=  f"Cluster_{cluster}_rep{index}"
                 forwardpath , reversepath = os.path.join(F_fastqdir,accession+"_1.fastq"), os.path.join(F_fastqdir,accession+"_2.fastq")
                 f.write(f"{condition}\t{replicate}\t{forwardpath}\t{reversepath}")
                 
                 
-    print("Trinity sample file have been created at "+ os.path.join(F_fastqdir, "Samples_for_trinity.tsv"))
-    print("Install Trinity (https://github.com/trinityrnaseq/), edit and run Run_Trinity.py to start de novo/ genome-guided transcriptome assembly.")
+    print("\nTrinity sample file have been created at "+ os.path.join(F_fastqdir, "Samples_for_trinity.tsv.\n"))
+    print("Install Trinity (https://github.com/trinityrnaseq/), edit and run Run_Trinity.py to start de novo / genome-guided transcriptome assembly.\n")
         
     
     logfile.contents["Step_2"]["status"]= "completed"
     logfile.update()
-    print("HSS-Trans.SelectAccessions.py completed.\nGenerating html report...")
+    print("HSS-Trans.SelectAccessions.py completed.\nGenerating html report...\n")
     report.generate_from_json_log(logfile.path, os.path.join(outputdir, "HSS-Trans.html"), 2)
     
     
