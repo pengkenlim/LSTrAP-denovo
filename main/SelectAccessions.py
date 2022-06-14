@@ -71,12 +71,14 @@ def download_PS_job(accession, index):
             logfile.load()
             logfile.contents["Step_2"]["processed_acc"][accession]= "PS failed"
             logfile.update()
+            os.system(f"rm {fastqpath}")
             return f"{accession}: Aborted after {retrylimit} retries."
         map_rate = read_map.write_quant_info(accession, kaloutdir, tpm_matpath)
         logfile.load()
         logfile.contents["Step_2"]["processed_acc"][accession]= float(map_rate)
         logfile.update()
         print(f"{accession}: Pseudoalignment completed.")
+        os.system(f"rm {fastqpath}")
         return f"{accession}: processed."
     return f"{accession}: Unknown exception occurred."
     
