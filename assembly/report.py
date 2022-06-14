@@ -78,7 +78,7 @@ def generate_from_json_log(logpath, reportpath,step=1):
                 t_string= "#ff9912"
             else:
                 t_string= "#4682b4"
-            cluster_size_data+= [[f"Cluster {str(i)}", len(log_content["cluster"]["kmeans"]["cluster_assignment_dict"].get(str(i))),t_string ]]
+            cluster_size_data+= [[f"Cluster {str(i)}", len(log_content["Step_2"]["kmeans"]["cluster_assignment_dict"].get(str(i))),t_string ]]
         cluster_size_data += [["QC failed", n_failed , "#bebebe"]]
 
     
