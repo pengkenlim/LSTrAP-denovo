@@ -7,7 +7,7 @@ programdir=os.path.join(os.getcwd(),"programs")
 installpath= os.path.join(programdir,"aspera")
 if not os.path.exists(installpath):
 	print("Downloading and installing Aspera CLI into programs directory...")
-	os.system("wget https://download.asperasoft.com/download/sw/cli/3.9.2/ibm-aspera-cli-3.9.2.1426.c59787a-linux-64-release.sh -O trashme.sh")
+	os.system("wget https://download.asperasoft.com/download/sw/cli/3.9.2/ibm-aspera-cli-3.9.2.1426.c59787a-linux-64-release.sh -O trashme.sh --no-check-certificate")
 	os.system(f"sed -i \'s|~/.aspera|{installpath}|g\' trashme.sh")
 	os.system("bash trashme.sh")
 	os.system("rm trashme.sh")
