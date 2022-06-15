@@ -261,7 +261,11 @@ if __name__ == "__main__":
         print(f"\nFetching RNA-seq accessions of {scientific_name} (NCBI TaxID: {taxid}) from ENA..\n")
         accessions = ena.get_runs(taxid)
         random.shuffle(accessions)
-        print(f"Total accessions fetched from ENA: {len(accessions)}\n")
+        if len(accessions) > 2000:
+            accessions=accessions[:2000]
+            print(f"Total accessions fetched from ENA: {len(accessions)} (capped)\n")
+        else:    
+            print(f"Total accessions fetched from ENA: {len(accessions)}\n")
         #check if there is a previous run in the same outputdir. if so, exit and print error message
         if logfile.contents["Step_1"]["run_info"]["init_time"] is not None:
             if logfile.contents["Step_1"]["status"] == "completed":
