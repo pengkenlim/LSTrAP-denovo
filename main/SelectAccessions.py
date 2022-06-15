@@ -78,7 +78,7 @@ def download_PS_job(accession, index):
         logfile.contents["Step_2"]["processed_acc"][accession]= float(map_rate)
         logfile.update()
         print(f"{accession}: Pseudoalignment completed.")
-        os.system(f"rm {fastqpath}")
+        #os.system(f"rm {fastqpath}") add in in final build
         return f"{accession}: processed."
     return f"{accession}: Unknown exception occurred."
     
