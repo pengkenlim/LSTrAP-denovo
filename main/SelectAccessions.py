@@ -308,6 +308,10 @@ if __name__ == "__main__":
     taxid, _, _, _, _, _, _ , _, _, _ ,_, _ = logfile.contents["Step_1"]["run_var"].values()
     
     print(f"Organism name: {scientific_name} (NCBI TaxID: {taxid})\n")
+    if len(accessions) == 2000:
+            print(f"Total accessions fetched from ENA: {len(accessions)} (capped)\n")
+        else:    
+            print(f"Total accessions fetched from ENA: {len(accessions)}\n")
     print(f"Total accessions fetched from ENA: {len(accessions)}\n")
     
     print("Transfering accession .fastq files downloaded in step 1 to new directory...")
