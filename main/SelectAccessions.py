@@ -59,7 +59,7 @@ def download_PS_job(accession, index):
         logfile.contents["Step_2"]["processed_acc"][accession]= "Downloaded"
         logfile.update()
     
-    if  logfile.contents["Step_2"]["processed_acc"].get(accession)== "Downloaded" or logfile.contents["Step_2"]["processed_acc"].get(accession) == "PS failed":
+    if  logfile.contents["Step_2"]["processed_acc"].get(accession)== "Downloaded":
         fastqpath =os.path.join(C_fastqdir,accession+".fastq.gz")
         kaloutdir= os.path.join(kaldir, accession)
         result= misc.run_with_retries(retrylimit,
@@ -71,7 +71,7 @@ def download_PS_job(accession, index):
             logfile.load()
             logfile.contents["Step_2"]["processed_acc"][accession]= "PS failed"
             logfile.update()
-            os.system(f"rm {fastqpath}")
+            #os.system(f"rm {fastqpath}") add in final build
             return f"{accession}: Aborted after {retrylimit} retries."
         map_rate = read_map.write_quant_info(accession, kaloutdir, tpm_matpath)
         logfile.load()
