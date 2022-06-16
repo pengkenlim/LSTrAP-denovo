@@ -21,7 +21,7 @@ def launch_kallisto_index(fastapath,indexpath):
 
 def launch_kallisto_quant(threads,indexpath, outputdir, fastqpath):
     """ launch kallisto quant in single-ended mode """
-    returncode=subprocess.run([constants.kallistopath, "quant", "-t", str(threads), "-i", indexpath, "-o", outputdir, "--single", "-l", "200", "-s" , "20" , fastqpath ]#,
+    returncode=subprocess.run([constants.kallistopath, "quant", "-t", str(threads), "-i", indexpath, "-o", outputdir, "--single", "-l", "200", "-s" , "20" , fastqpath ])
     #stdout=subprocess.DEVNULL, 
     #stderr=subprocess.STDOUT) 
     return returncode.returncode
