@@ -52,7 +52,7 @@ def parallel_job(workers):
             print(f.result())
 
 if __name__ == "__main__":
-    accessions= for [file.split("") in os.listdir(fastqdir) if ".gz" in file]
+    accessions=  [file.split("") for file in os.listdir(fastqdir) if ".gz" in file]
     print("kallisto index....")
     read_map.launch_kallisto_index(referencepath, indexpath)
     print("Parallel PS...")
