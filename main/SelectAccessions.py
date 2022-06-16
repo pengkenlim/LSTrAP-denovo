@@ -425,6 +425,7 @@ if __name__ == "__main__":
     if "FTP_links" not in logfile.contents["Step_2"]["selected_accessions"].keys():
         logfile.contents["Step_2"]["selected_accessions"]["FTP_links"]=[]
         logfile.update()
+    logfile.load()
     for cluster in clusters:
         #check if selection is complete for cluster
         if cluster in logfile.contents["Step_2"]["selected_accessions"].keys():
