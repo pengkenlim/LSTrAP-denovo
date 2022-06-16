@@ -66,7 +66,7 @@ def download_PS_job(accession, index):
         read_map.launch_kallisto_quant,
         [threads, indexpath , kaloutdir , fastqpath],
         f"{accession}: Kallisto pseudoalignment failed. Retrying...",
-        f"{accession}: Kallisto pseudoalignment of accession reads against draft CDS of Preliminary assembly...\n")
+        f"{accession}: Kallisto pseudoalignment of accession reads against draft CDSs...\n")
         if result == "failed":
             logfile.load()
             logfile.contents["Step_2"]["processed_acc"][accession]= "PS failed"
@@ -416,8 +416,7 @@ if __name__ == "__main__":
     
     #report kmeans stats to user
     print(f"\nOptimal K-means iteration determined to be at k={optimal_k} with a silhouette coefficient of {sc_max}.\n\nAverage cluster size: {mean_stat} accessions\nMedian cluster size: {median_stat} accessions\nSize of largest cluster: {max_stat} accessions\nSize of smallest cluster: {min_stat} accessions\n")
-    print(f"Selecting representative accessions from each cluster based on target library size....\n\
-    Note: Fetching metadata might take some time.")
+    print(f"Selecting representative accessions from each cluster based on target library size....\nNote: Fetching metadata might take some time.")
     clusters = [ int(k) for k in list(cluster_assignment_dict.keys())]
     clusters.sort()
     clusters= [str(k) for k in clusters]
@@ -464,7 +463,7 @@ if __name__ == "__main__":
                             logfile.contents["Step_2"]["selected_accessions"][cluster][accession]={"Library_size": forward.get("filesize") + reverse.get("filesize")}
                             logfile.contents["Step_2"]["selected_accessions"]["FTP_links"] += [forward.get("url") ,reverse.get("url")]
                             logfile.update()
-            print(f"Cluster{cluster}: cluster representatives selected.\n")
+            print(f"Cluster {cluster}: cluster representatives selected.\n")
     
     FTP_links = logfile.contents["Step_2"]["selected_accessions"]["FTP_links"]
     print(f"A total of {int(len(FTP_links)/2)} accessions have been selected.\nInitiating download...\n")

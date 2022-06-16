@@ -288,22 +288,26 @@ if __name__ == "__main__":
                 if len(selected_accessions_dict)==n_accessions:
                     break
             if len(selected_accessions_dict)<n_accessions:
-                print(f"User-provided accessions are insufficient. Will supplement with other accessions...")
+                print(f"User-provided accessions are insufficient. Will supplement with other accessions..\nNote: Fetching metadata might take some time.\n")
                 for accession in accessions:
                     ascp_fullpath, ftp_fullpath, filesize = aspera.get_download_path_ffq(accession)
                     if filesize >= filesizelimit:
                         selected_accessions_dict[accession]=(ascp_fullpath,ftp_fullpath)
+                        print(f"{accession} selected ({len(selected_accessions_dict)}/{n_accessions}).\n")
                     if len(selected_accessions_dict)==n_accessions:
                         break
+                    sys.exit("There are insufficient accessions that fufill file size requirements\nPlease consider decreasing requirement via --filesizelimit argument.\n")
         else:
-            print("Selecting accessions with appropriate file sizes to build preliminary assembly...")
+            print("Selecting accessions with appropriate file sizes to build preliminary assembly...\nNote: Fetching metadata might take some time.\n")
             selected_accessions_dict={}
             for accession in accessions:
                 ascp_fullpath, ftp_fullpath, filesize = aspera.get_download_path_ffq(accession)
                 if filesize >= filesizelimit:
                     selected_accessions_dict[accession]=(ascp_fullpath,ftp_fullpath)
+                    print(f"{accession} selected ({len(selected_accessions_dict)}/{n_accessions}).\n")
                 if len(selected_accessions_dict)==n_accessions:
                     break
+                sys.exit("There are insufficient accessions that fufill file size requirements\nPlease consider decreasing requirement via --filesizelimit argument.\n")
                 
         if threadpool % workers != 0:
             print(f"Specified thread pool of {threadpool} is not divisible by number of workers.")
