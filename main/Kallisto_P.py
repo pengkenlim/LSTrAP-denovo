@@ -34,7 +34,7 @@ def ps_job(accession, index):
     read_map.launch_kallisto_quant,
     [threads, indexpath , kaloutdir , fastqpath],
     f"{accession}: Kallisto pseudoalignment failed. Retrying...",
-    f"{accession}: Kallisto pseudoalignment of accession reads against reference failed...\n")
+    f"{accession}: Kallisto pseudoalignment of accession reads against reference...\n")
     if result == "failed":
         with open(failedaccpath, "a") as f:
             f.write(f"{accession}\tPS_failed\n")
