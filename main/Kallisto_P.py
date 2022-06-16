@@ -41,7 +41,7 @@ def ps_job(accession, index):
         return f"{accession}: Aborted after {retrylimit} retries."
     map_rate = read_map.write_quant_info(accession, kaloutdir, tpm_matpath)
     with open(mapratepath, "a") as f:
-        f.write(f"{accession}\{map_rate}\n")
+        f.write(f"{accession}\t{map_rate}\n")
     print(f"{accession}: Pseudoalignment completed. {index}")
     return f"{accession}: processed."
     
