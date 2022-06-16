@@ -23,12 +23,12 @@ failedaccpath="/home/pengken001/pipeline_output/TAXID_3702/reference/failed.tsv"
 retrylimit=2
 workers=16
 threads=32
-C_fastqdir="/home/pengken001/pipeline_output/TAXID_3702/Step_2/fastq"
+fastqdir="/home/pengken001/pipeline_output/TAXID_3702/Step_2/fastq"
 kmin=2
 kmax=88
 pseudoalignment_threshold=0
 def ps_job(accession, index):
-    fastqpath =os.path.join(C_fastqdir,accession+".fastq.gz")
+    fastqpath =os.path.join(fastqdir,accession+".fastq.gz")
     kaloutdir= os.path.join(kaldir, accession)
     result= misc.run_with_retries(retrylimit,
     read_map.launch_kallisto_quant,
