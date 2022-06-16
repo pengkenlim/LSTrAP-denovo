@@ -52,11 +52,11 @@ def parallel_job(workers):
             print(f.result())
 
 if __name__ == "__main__":
-    accessions=  [file.split(".fastq")[0] for file in os.listdir(fastqdir) if ".gz" in file]
-    print("kallisto index....")
-    read_map.launch_kallisto_index(referencepath, indexpath)
-    print("Parallel PS...")
-    parallel_job(workers)
+    #accessions=  [file.split(".fastq")[0] for file in os.listdir(fastqdir) if ".gz" in file]
+    #print("kallisto index....")
+    #read_map.launch_kallisto_index(referencepath, indexpath)
+    #print("Parallel PS...")
+    #parallel_job(workers)
     maprate_df = pd.read_csv(mapratepath, sep="\t", header=None)
     maprate_dict= maprate_df.set_index(0).to_dict()[1]
     total, failed, passed, cutoff= classify.thresholder({key:val for key, val in maprate_dict.items()}, pseudoalignment_threshold)
@@ -87,8 +87,8 @@ if __name__ == "__main__":
         else:
             cluster_assignment_dict[int(cluster)]+= [accession]
     silhouette_coefficients_dict = {int(k): sc for k , sc in zip(range(kmin,kmax +1), silhouette_coefficients)}
-    df["silhouette_coefficients_dict"] = silhouette_coefficients_dict
-    df["cluster_assignment_dict"] = cluster_assignment_dict
+    df["silhouette_coefficients_dict"] = [silhouette_coefficients_dict]
+    df["cluster_assignment_dict"] = [cluster_assignment_dict]
     df.to_csv(infopath)
     median_stat , mean_stat, min_stat , max_stat = classify.report_cluster_assignment_stats(cluster_assignment_dict)
     df["cluster_assignment_stats"] = [[optimal_k, sc_max, median_stat , mean_stat, min_stat , max_stat]]
