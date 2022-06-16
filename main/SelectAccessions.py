@@ -375,8 +375,9 @@ if __name__ == "__main__":
     
     #read TPM expression matrix from file path and return subsetted matrix (without failed accessions)\
     Matrix= classify.mat_parser(tpm_matpath, passed)
-    #normalise TPM values within each accession, PCA transfrom
-    pca_data , pc_variances = classify.PCA_transformer(Matrix)    
+    #normalise TPM values within each accession, PCA transfrom. Context manager to limit core usage
+    with threadpool_limits(user_api="openmp", limits=threadpool):
+        pca_data , pc_variances = classify.PCA_transformer(Matrix)    
     print(f"PCA-transformation complete with {np.round(sum(pc_variances))}% of variance retained. (PC1= {pc_variances[0]}%)\n")
     
     #extract k-means minimum and maximum values from range k_range variable parsed from arguments
