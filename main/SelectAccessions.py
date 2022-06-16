@@ -6,13 +6,13 @@ if __name__ == "__main__":
         parent_module= os.path.join(abspath.split("HSS-Trans")[0], "HSS-Trans")
         sys.path.insert(0, parent_module)
 
+from threadpoolctl import threadpool_limits
 import argparse
 import concurrent.futures
 from time import sleep
 from datetime import datetime
 from tqdm import tqdm
 import numpy as np
-from threadpoolctl import threadpool_limits
 
 from assembly import misc , report
 from download import aspera
@@ -418,6 +418,7 @@ if __name__ == "__main__":
     #report kmeans stats to user
     print(f"\nOptimal K-means iteration determined to be at k={optimal_k} with a silhouette coefficient of {sc_max}.\n\nAverage cluster size: {mean_stat} accessions\nMedian cluster size: {median_stat} accessions\nSize of largest cluster: {max_stat} accessions\nSize of smallest cluster: {min_stat} accessions\n")
     print(f"Selecting representative accessions from each cluster based on target library size....\nNote: Fetching metadata might take some time.")
+    logfile.load()
     clusters = [ int(k) for k in list(cluster_assignment_dict.keys())]
     clusters.sort()
     clusters= [str(k) for k in clusters]
