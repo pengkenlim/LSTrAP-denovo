@@ -18,7 +18,7 @@ mapratepath= "/home/pengken001/pipeline_output/TAXID_3702/reference/map_rate.tsv
 infopath="/home/pengken001/pipeline_output/TAXID_3702/reference/info.csv"
 referencepath="/home/pengken001/pipeline_output/TAXID_3702/reference/Araport_cds_20210622_representative_gene_model.fasta"
 indexpath="/home/pengken001/pipeline_output/TAXID_3702/reference/Araport_cds_20210622_representative_gene_model.index"
-kaldir="/home/pengken001/pipeline_output/TAXID_3702/Step_2/kallisto"
+kaldir="/home/pengken001/pipeline_output/TAXID_3702/reference/kallisto"
 failedaccpath="/home/pengken001/pipeline_output/TAXID_3702/reference/failed.tsv"
 retrylimit=2
 workers=16
@@ -47,9 +47,9 @@ def ps_job(accession, index):
     
 def parallel_job(workers):
     with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
-    results= [executor.submit(ps_job, accession, index) for index ,accession in enumerate(accessions)]
-    for f in concurrent.futures.as_completed(results):
-        print(f.result())
+        results= [executor.submit(ps_job, accession, index) for index ,accession in enumerate(accessions)]
+        for f in concurrent.futures.as_completed(results):
+            print(f.result())
 
 if __name__ == "__main__":
     accessions= for [file.split("") in os.listdir(fastqdir) if ".gz" in file]
