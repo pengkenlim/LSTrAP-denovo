@@ -399,9 +399,9 @@ if __name__ == "__main__":
         cluster_assignment_dict = {}
         for accession , cluster in zip(passed ,cluster_assignment):
             if cluster not in cluster_assignment_dict.keys():
-                cluster_assignment_dict[int(cluster)] = [accession]
+                cluster_assignment_dict[cluster] = [accession]
             else:
-                cluster_assignment_dict[int(cluster)]+= [accession]
+                cluster_assignment_dict[cluster]+= [accession]
         silhouette_coefficients_dict = {int(k): sc for k , sc in zip(range(kmin,kmax +1), silhouette_coefficients)}
         #write cluster assignments to log
         logfile.contents["Step_2"]["kmeans"]["s_coeficient"]= silhouette_coefficients_dict
