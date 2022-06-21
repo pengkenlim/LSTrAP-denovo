@@ -398,7 +398,7 @@ if __name__ == "__main__":
         
         cluster_assignment_dict = {}
         for accession , cluster in zip(passed ,cluster_assignment):
-            if cluster not in cluster_assignment_dict.keys():
+            if str(cluster) not in cluster_assignment_dict.keys():
                 cluster_assignment_dict[str(cluster)] = [accession]
             else:
                 cluster_assignment_dict[str(cluster)]+= [accession]
