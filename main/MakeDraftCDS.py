@@ -305,8 +305,7 @@ if __name__ == "__main__":
                 if filesize >= filesizelimit:
                     selected_accessions_dict[accession]=(ascp_fullpath,ftp_fullpath)
                     print(f"{accession} selected ({len(selected_accessions_dict)}/{n_accessions}).\n")
-                if len(selected_accessions_dict)==n_accessions:
-                    break
+            if len(selected_accessions_dict)==n_accessions:
                 sys.exit("There are insufficient accessions that fufill file size requirements\nPlease consider decreasing requirement via --filesizelimit argument.\n")
                 
         if threadpool % workers != 0:
