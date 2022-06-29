@@ -28,15 +28,16 @@ def download_PS_job(accession, index):
     if index < workers:
         sleep((index%workers)*5)
     if type(logfile.contents["Step_2"]["processed_acc"].get(accession)) == float:
-        return f"{accession} already processed."
+        return accession, index , "Already processed"
     if accession not in logfile.contents["Step_2"]["processed_acc"].keys() or logfile.contents["Step_2"]["processed_acc"].get(accession) == "Download failed" or logfile.contents["Step_2"]["processed_acc"].get(accession) == "Download link not found": #check if accession has been downloaded/processed. Proceed with download if not.
         ascp_fullpath, ftp_fullpath, filesize = aspera.get_download_path_ffq(accession)
         fastqpath =os.path.join(C_fastqdir,accession+".fastq.gz")
         if ascp_fullpath == "NOT_FOUND":
-            logfile.load()
-            logfile.contents["Step_2"]["processed_acc"][accession]= "Download link not found"
-            logfile.update()
-            return f"{accession}: Aborted. Download link not found."
+            return accession , index , "Download link not found"
+            #logfile.load()
+            #logfile.contents["Step_2"]["processed_acc"][accession]= "Download link not found"
+            #logfile.update()
+            #return f"{accession}: Aborted. Download link not found."
         #download
         if download_method == "ascp":
             result= misc.run_with_retries(retrylimit,
@@ -51,13 +52,14 @@ def download_PS_job(accession, index):
             f"{accession}: Download failed. Retrying...",
             f"{accession}: Downloading file via ftp...\n")
         if result == "failed":
-            logfile.load()
-            logfile.contents["Step_2"]["processed_acc"][accession]= "Download failed"
-            logfile.update()
-            return f"{accession}: Aborted after {retrylimit} retries."
-        logfile.load()
+            return accession , index , "Download failed"
+            #logfile.load()
+            #logfile.contents["Step_2"]["processed_acc"][accession]= "Download failed"
+            #logfile.update()
+            #return f"{accession}: Aborted after {retrylimit} retries."
+        #logfile.load()
         logfile.contents["Step_2"]["processed_acc"][accession]= "Downloaded"
-        logfile.update()
+        #logfile.update()
     
     if  logfile.contents["Step_2"]["processed_acc"].get(accession)== "Downloaded":
         fastqpath =os.path.join(C_fastqdir,accession+".fastq.gz")
@@ -68,19 +70,21 @@ def download_PS_job(accession, index):
         f"{accession}: Kallisto pseudoalignment failed. Retrying...",
         f"{accession}: Kallisto pseudoalignment of accession reads against draft CDSs...\n")
         if result == "failed":
-            logfile.load()
-            logfile.contents["Step_2"]["processed_acc"][accession]= "PS failed"
-            logfile.update()
             #os.system(f"rm {fastqpath}") add in final build
-            return f"{accession}: Aborted after {retrylimit} retries."
+            return accession , index , "PS failed"
+            #logfile.load()
+            #logfile.contents["Step_2"]["processed_acc"][accession]= "PS failed"
+            #logfile.update()
+            #return f"{accession}: Aborted after {retrylimit} retries."
         map_rate = read_map.write_quant_info(accession, kaloutdir, tpm_matpath)
-        logfile.load()
-        logfile.contents["Step_2"]["processed_acc"][accession]= float(map_rate)
-        logfile.update()
-        print(f"{accession}: Pseudoalignment completed.")
         #os.system(f"rm {fastqpath}") add in in final build
-        return f"{accession}: processed."
-    return f"{accession}: Unknown exception occurred."
+        print(f"{accession}: Pseudoalignment completed.")
+        return accession , index , float(map_rate)
+        #logfile.load()
+        #logfile.contents["Step_2"]["processed_acc"][accession]= float(map_rate)
+        #logfile.update()
+        #return f"{accession}: processed."
+    return accession , index , "Unknown exception"
     
     
     
@@ -95,9 +99,25 @@ def parallel_job(workers):
         progress_bar= tqdm(total=len(accessions), desc="Accessions processed", unit="Acsn", leave=True)
         results= [executor.submit(download_PS_job, accession, index) for index, accession in enumerate(accessions)]
         for f in concurrent.futures.as_completed(results):
-            #if "processed" in f.result() or "Aborted" in f.result():
+            #print(f.result())
+            accession , index , map_rate = f.result()
+            if map_rate== "Already processed":
+                msg = f"{accession} already processed."
+            else:
+                logfile.contents["Step_2"]["processed_acc"][accession]=map_rate 
+                if map_rate == "Download link not found":
+                    msg= f"{accession}: Aborted. Download link not found."
+                elif map_rate == "Download failed":
+                    msg= f"{accession}: Aborted. Download link not found."
+                elif map_rate == "PS failed":
+                    msg= f"{accession}: Aborted after {retrylimit} retries."
+                elif type(map_rate) == float:
+                    msg= f"{accession}: processed."
+                else:
+                    msg= f"{accession}: ERROR. Unknown exception occurred."
             progress_bar.update(1)
-            progress_bar.set_postfix_str(s=f.result())
+            progress_bar.set_postfix_str(s=msg)
+            logfile.update()
             print("\n")
         progress_bar.close()
         logfile.load()
@@ -114,26 +134,28 @@ def download_job(link, index):
         sleep((index%workers)*5)
     if filename in logfile.contents["Step_2"]["selected_accessions"]["download_progress"].keys():
         if logfile.contents["Step_2"]["selected_accessions"]["download_progress"].get(filename) == "Downloaded":
-            return f"Skipping {filename} as it had already been downloaded."
+            return filename , index, "Already downloaded"
+            #return f"Skipping {filename} as it had already been downloaded."
     fastqpath= os.path.join(F_fastqdir, filename)
     if download_method == "ascp":
         ascp_fullpath = link.replace("ftp://ftp.sra.ebi.ac.uk/", "era-fasp@fasp.sra.ebi.ac.uk:")
-        result= misc.run_with_retries(2,
+        result= misc.run_with_retries(retrylimit,
         aspera.launch_ascp,
-        [ascp_fullpath,fastqpath,0],#0 = no limit
+        [ascp_fullpath,fastqpath,0],#0 = no limit, full download
         f"{filename}: Download failed. Retrying...",
         f"{filename}: Downloading file via ascp...\n")
     elif download_method == "ftp":
-         result= misc.run_with_retries(2,
+         result= misc.run_with_retries(retrylimit,
             aspera.launch_curl,
-            [link,fastqpath,0], #0 = no limit
+            [link,fastqpath,0], #0 = no limit, full download
             f"{filename}: Download failed. Retrying...",
             f"{filename}: Downloading file via ftp...\n")
     if result == "failed":
-        logfile.load()
-        logfile.contents["Step_2"]["selected_accessions"]["download_progress"][filename]= "Download failed"
-        logfile.update()
-        return f"{filename}: Download aborted after {2} retries."
+        #logfile.load()
+        #logfile.contents["Step_2"]["selected_accessions"]["download_progress"][filename]= "Download failed"
+        #logfile.update()
+        return filename , index, "Download failed"
+        #return f"{filename}: Download aborted after {retrylimit} retries."
     else:
         #unzip and rename headers (because trinity sometimes have issues with fastq directly downloaded from ENA)
         unzippedfastqpath= fastqpath.split(".gz")[0]
@@ -142,12 +164,13 @@ def download_job(link, index):
         elif "_2" in unzippedfastqpath:
             os.system(f"zcat {fastqpath} | awk \'{{print (NR%4 == 1) ? \"@1_\" ++i \"/1\": $0}}\' > {unzippedfastqpath}")
         os.system(f"rm {fastqpath}")
-        logfile.load()
-        logfile.contents["Step_2"]["selected_accessions"]["download_progress"][filename]= "Downloaded"
-        logfile.update()
+        #logfile.load()
+        #logfile.contents["Step_2"]["selected_accessions"]["download_progress"][filename]= "Downloaded"
+        #logfile.update()
         print(f"{filename}: Downloaded.")
-        return f"{filename}: Downloaded."
-    return f"{filename}: Unexpected error."
+        return filename , index, "Downloaded"
+        #return f"{filename}: Downloaded."
+    return filename , index, "Unknown exception"
     
     
 def parallel_download(workers):
@@ -157,9 +180,19 @@ def parallel_download(workers):
         progress_bar= tqdm(total=len(FTP_links), desc="Fastq Downloaded", unit="fq", leave=True)
         results= [executor.submit(download_job, link, index) for index, link in enumerate(FTP_links)]
         for f in concurrent.futures.as_completed(results):
-            #if "processed" in f.result() or "Aborted" in f.result():
+            
+            filename , index, returncode = f.result()
+            if returncode == "Already downloaded":
+                msg= f"{filename}: Already been downloaded."
+            else:
+                logfile.contents["Step_2"]["selected_accessions"]["download_progress"][filename]= returncode
+                logfile.update()
+                if returncode== "Download failed":
+                   msg=  f"{filename}: Download aborted after {retrylimit} retries."
+                elif returncode == "Downloaded":
+                   msg= f"{filename}: Downloaded."
             progress_bar.update(1)
-            progress_bar.set_postfix_str(s=f.result())
+            progress_bar.set_postfix_str(s=msg)
             print("\n")
         progress_bar.close()
         logfile.load()
@@ -175,8 +208,8 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--output_dir", type=str, metavar= "", required=True,
     help= "Directory for data output. Directory needs to be same as for step 1 (MakeDraftCDS.py).")
     parser.add_argument("-ps", "--pseudoalignment_threshold", type=int ,metavar="", default=0 , choices=range(0, 70+1),
-    help = "Specifies pseudoalignment (%%PS) threshold during quality control. Expression data of accessions that do not meet this threshold will be excluded as features in k-means clustering.\
-    By default(0), %%PS to threshold will be determined automatically to be the lower bound of the %%PS distribution (Q1 - 1.5 *IQR) or 10%%, whichever is higher.")
+    help = "Specifies reads pseudoaligned (%%PS) threshold for quality control. Expression data of accessions that do not meet this threshold will be excluded as features for clustering.\
+    Set to 0 by default where %%PS threshold will be set to be the lower bound of the %%PS distribution (Q1 - 1.5 *IQR) or 20%%, whichever is higher.")
     parser.add_argument("-s","--filesizelimit" , type=int, metavar="", default=500 , choices=range(100, 1000),
     help="Specifies the size limit(mb) for the partial download of accession read files (gzip compressed) for pseudoalignment. Limit set to 500 (mb) by default. \
     Size maybe decreased to improve the overall runtime (Download and Psudoalignment) and storage used in this step of the pipeline.\
@@ -191,8 +224,9 @@ if __name__ == "__main__":
     help= "Specifies the upper limit for number of accessions to download and process. Accessions will be selected from a pre-randomised list that was fetched during MakeDraftCDS.py run and stored in in the logs.json file.\
     Default set to 500.")
     parser.add_argument("-kr", "--k_range", type=str, metavar="", default="auto",
-    help = "Specifies the range of k (number of clusters) to iterate through during k-means clustering. Lower and upper limit seperated by colon(:). \
-    Set to auto(2:n where n ≈ number of accessions that passed qc / 10) by default.")    
+    help = "Specifies the range of k (number of clusters) to iterate through during clustering. Lower and upper limit seperated by colon(:). \
+    Set to auto(5:20) by default. Optimal k will be chosen from this range based on silhouette coefficient, a clustering performance metric.\
+    As such, please set range within expectations based on heterogenity of expression data for that organism.")    
     parser.add_argument("-ct", "--consensus_threshold", type=int ,metavar="", default=0 , choices=range(0, 50+1),
     help = "Specifies consensus threshold of preliminary assembly. Default set to 0 where optimal threshold determined automatically in step 1 will be used.")
     parser.add_argument("-clib", "--cluster_lib_size", type=int ,metavar="", default=2000 , choices=range(500, 10*1000),
@@ -312,7 +346,6 @@ if __name__ == "__main__":
         print(f"Total accessions fetched from ENA: {len(accessions)} (capped)\n")
     else:    
         print(f"Total accessions fetched from ENA: {len(accessions)}\n")
-    print(f"Total accessions fetched from ENA: {len(accessions)}\n")
     
     print("Transfering accession .fastq files downloaded in step 1 to new directory...")
     for file in os.listdir(P_fastqdir): #xfer old files if not already done so
@@ -382,12 +415,17 @@ if __name__ == "__main__":
     
     #extract k-means minimum and maximum values from range k_range variable parsed from arguments
     if k_range == "auto":
-        kmin = 2
-        kmax= int(np.round((len(passed) /10))) +1
+        kmin = 5
+        kmax= 20
+        if kmax > len(passed):
+            print(f"Number of accessions that passed QC is below upper limit of k range {kmax}.\nRange changed to {kmin}:{len(passed)}.")
+            kmax = len(passed)
     else:
         kmin = int(k_range.split(":")[0])
         kmax= int(k_range.split(":")[1])+1 #non-inclusive
-    
+        if kmax > len(passed):
+            print(f"Number of accessions that passed QC is below upper limit of k range {kmax}.\nRange changed to {kmin}:{len(passed)}.")
+            kmax = len(passed)
     if "cluster_assignment_stats" not in logfile.contents["Step_2"]["kmeans"].keys():
         print(f"Initiating k-means clustering of accesions based on PCA data.\nClustering iterations will walk from k={kmin} to k={kmax-1} to determine optimal number of clusters(k)...\n")
         #k-means walk proper under context manager (threadpool_limits) to limit core usage. kmeans package uses all available cores by default.
@@ -414,7 +452,7 @@ if __name__ == "__main__":
         optimal_k, sc_max, median_stat , mean_stat, min_stat , max_stat = logfile.contents["Step_2"]["kmeans"]["cluster_assignment_stats"]
         cluster_assignment_dict = logfile.contents["Step_2"]["kmeans"]["cluster_assignment_dict"]
         silhouette_coefficients_dict = logfile.contents["Step_2"]["kmeans"]["s_coeficient"]
-    
+    print(cluster_assignment_dict)
     #report kmeans stats to user
     print(f"\nOptimal K-means iteration determined to be at k={optimal_k} with a silhouette coefficient of {sc_max}.\n\nAverage cluster size: {mean_stat} accessions\nMedian cluster size: {median_stat} accessions\nSize of largest cluster: {max_stat} accessions\nSize of smallest cluster: {min_stat} accessions\n")
     print(f"Selecting representative accessions from each cluster based on target library size....\nNote: Fetching metadata might take some time.")
