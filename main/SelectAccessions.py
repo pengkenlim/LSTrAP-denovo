@@ -387,6 +387,8 @@ if __name__ == "__main__":
     
     #initiate parallel DL and PS of accessions
     parallel_job(workers)
+    print("\nChecking logs to re-attempt download of failed accessions....")
+    parallel_job(workers)
     
     print("\nParallel download and pseudoalignment complete.\n")
     
@@ -412,7 +414,6 @@ if __name__ == "__main__":
     with threadpool_limits(user_api="openmp", limits=threadpool):
         pca_data , pc_variances = classify.PCA_transformer(Matrix)    
     print(f"PCA-transformation complete with {np.round(sum(pc_variances))}% of variance retained. (PC1= {pc_variances[0]}%)\n")
-    
     #extract k-means minimum and maximum values from range k_range variable parsed from arguments
     if k_range == "auto":
         kmin = 5
@@ -430,9 +431,9 @@ if __name__ == "__main__":
         print(f"Initiating k-means clustering of accesions based on PCA data.\nClustering iterations will walk from k={kmin} to k={kmax-1} to determine optimal number of clusters(k)...\n")
         #k-means walk proper under context manager (threadpool_limits) to limit core usage. kmeans package uses all available cores by default.
         with threadpool_limits(user_api="openmp", limits=threadpool):
-            k_cluster_assignment_dict, silhouette_coefficients = classify.kmeans_kwalk(pca_data, kmin, kmax)
+            k_cluster_assignment_dict, silhouette_coefficients, k_centroids_dict = classify.kmeans_kwalk(pca_data, kmin, kmax)
         #feed silhouette_coefficients and cluster assignments at different ks into function that determines optimal k 
-        optimal_k, cluster_assignment , sc_max = classify.optimal_k_silhouette(kmin, kmax, silhouette_coefficients, k_cluster_assignment_dict)
+        optimal_k, cluster_assignment , sc_max, centroids = classify.optimal_k_silhouette(kmin, kmax, silhouette_coefficients, k_cluster_assignment_dict, k_centroids_dict)
         
         cluster_assignment_dict = {}
         for accession , cluster in zip(passed ,cluster_assignment):
@@ -448,11 +449,17 @@ if __name__ == "__main__":
         median_stat , mean_stat, min_stat , max_stat = classify.report_cluster_assignment_stats(cluster_assignment_dict)
         logfile.contents["Step_2"]["kmeans"]["cluster_assignment_stats"]= [optimal_k, sc_max, median_stat , mean_stat, min_stat , max_stat]
         logfile.update()
+
+        master_cluster_assignment_dict = classify.generate_master_cluster_assignment_dict(cluster_assignment_dict, centroids, pca_data,
+        {key:val for key, val in logfile.contents["Step_2"].get("processed_acc").items() if type(val) is not str})
+        logfile.contents["Step_2"]["kmeans"]["master_cluster_assignment_dict"] = master_cluster_assignment_dict
+        logfile.update()
     else:
         optimal_k, sc_max, median_stat , mean_stat, min_stat , max_stat = logfile.contents["Step_2"]["kmeans"]["cluster_assignment_stats"]
         cluster_assignment_dict = logfile.contents["Step_2"]["kmeans"]["cluster_assignment_dict"]
         silhouette_coefficients_dict = logfile.contents["Step_2"]["kmeans"]["s_coeficient"]
-    print(cluster_assignment_dict)
+        master_cluster_assignment_dict = logfile.contents["Step_2"]["kmeans"]["master_cluster_assignment_dict"]
+    
     #report kmeans stats to user
     print(f"\nOptimal K-means iteration determined to be at k={optimal_k} with a silhouette coefficient of {sc_max}.\n\nAverage cluster size: {mean_stat} accessions\nMedian cluster size: {median_stat} accessions\nSize of largest cluster: {max_stat} accessions\nSize of smallest cluster: {min_stat} accessions\n")
     print(f"Selecting representative accessions from each cluster based on target library size....\nNote: Fetching metadata might take some time.")
@@ -460,7 +467,6 @@ if __name__ == "__main__":
     clusters = [ int(k) for k in list(cluster_assignment_dict.keys())]
     clusters.sort()
     clusters= [str(k) for k in clusters]
-    processed_acc_dict = logfile.contents["Step_2"].get("processed_acc")
     if "FTP_links" not in logfile.contents["Step_2"]["selected_accessions"].keys():
         logfile.contents["Step_2"]["selected_accessions"]["FTP_links"]=[]
         logfile.update()
@@ -470,24 +476,11 @@ if __name__ == "__main__":
         if cluster in logfile.contents["Step_2"]["selected_accessions"].keys():
             print(f"Cluster{cluster}: cluster representatives selected.\n")
         else:    
-            accessions= cluster_assignment_dict.get(cluster)
-
-            #this dict shall accessions as key and PS% stats as values
-            accession_dict = {acc: processed_acc_dict.get(acc) for acc in accessions}
-
-            ranked_ps = list(accession_dict.values())
-            ranked_ps.sort()
-
-            accession_dict_sorted={}
-            #brute force using nested loop to sort the dictionary based on %PS values
-            for ps in ranked_ps:
-                for key, val in accession_dict.items():
-                    if ps == val:
-                        accession_dict_sorted[key]= val
             logfile.contents["Step_2"]["selected_accessions"][cluster]={}
+            master_cluster_assignment_dict
             libsize=0
-            for accession in accession_dict_sorted.keys():
-                if libsize < (cluster_lib_size * 1048*1048): #minimum library size of 2gb (forward + reverse, gunzipped) per cluster
+            for accession, info_list in master_cluster_assignment_dict[cluster].items(): #moving down the list of accessions, sorted based on distance to centroids in master dict
+                if libsize < (cluster_lib_size * 1048*1048):
                     forward, reverse = "ERR", "ERR"
                     ftp_links= aspera.launch_ffq_ftp(accession)
                         #check if paired end
@@ -497,10 +490,9 @@ if __name__ == "__main__":
                                 forward = file
                             elif file["filenumber"] == 2:
                                 reverse = file
-                        #add read files to total libary size
                         if forward != "ERR" and  reverse != "ERR":
                             libsize+= forward.get("filesize") + reverse.get("filesize")
-                            logfile.contents["Step_2"]["selected_accessions"][cluster][accession]={"Library_size": forward.get("filesize") + reverse.get("filesize")}
+                            logfile.contents["Step_2"]["selected_accessions"][cluster][accession]={"Library_size": forward.get("filesize") + reverse.get("filesize") ,"Distance": info_list[0], "PS": info_list[1]}
                             logfile.contents["Step_2"]["selected_accessions"]["FTP_links"] += [forward.get("url") ,reverse.get("url")]
                             logfile.update()
             print(f"Cluster {cluster}: cluster representatives selected.\n")
@@ -519,19 +511,17 @@ if __name__ == "__main__":
     parallel_download(workers)
     
     #make samples_file for trinity
-    with open(os.path.join(F_fastqdir, "Samples_for_trinity.tsv"), "w") as f:
+    with open(os.path.join(outputdir, "Samples_for_trinity.tsv"), "w") as f:
         for cluster in clusters:
             condition= f"Cluster_{cluster}"
             for index , accession in enumerate(logfile.contents["Step_2"]["selected_accessions"][cluster]):
                 replicate=  f"Cluster_{cluster}_rep{index}"
                 forwardpath , reversepath = os.path.join(F_fastqdir,accession+"_1.fastq"), os.path.join(F_fastqdir,accession+"_2.fastq")
-                f.write(f"{condition}\t{replicate}\t{forwardpath}\t{reversepath}")
+                f.write(f"{condition}\t{replicate}\t{forwardpath}\t{reversepath}\n")
                 
                 
-    print("\nTrinity sample file have been created at "+ os.path.join(F_fastqdir, "Samples_for_trinity.tsv.\n"))
+    print("\nTrinity sample file have been created at "+ os.path.join(outputdir, "Samples_for_trinity.tsv.\n"))
     print("Install Trinity (https://github.com/trinityrnaseq/), edit and run Run_Trinity.py to start de novo / genome-guided transcriptome assembly.\n")
-        
-    
     logfile.contents["Step_2"]["status"]= "completed"
     logfile.update()
     print("HSS-Trans.SelectAccessions.py completed.\nGenerating html report...\n")

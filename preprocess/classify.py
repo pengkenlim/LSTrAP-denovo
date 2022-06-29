@@ -15,6 +15,7 @@ from sklearn.metrics import silhouette_score
 from k_means_constrained import KMeansConstrained
 import pandas as pd
 from scipy.stats import iqr
+from sklearn.metrics.pairwise import euclidean_distances
 
 def kdecutoff(mappingvalues):
     """Used to determine minimum mapping rate cutoff (threshold) for quality control based on their distribution (more specifically, estimated kernel density).
@@ -58,14 +59,16 @@ def kmeans_kwalk(data, k_min, k_max):
     #kmeans_kwargs = {"init": "k-means++", "n_init": 100,"max_iter": 2000,"random_state": 42, "size_min": 10} #for kmeans constrained
     silhouette_coefficients = []
     k_cluster_assignment_dict={}
+    k_centroids_dict={}
     for k in range(k_min,k_max):
         kmeans = KMeans(n_clusters=k, **kmeans_kwargs)
         #kmeans = KMeansConstrained(n_clusters=k, **kmeans_kwargs)
         kmeans.fit(data)
         silhouette_coefficients.append(silhouette_score(data, kmeans.labels_))
         k_cluster_assignment_dict[k]= kmeans.labels_
+        k_centroids_dict[k]= kmeans.cluster_centers_
         print(f"K-means iteration at k={k} complete.\n")
-    return k_cluster_assignment_dict , silhouette_coefficients
+    return k_cluster_assignment_dict , silhouette_coefficients, k_centroids_dict
     
 
 def PCA_transformer(Matrix, n_pcs=100):
@@ -87,17 +90,18 @@ def PCA_transformer(Matrix, n_pcs=100):
 
 def mat_parser(pathtomat, accessions):
     ''' returns matrix for PCA x-formation. accessions= list of accessions that passed qc'''
-    Matrix= pd.read_csv( pathtomat,sep="\t").set_index("accession").transpose()
+    Matrix= pd.read_csv( pathtomat,sep="\t").set_index("accession").drop_duplicates(keep='last').transpose()
     Matrix= Matrix[accessions]
     return Matrix
     
-def optimal_k_silhouette(k_min, k_max, silhouette_coefficients, k_cluster_assignment_dict):
+def optimal_k_silhouette(k_min, k_max, silhouette_coefficients, k_cluster_assignment_dict, k_centroids_dict):
     """Determine the optimal k based on silhouette score. Returns optimal k and respective list of cluster_labels.
     Optimal K is defined as the lowest k  within 0.01 range of max silhoette score"""
     sc_rounded= [np.round(sc, 2) for sc in silhouette_coefficients] 
     optimal_k = [k for k in range(k_min,k_max)][sc_rounded.index(max(sc_rounded))]
     cluster_assignment = k_cluster_assignment_dict.get(optimal_k)
-    return optimal_k, cluster_assignment , silhouette_coefficients[sc_rounded.index(max(sc_rounded))]
+    centroids = k_centroids_dict.get(optimal_k)
+    return optimal_k, cluster_assignment , silhouette_coefficients[sc_rounded.index(max(sc_rounded))] , centroids
 
 def report_cluster_assignment_stats(cluster_assignment_dict):
     n_accession_list= [len(val) for val in cluster_assignment_dict.values()]
@@ -106,4 +110,24 @@ def report_cluster_assignment_stats(cluster_assignment_dict):
     min_stat = np.min(n_accession_list)
     max_stat = np.max(n_accession_list)
     return int(median_stat) , int(mean_stat), int(min_stat) , int(max_stat)
-    
+ 
+def generate_master_cluster_assignment_dict(cluster_assignment, centroids, pca_data, mapratedict):
+    """Step after optimal_k_silhouette().
+    used to generate master cluster assignment dict containing cluster as keys and subdict as values 
+    subdict have accession as keys and info tuple as values sorted based on distance to cluster centroids.
+    info list : (distance, maprate ) 
+    e.g. {"0": {"SRR123456":[dist, maprate], ...}, ...}"""
+    temp_dict = {}
+    for cluster, accessions in cluster_assignment.items():
+        temp_dict[cluster] = {}
+        for acc in accessions:
+            min_euc_dist= euclidean_distances(np.array(centroids), np.array(pca_data.loc[acc]).reshape(1, -1))[int(cluster)]
+            temp_dict[cluster][acc]=float(min_euc_dist)
+    master_cluster_assignment_dict = {}
+    for cluster, dist_dict in temp_dict.items():
+        master_cluster_assignment_dict[cluster]={}
+        sortedlist= sorted(list(dist_dict.values()))
+        inverted_dist_dict={value:key for key, value in dist_dict.items()}
+        for value in sortedlist:
+            master_cluster_assignment_dict[cluster][inverted_dist_dict[value]]=[ value, mapratedict[inverted_dist_dict[value]]]
+    return master_cluster_assignment_dict
