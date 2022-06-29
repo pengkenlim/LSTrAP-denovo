@@ -105,6 +105,8 @@ def parallel_job(workers):
                 msg = f"{accession} already processed."
             else:
                 logfile.contents["Step_2"]["processed_acc"][accession]=map_rate 
+                if index%workers == 0:
+                    logfile.update() #only one worker can trigger update of log file.
                 if map_rate == "Download link not found":
                     msg= f"{accession}: Aborted. Download link not found."
                 elif map_rate == "Download failed":
@@ -117,7 +119,7 @@ def parallel_job(workers):
                     msg= f"{accession}: ERROR. Unknown exception occurred."
             progress_bar.update(1)
             progress_bar.set_postfix_str(s=msg)
-            logfile.update()
+            
             print("\n")
         progress_bar.close()
         logfile.load()
