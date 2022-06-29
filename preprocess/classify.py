@@ -37,8 +37,8 @@ def kdecutoff(mappingvalues):
         
 def lowerfence_iqr_cutoff(mappingvalues):
     '''replaces kdecutoff (more reliable and is a well established statistical method to look for outliers). Basically returns the lower fence (Q1 - 1.5*IQR) using the interquartile range (IQR)
-    if lower fence is lower than 10%, return 10 % instead'''
-    return max([np.percentile(mappingvalues, 25) - 1.5*iqr(mappingvalues), 10])
+    if lower fence is lower than 20%, return 10 % instead'''
+    return max([np.percentile(mappingvalues, 25) - 1.5*iqr(mappingvalues), 20])
     
 
 def thresholder(maprate_dict, cutoff):
