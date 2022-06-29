@@ -107,6 +107,7 @@ def parallel_job(workers):
                 logfile.contents["Step_2"]["processed_acc"][accession]=map_rate 
                 if index%workers == 0:
                     logfile.update() #only one worker can trigger update of log file.
+                    print("Checkpoint reached. Logfile updated")
                 if map_rate == "Download link not found":
                     msg= f"{accession}: Aborted. Download link not found."
                 elif map_rate == "Download failed":
