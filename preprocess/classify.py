@@ -13,6 +13,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 from k_means_constrained import KMeansConstrained
+from sklearn_extra.cluster import KMedoids
 import pandas as pd
 from scipy.stats import iqr
 from sklearn.metrics.pairwise import euclidean_distances
@@ -55,14 +56,16 @@ def thresholder(maprate_dict, cutoff):
 
 def kmeans_kwalk(data, k_min, k_max):
     """do kmeans iteration walk"""
-    kmeans_kwargs = {"init": "k-means++", "n_init": 100,"max_iter": 2000,"random_state": 42} #remove random state (seed) after development
+    #kmeans_kwargs = {"init": "k-means++", "n_init": 100,"max_iter": 2000,"random_state": 42} #remove random state (seed) after development
     #kmeans_kwargs = {"init": "k-means++", "n_init": 100,"max_iter": 2000,"random_state": 42, "size_min": 10} #for kmeans constrained
+    kmeans_kwargs = {"init": "k-medoids++", "method":"pam" ,"max_iter": 2000,"random_state": 42}
     silhouette_coefficients = []
     k_cluster_assignment_dict={}
     k_centroids_dict={}
     for k in range(k_min,k_max):
-        kmeans = KMeans(n_clusters=k, **kmeans_kwargs)
+        #kmeans = KMeans(n_clusters=k, **kmeans_kwargs)
         #kmeans = KMeansConstrained(n_clusters=k, **kmeans_kwargs)
+        kmeans = KMedoids(n_clusters=k, **kmeans_kwargs)
         kmeans.fit(data)
         silhouette_coefficients.append(silhouette_score(data, kmeans.labels_))
         k_cluster_assignment_dict[k]= kmeans.labels_

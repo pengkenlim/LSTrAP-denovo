@@ -155,7 +155,7 @@ def generate_from_json_log(logpath, reportpath,step=1):
         var data = google.visualization.arrayToDataTable({sc_data});
 
        var options = {{
-          title: 'Clustering Performance of K-means Clustering Iterations at Different ks',
+          title: 'Clustering Performance of K-Medoids Clustering Iterations at Different ks',
           legend: {{ position: 'none' }},
 		  vAxis: {{title: "Silhouette coefficient"}},
 		  hAxis: {{title: "Number of clusters (k)"}}
@@ -235,12 +235,10 @@ def generate_from_json_log(logpath, reportpath,step=1):
         <h3>Accession Quality Control</h3>
         <div id="PS_HISTO" style="width: 900px; height: 500px;"></div>
         <p>Pseudoalignment threshold of <b>{ps_cutoff}%</b> was used for quality control (QC). <b>{n_failed}</b> out of {n_total} accessions failed QC and was excluded out of pipeline.</p>
-        <h3>Clustering of Accessions using K-means Algorithm</h3>
+        <h3>Clustering of Accessions using K-medoids Algorithm</h3>
         <div id="SC_CURVE" style="width: 900px; height: 500px;"></div>
-        <p>Optimal K-means iteration determined to be at <b>k={optimal_k}</b> with a silhouette coefficient of <b>{sc_max}</b>.</p>
+        <p>Optimal K-Medoids iteration determined to be at <b>k={optimal_k}</b> with a silhouette coefficient of <b>{sc_max}</b>.</p>
         <div id="CLUSTER_SIZE_BAR" style="width: 900px; height: 900px;"></div>
-		<h2 style="background-color:#D6EEEE;">Step 3. Modular concatenation of multi-kmer and transcriptome-profile-specific assemblies.</h2>	
-		<h3>Format to be determined</h3>
 	</body>
 </html>'''
     #creating report file
