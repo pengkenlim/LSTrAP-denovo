@@ -186,7 +186,8 @@ def parallel_download(workers):
                 msg= f"{filename}: Already been downloaded."
             else:
                 logfile.contents["Step_2"]["selected_accessions"]["download_progress"][filename]= returncode
-                logfile.update()
+                if index%workers == 0:
+                    logfile.update() #only one worker can trigger update of log file.
                 if returncode== "Download failed":
                    msg=  f"{filename}: Download aborted after {retrylimit} retries."
                 elif returncode == "Downloaded":
@@ -428,7 +429,7 @@ if __name__ == "__main__":
             print(f"Number of accessions that passed QC is below upper limit of k range {kmax}.\nRange changed to {kmin}:{len(passed)}.")
             kmax = len(passed)
     if "cluster_assignment_stats" not in logfile.contents["Step_2"]["kmeans"].keys():
-        print(f"Initiating k-means clustering of accesions based on PCA data.\nClustering iterations will walk from k={kmin} to k={kmax-1} to determine optimal number of clusters(k)...\n")
+        print(f"Initiating k-Medoids clustering of accesions based on PCA data.\nClustering iterations will walk from k={kmin} to k={kmax-1} to determine optimal number of clusters(k)...\n")
         #k-means walk proper under context manager (threadpool_limits) to limit core usage. kmeans package uses all available cores by default.
         with threadpool_limits(user_api="openmp", limits=threadpool):
             k_cluster_assignment_dict, silhouette_coefficients, k_centroids_dict = classify.kmeans_kwalk(pca_data, kmin, kmax)
@@ -461,7 +462,7 @@ if __name__ == "__main__":
         master_cluster_assignment_dict = logfile.contents["Step_2"]["kmeans"]["master_cluster_assignment_dict"]
     
     #report kmeans stats to user
-    print(f"\nOptimal K-means iteration determined to be at k={optimal_k} with a silhouette coefficient of {sc_max}.\n\nAverage cluster size: {mean_stat} accessions\nMedian cluster size: {median_stat} accessions\nSize of largest cluster: {max_stat} accessions\nSize of smallest cluster: {min_stat} accessions\n")
+    print(f"\nOptimal K-Medoids iteration determined to be at k={optimal_k} with a silhouette coefficient of {sc_max}.\n\nAverage cluster size: {mean_stat} accessions\nMedian cluster size: {median_stat} accessions\nSize of largest cluster: {max_stat} accessions\nSize of smallest cluster: {min_stat} accessions\n")
     print(f"Selecting representative accessions from each cluster based on target library size....\nNote: Fetching metadata might take some time.")
     logfile.load()
     clusters = [ int(k) for k in list(cluster_assignment_dict.keys())]
