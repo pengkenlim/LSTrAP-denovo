@@ -165,7 +165,7 @@ def download_job(link, index):
         if "_1" in unzippedfastqpath:
             os.system(f"zcat {fastqpath} | awk \'{{print (NR%4 == 1) ? \"@1_\" ++i \"/1\": $0}}\' > {unzippedfastqpath}")
         elif "_2" in unzippedfastqpath:
-            os.system(f"zcat {fastqpath} | awk \'{{print (NR%4 == 1) ? \"@1_\" ++i \"/1\": $0}}\' > {unzippedfastqpath}")
+            os.system(f"zcat {fastqpath} | awk \'{{print (NR%4 == 1) ? \"@1_\" ++i \"/2\": $0}}\' > {unzippedfastqpath}")
         os.system(f"rm {fastqpath}")
         #logfile.load()
         #logfile.contents["Step_2"]["selected_accessions"]["download_progress"][filename]= "Downloaded"
