@@ -59,17 +59,17 @@ def single_sample_assembly(accession,index):
         fastqpath=os.path.join(fastqdir,accession+".fastq.gz")
         fastqpath_2=os.path.join(fastqdir,accession+"_2.fastq.gz")
         if download_method == "ascp":
-            #download file 1
+            #download file 1, no download limit.
             result= misc.run_with_retries(retrylimit,
             aspera.launch_ascp,
-            [ascp_fullpath[0],fastqpath,filesizelimit],
+            [ascp_fullpath[0],fastqpath,0],
             f"{accession}: Download failed. Retrying...",
             f"{accession}: Downloading file 1 via ascp...\n")
             if result == "failed":
                 with open(pathtoprocessed, "a") as f:
                     f.write(f"{accession}\tDownload failed\n")
                 return f"{accession}: Aborted after {retrylimit} retries."
-            #download file 2
+            #download file 2, download limit = filesizelimit - filesize of file 1
             result= misc.run_with_retries(retrylimit,
             aspera.launch_ascp,
             [ascp_fullpath[1],fastqpath_2,filesizelimit - filesize[0] ],
@@ -77,17 +77,17 @@ def single_sample_assembly(accession,index):
             f"{accession}: Downloading file 2 via ascp...\n")
             
         elif download_method == "ftp":
-            #download file 1
+            #download file 1, no download limit.
             result= misc.run_with_retries(retrylimit,
             aspera.launch_curl,
-            [ftp_fullpath[0],fastqpath,filesizelimit],
+            [ftp_fullpath[0],fastqpath,0], 
             f"{accession}: Download failed. Retrying...",
             f"{accession}: Downloading file 1 via ftp...\n")
             if result == "failed":
                 with open(pathtoprocessed, "a") as f:
                     f.write(f"{accession}\tDownload failed\n")
                 return f"{accession}: Aborted after {retrylimit} retries."
-            #download file 2
+            #download file 2, download limit = filesizelimit - filesize of file 1
             result= misc.run_with_retries(retrylimit,
             aspera.launch_curl,
             [ftp_fullpath[1],fastqpath_2,filesizelimit - filesize[0]],
