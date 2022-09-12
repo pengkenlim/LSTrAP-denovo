@@ -87,7 +87,11 @@ def launch_ffq_ftp(accession):
     completedprocess = subprocess.run(["ffq" ,"--ftp", accession], capture_output=True)
     returncode= completedprocess.returncode
     stdout= completedprocess.stdout.decode("utf-8")
-    return json.loads(stdout)
+    try:
+        return json.loads(stdout)
+    except:
+        #unexpected error
+        return []
 
 def get_download_path_ffq(accession):
     """wrapper for launch_ffq_ftp(). Parse json output to return download links of largest read file"""

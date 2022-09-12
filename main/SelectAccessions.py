@@ -163,12 +163,12 @@ def download_job(link, index):
         #return f"{filename}: Download aborted after {retrylimit} retries."
     else:
         #unzip and rename headers (because trinity sometimes have issues with fastq directly downloaded from ENA)
-        unzippedfastqpath= fastqpath.split(".gz")[0]
-        if "_1" in unzippedfastqpath:
-            os.system(f"zcat {fastqpath} | awk \'{{print (NR%4 == 1) ? \"@1_\" ++i \"/1\": $0}}\' > {unzippedfastqpath}")
-        elif "_2" in unzippedfastqpath:
-            os.system(f"zcat {fastqpath} | awk \'{{print (NR%4 == 1) ? \"@1_\" ++i \"/2\": $0}}\' > {unzippedfastqpath}")
-        os.system(f"rm {fastqpath}")
+        #unzippedfastqpath= fastqpath.split(".gz")[0]
+        #if "_1" in unzippedfastqpath:
+        #    os.system(f"zcat {fastqpath} | awk \'{{print (NR%4 == 1) ? \"@1_\" ++i \"/1\": $0}}\' > {unzippedfastqpath}")
+        #elif "_2" in unzippedfastqpath:
+        #    os.system(f"zcat {fastqpath} | awk \'{{print (NR%4 == 1) ? \"@1_\" ++i \"/2\": $0}}\' > {unzippedfastqpath}")
+        #os.system(f"rm {fastqpath}")
         #logfile.load()
         #logfile.contents["Step_2"]["selected_accessions"]["download_progress"][filename]= "Downloaded"
         #logfile.update()
@@ -539,7 +539,8 @@ if __name__ == "__main__":
             condition= f"Cluster_{cluster}"
             for index , accession in enumerate(logfile.contents["Step_2"]["selected_accessions"][cluster]):
                 replicate=  f"Cluster_{cluster}_rep{index}"
-                forwardpath , reversepath = os.path.join(F_fastqdir,accession+"_1.fastq"), os.path.join(F_fastqdir,accession+"_2.fastq")
+                #forwardpath , reversepath = os.path.join(F_fastqdir,accession+"_1.fastq"), os.path.join(F_fastqdir,accession+"_2.fastq")
+                forwardpath , reversepath = os.path.join(F_fastqdir,accession+"_1.fastq.gz"), os.path.join(F_fastqdir,accession+"_2.fastq.gz")
                 f.write(f"{condition}\t{replicate}\t{forwardpath}\t{reversepath}\n")
                 
                 
