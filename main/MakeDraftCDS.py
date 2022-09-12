@@ -32,26 +32,75 @@ def single_sample_assembly(accession,index):
         return f"{accession} already processed."
     #to un-sync workers 
     sleep((index%workers)*10)
-    ascp_fullpath,ftp_fullpath = logfile.contents["Step_1"]["run_var"]["selected_accessions"].get(accession)
-    fastqpath=os.path.join(fastqdir,accession+".fastq.gz")
+    ascp_fullpath,ftp_fullpath,filesize = logfile.contents["Step_1"]["run_var"]["selected_accessions"].get(accession)
+    #check if paired or if forward > filesizelimit
+    if len(ascp_fullpath) == 1 or filesize[0] >= filesizelimit:
+        fastqpath=os.path.join(fastqdir,accession+".fastq.gz")
     #use the appropriate download method to download accession
-    if download_method == "ascp":
-        result= misc.run_with_retries(retrylimit,
-        aspera.launch_ascp,
-        [ascp_fullpath,fastqpath,filesizelimit],
-        f"{accession}: Download failed. Retrying...",
-        f"{accession}: Downloading file via ascp...\n")
-        
-    elif download_method == "ftp":
-        result= misc.run_with_retries(retrylimit,
-        aspera.launch_curl,
-        [ftp_fullpath,fastqpath,filesizelimit],
-        f"{accession}: Download failed. Retrying...",
-        f"{accession}: Downloading file via ftp...\n")
-    if result == "failed":
-        logfile.load()
-        logfile.contents["Step_1"]["processed_acc"][accession]= "Download failed."
-        logfile.update()
+        if download_method == "ascp" :
+            result= misc.run_with_retries(retrylimit,
+            aspera.launch_ascp,
+            [ascp_fullpath[0],fastqpath,filesizelimit],
+            f"{accession}: Download failed. Retrying...",
+            f"{accession}: Downloading file via ascp...\n")
+            
+        elif download_method == "ftp":
+            result= misc.run_with_retries(retrylimit,
+            aspera.launch_curl,
+            [ftp_fullpath[0],fastqpath,filesizelimit],
+            f"{accession}: Download failed. Retrying...",
+            f"{accession}: Downloading file via ftp...\n")
+        if result == "failed":
+            logfile.load()
+            logfile.contents["Step_1"]["processed_acc"][accession]= "Download failed."
+            logfile.update()
+            return f"{accession}: Aborted after {retrylimit} retries."
+    else:
+        fastqpath=os.path.join(fastqdir,accession+".fastq.gz")
+        fastqpath_2=os.path.join(fastqdir,accession+"_2.fastq.gz")
+        if download_method == "ascp":
+            #download file 1
+            result= misc.run_with_retries(retrylimit,
+            aspera.launch_ascp,
+            [ascp_fullpath[0],fastqpath,filesizelimit],
+            f"{accession}: Download failed. Retrying...",
+            f"{accession}: Downloading file 1 via ascp...\n")
+            if result == "failed":
+                with open(pathtoprocessed, "a") as f:
+                    f.write(f"{accession}\tDownload failed\n")
+                return f"{accession}: Aborted after {retrylimit} retries."
+            #download file 2
+            result= misc.run_with_retries(retrylimit,
+            aspera.launch_ascp,
+            [ascp_fullpath[1],fastqpath_2,filesizelimit - filesize[0] ],
+            f"{accession}: Download failed. Retrying...",
+            f"{accession}: Downloading file 2 via ascp...\n")
+            
+        elif download_method == "ftp":
+            #download file 1
+            result= misc.run_with_retries(retrylimit,
+            aspera.launch_curl,
+            [ftp_fullpath[0],fastqpath,filesizelimit],
+            f"{accession}: Download failed. Retrying...",
+            f"{accession}: Downloading file 1 via ftp...\n")
+            if result == "failed":
+                with open(pathtoprocessed, "a") as f:
+                    f.write(f"{accession}\tDownload failed\n")
+                return f"{accession}: Aborted after {retrylimit} retries."
+            #download file 2
+            result= misc.run_with_retries(retrylimit,
+            aspera.launch_curl,
+            [ftp_fullpath[1],fastqpath_2,filesizelimit - filesize[0]],
+            f"{accession}: Download failed. Retrying...",
+            f"{accession}: Downloading file 2 via ftp...\n")
+        if result == "failed":
+            with open(pathtoprocessed, "a") as f:
+                f.write(f"{accession}\tDownload failed\n")
+            return f"{accession}: Aborted after {retrylimit} retries."
+        #concatenate reverse reads to forward reads
+        os.system(f"cat {fastqpath_2} >> {fastqpath}")
+        os.system(f"rm {fastqpath_2}")
+            
     #trim and uncompress
     result= misc.run_with_retries(retrylimit,
     trim.launch_fastp,
@@ -59,9 +108,8 @@ def single_sample_assembly(accession,index):
     f"{accession}: Fastp trimming failed. Retrying...",
     f"{accession}: Trimming file using Fastp...\n")
     if result == "failed":
-        logfile.load()
-        logfile.contents["Step_1"]["processed_acc"][accession]= "Fastp failed."
-        logfile.update()
+        with open(pathtoprocessed, "a") as f:
+            f.write(f"{accession}\tFastP failed\n")
         return f"{accession}: Aborted after {retrylimit} retries."
     #make config file for soapdenovotrans to parse
     fastqpath= fastqpath.split(".gz")[0]
@@ -75,9 +123,8 @@ def single_sample_assembly(accession,index):
     f"{accession}: Soapdenovo-Trans failed. Retrying...",
     f"{accession}: Assembling transcripts with Soapdenovo-Trans...\n")
     if result == "failed":
-        logfile.load()
-        logfile.contents["Step_1"]["processed_acc"][accession]= "Assembly failed."
-        logfile.update()
+        with open(pathtoprocessed, "a") as f:
+            f.write(f"{accession}\tAssembly failed\n")
         return f"{accession}: Aborted after {retrylimit} retries."
     
     #renaming transcript file to keep and deleting others
@@ -94,15 +141,13 @@ def single_sample_assembly(accession,index):
     f"{accession}: ORFfinder failed. Retrying...",
     f"{accession}: Extracting CDS with ORFfinder...\n")
     if result == "failed":
-        logfile.load()
-        logfile.contents["Step_1"]["processed_acc"][accession]= "Assembly failed."
-        logfile.update()
+        with open(pathtoprocessed, "a") as f:
+            f.write(f"{accession}\tAssembly failed\n")
         return f"{accession}: Aborted after {retrylimit} retries."
     os.system(f"rm {outputpath_prefix}.fasta")
     n_cds, _, _ = misc.get_assembly_stats(outputpath_prefix + "_cds.fasta")
-    logfile.load()
-    logfile.contents["Step_1"]["processed_acc"][accession]= n_cds
-    logfile.update()
+    with open(pathtoprocessed, "a") as f:
+        f.write(f"{accession}\t{n_cds}\n")
     print(f"{accession}: Single-sample assembly completed.")
     return f"{accession} processed"    
     
@@ -215,7 +260,7 @@ if __name__ == "__main__":
     parser.add_argument("-a", "--accessions", type=str, metavar="",
     help= "User-defined list of SRA run accessions to fetch for preliminary assembly. If insufficient accessions provided, run will be supplemented with other public accessions. E.g.: SRR123456,SRR654321,ERR246810,...")
     
-    #mutually excusive args for initial run or resume incomplete run
+    #mutually exclusive argumentss for initial run or resume incomplete run
     ME_group_1 = parser.add_mutually_exclusive_group(required=True)
     ME_group_1.add_argument("-i", "--id", type=int, metavar="", 
     help= "NCBI TaxID of organism for fetching SRA run accessions.")
@@ -261,11 +306,11 @@ if __name__ == "__main__":
         print(f"\nFetching RNA-seq accessions of {scientific_name} (NCBI TaxID: {taxid}) from ENA..\n")
         accessions = ena.get_runs(taxid)
         random.shuffle(accessions)
-        if len(accessions) > 2000:
-            accessions=accessions[:2000]
-            print(f"Total accessions fetched from ENA: {len(accessions)} (capped)\n")
-        else:    
-            print(f"Total accessions fetched from ENA: {len(accessions)}\n")
+        #if len(accessions) > 2000: #Removed cap on accessions to write in log
+            #accessions=accessions[:2000]
+            #print(f"Total accessions fetched from ENA: {len(accessions)} (capped)\n")
+        #else:    
+        print(f"Total accessions fetched from ENA: {len(accessions)}\n")
         #check if there is a previous run in the same outputdir. if so, exit and print error message
         if logfile.contents["Step_1"]["run_info"]["init_time"] is not None:
             if logfile.contents["Step_1"]["status"] == "completed":
@@ -280,9 +325,9 @@ if __name__ == "__main__":
             print("Checking file sizes of accessions provided by user...")
             selected_accessions_dict={}
             for accession in selected_accessions:
-                ascp_fullpath, ftp_fullpath, filesize = aspera.get_download_path_ffq(accession)
-                if filesize >= filesizelimit:
-                    selected_accessions_dict[accession]=(ascp_fullpath,ftp_fullpath)
+                ascp_fullpath, ftp_fullpath, filesize = aspera.get_download_path_ffq2(accession)
+                if sum(filesize) >= filesizelimit:
+                    selected_accessions_dict[accession]=(ascp_fullpath,ftp_fullpath,filesize)
                 else:
                     print(f"{accession} not included due to insufficient file size.")
                 if len(selected_accessions_dict)==n_accessions:
@@ -290,9 +335,9 @@ if __name__ == "__main__":
             if len(selected_accessions_dict)<n_accessions:
                 print(f"User-provided accessions are insufficient. Will supplement with other accessions..\nNote: Fetching metadata might take some time.\n")
                 for accession in accessions:
-                    ascp_fullpath, ftp_fullpath, filesize = aspera.get_download_path_ffq(accession)
-                    if filesize >= filesizelimit:
-                        selected_accessions_dict[accession]=(ascp_fullpath,ftp_fullpath)
+                    ascp_fullpath, ftp_fullpath, filesize = aspera.get_download_path_ffq2(accession)
+                    if sum(filesize) >= filesizelimit:
+                        selected_accessions_dict[accession]=(ascp_fullpath,ftp_fullpath,filesize)
                         print(f"{accession} selected ({len(selected_accessions_dict)}/{n_accessions}).\n")
                         if len(selected_accessions_dict)==n_accessions:
                             break
@@ -302,9 +347,9 @@ if __name__ == "__main__":
             print("Selecting accessions with appropriate file sizes to build preliminary assembly...\nNote: Fetching metadata might take some time.\n")
             selected_accessions_dict={}
             for accession in accessions:
-                ascp_fullpath, ftp_fullpath, filesize = aspera.get_download_path_ffq(accession)
-                if filesize >= filesizelimit:
-                    selected_accessions_dict[accession]=(ascp_fullpath,ftp_fullpath)
+                ascp_fullpath, ftp_fullpath, filesize = aspera.get_download_path_ffq2(accession)
+                if sum(filesize) >= filesizelimit:
+                    selected_accessions_dict[accession]=(ascp_fullpath,ftp_fullpath,filesize)
                     print(f"{accession} selected ({len(selected_accessions_dict)}/{n_accessions}).\n")
                     if len(selected_accessions_dict)==n_accessions:
                         break
@@ -355,8 +400,23 @@ if __name__ == "__main__":
         threads=int(threadpool/workers)
     
     logfile.load()
+    #create temp file to store processed accessions
+    pathtoprocessed= os.path.join(outputdir, "Step_1","processed.tsv")
+    if not os.path.exists(pathtoprocessed):
+        with open(pathtoprocessed, "w") as f:
+            f.write("Accession\tn_CDS\n")
+    #load tempfile into log file annd update logfile.
+    with open(pathtoprocessed, "r") as f:
+        logfile.contents["Step_1"]["processed_acc"] = {chunk.split("\t")[0]: chunk.split("\t")[1] for chunk in f.read().split("\n") if chunk != "Accession\tn_CDS" and chunk != ""}
+        logfile.contents["Step_1"]["processed_acc"] = {key : value if "failed" in value else int(value) for key, value in logfile.contents["Step_1"]["processed_acc"].items()}
+    logfile.update()
+    
     #assemble SSAs in parallel
-    parallel_ssa(workers)   
+    parallel_ssa(workers)
+    with open(pathtoprocessed, "r") as f:
+        logfile.contents["Step_1"]["processed_acc"] = {chunk.split("\t")[0]: chunk.split("\t")[1] for chunk in f.read().split("\n") if chunk != "Accession\tn_CDS" and chunk != ""}
+        logfile.contents["Step_1"]["processed_acc"] = {key : value if "failed" in value else int(value) for key, value in logfile.contents["Step_1"]["processed_acc"].items()}
+    logfile.update()
     ssa_consensus(ssadir)
     logfile.load()
     logfile.contents["Step_1"]["status"]= "completed"

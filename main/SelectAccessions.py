@@ -104,10 +104,12 @@ def parallel_job(workers):
             if map_rate== "Already processed":
                 msg = f"{accession} already processed."
             else:
-                logfile.contents["Step_2"]["processed_acc"][accession]=map_rate 
-                if index%workers == 0:
-                    logfile.update() #only one worker can trigger update of log file.
-                    print("Checkpoint reached. Logfile updated")
+                #logfile.contents["Step_2"]["processed_acc"][accession]=map_rate 
+                #if index%workers == 0:
+                    #logfile.update() #only one worker can trigger update of log file.
+                    #print("Checkpoint reached. Logfile updated")
+                with open(pathtoprocessed, "a") as f:
+                    f.write(f"{accession}\t{map_rate}\n")
                 if map_rate == "Download link not found":
                     msg= f"{accession}: Aborted. Download link not found."
                 elif map_rate == "Download failed":
@@ -339,6 +341,16 @@ if __name__ == "__main__":
     C_fastqdir= os.path.join(outputdir, "Step_2", "fastq") #to store downloaded fastq files
     if not os.path.exists(C_fastqdir):
         os.makedirs(C_fastqdir)   
+    #make file to store processed file
+    pathtoprocessed= os.path.join(outputdir, "Step_2", "processed.tsv")    
+    if not os.path.exists(pathtoprocessed):
+         with open(pathtoprocessed, "w") as f:
+                f.write("Accession\tMap_rate\n")
+    #load processed files into log and  update logfile.
+    with open(pathtoprocessed, "r") as f:
+        logfile.contents["Step_2"]["processed_acc"] = {chunk.split("\t")[0]: chunk.split("\t")[1] for chunk in f.read().split("\n") if chunk != "Accession\tMap_rate" and chunk != ""}
+        logfile.contents["Step_2"]["processed_acc"] = {key : value if "failed" in value else float(value) for key, value in logfile.contents["Step_2"]["processed_acc"].items()}
+    logfile.update()
     
     #get accessions and sci name from logfile
     accessions = logfile.contents["Step_1"].get("total_acc")
@@ -346,10 +358,10 @@ if __name__ == "__main__":
     taxid, _, _, _, _, _, _ , _, _, _ ,_, _ = logfile.contents["Step_1"]["run_var"].values()
     
     print(f"Organism name: {scientific_name} (NCBI TaxID: {taxid})\n")
-    if len(accessions) == 2000:
-        print(f"Total accessions fetched from ENA: {len(accessions)} (capped)\n")
-    else:    
-        print(f"Total accessions fetched from ENA: {len(accessions)}\n")
+    #if len(accessions) == 2000:
+        #print(f"Total accessions fetched from ENA: {len(accessions)} (capped)\n")
+    #else:    
+    print(f"Total accessions fetched from ENA: {len(accessions)}\n")
     
     print("Transfering accession .fastq files downloaded in step 1 to new directory...")
     for file in os.listdir(P_fastqdir): #xfer old files if not already done so
@@ -391,9 +403,16 @@ if __name__ == "__main__":
     
     #initiate parallel DL and PS of accessions
     parallel_job(workers)
+    with open(pathtoprocessed, "r") as f:
+        logfile.contents["Step_2"]["processed_acc"] = {chunk.split("\t")[0]: chunk.split("\t")[1] for chunk in f.read().split("\n") if chunk != "Accession\tMap_rate" and chunk != ""}
+        logfile.contents["Step_2"]["processed_acc"] = {key : value if "failed" in value else float(value) for key, value in logfile.contents["Step_2"]["processed_acc"].items()}
+    logfile.update()
     print("\nChecking logs to re-attempt download of failed accessions....")
     parallel_job(workers)
-    
+    with open(pathtoprocessed, "r") as f:
+        logfile.contents["Step_2"]["processed_acc"] = {chunk.split("\t")[0]: chunk.split("\t")[1] for chunk in f.read().split("\n") if chunk != "Accession\tMap_rate" and chunk != ""}
+        logfile.contents["Step_2"]["processed_acc"] = {key : value if "failed" in value else float(value) for key, value in logfile.contents["Step_2"]["processed_acc"].items()}
+    logfile.update()
     print("\nParallel download and pseudoalignment complete.\n")
     
     logfile.load()
