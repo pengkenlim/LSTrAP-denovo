@@ -115,7 +115,7 @@ def get_download_path_ffq2(accession):
     while type(ftp_metadata) != list:
         ftp_metadata = launch_ffq_ftp(accession)
     if ftp_metadata == []:
-        return "NOT_FOUND", "NOT_FOUND",0   
+        return ["NOT_FOUND"], ["NOT_FOUND"],[0]   
     urls= [datadict.get("url") for datadict in ftp_metadata if datadict.get("filetype") == "fastq"]
     #check if single ended / paried end
     seq_type="single"
@@ -134,7 +134,7 @@ def get_download_path_ffq2(accession):
         filesizes = [datadict.get("filesize") for datadict in ftp_metadata if ".fastq.gz" in datadict.get("url") ]
         return ascp_fullpath , ftp_fullpath , filesizes
     
-    return "NOT_FOUND", "NOT_FOUND",0 
+    return ["NOT_FOUND"], ["NOT_FOUND"],[0] 
 
 
 __all__=["get_download_path", "check_filesize", "launch_ascp","launch_curl" , "get_download_path_ffq"]
