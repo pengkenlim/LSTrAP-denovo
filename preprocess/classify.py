@@ -12,7 +12,7 @@ from sklearn.neighbors import KernelDensity
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
-from k_means_constrained import KMeansConstrained
+#from k_means_constrained import KMeansConstrained
 from sklearn_extra.cluster import KMedoids
 import pandas as pd
 from scipy.stats import iqr
