@@ -22,7 +22,7 @@ from preprocess import read_map, classify
 def download_PS_job(accession, index):
     '''Job to validate download path -> download via FTP/ascp -> Peudoalignment(PS) by Kallisto'''
     #to slow down jobs
-    sleep(1)
+    #sleep(1)
     logfile.load()
     #to unsync workers
     if index < workers:
