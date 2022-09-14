@@ -29,11 +29,11 @@ def download_PS_job(accession, index):
         sleep((index%workers)*5)
     if type(logfile.contents["Step_2"]["processed_acc"].get(accession)) == float:
         return accession, index , "Already processed"
-    if accession not in logfile.contents["Step_2"]["processed_acc"].keys() or logfile.contents["Step_2"]["processed_acc"].get(accession) == "Download failed" or logfile.contents["Step_2"]["processed_acc"].get(accession) == "Download link not found": #check if accession has been downloaded/processed. Proceed with download if not.
+    if accession not in logfile.contents["Step_2"]["processed_acc"].keys() or logfile.contents["Step_2"]["processed_acc"].get(accession) == "Download failed" or logfile.contents["Step_2"]["processed_acc"].get(accession) == "Download failed because link not found": #check if accession has been downloaded/processed. Proceed with download if not.
         ascp_fullpath, ftp_fullpath, filesize = aspera.get_download_path_ffq(accession)
         fastqpath =os.path.join(C_fastqdir,accession+".fastq.gz")
         if ascp_fullpath == "NOT_FOUND":
-            return accession , index , "Download link not found"
+            return accession , index , "Download failed because link not found"
             #logfile.load()
             #logfile.contents["Step_2"]["processed_acc"][accession]= "Download link not found"
             #logfile.update()
@@ -110,10 +110,10 @@ def parallel_job(workers):
                     #print("Checkpoint reached. Logfile updated")
                 with open(pathtoprocessed, "a") as f:
                     f.write(f"{accession}\t{map_rate}\n")
-                if map_rate == "Download link not found":
+                if map_rate == "Download failed because link not found":
                     msg= f"{accession}: Aborted. Download link not found."
                 elif map_rate == "Download failed":
-                    msg= f"{accession}: Aborted. Download link not found."
+                    msg= f"{accession}: Aborted. Download failed."
                 elif map_rate == "PS failed":
                     msg= f"{accession}: Aborted after {retrylimit} retries."
                 elif type(map_rate) == float:
