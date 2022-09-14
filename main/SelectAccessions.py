@@ -61,7 +61,7 @@ def download_PS_job(accession, index):
         logfile.contents["Step_2"]["processed_acc"][accession]= "Downloaded"
         #logfile.update()
     
-    if  logfile.contents["Step_2"]["processed_acc"].get(accession)== "Downloaded":
+    if  logfile.contents["Step_2"]["processed_acc"].get(accession)== "Downloaded" and os.path.exists(fastqpath):
         fastqpath =os.path.join(C_fastqdir,accession+".fastq.gz")
         kaloutdir= os.path.join(kaldir, accession)
         result= misc.run_with_retries(retrylimit,
