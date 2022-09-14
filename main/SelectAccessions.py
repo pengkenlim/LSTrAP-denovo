@@ -349,7 +349,7 @@ if __name__ == "__main__":
     #load processed files into log and  update logfile.
     with open(pathtoprocessed, "r") as f:
         logfile.contents["Step_2"]["processed_acc"] = {chunk.split("\t")[0]: chunk.split("\t")[1] for chunk in f.read().split("\n") if chunk != "Accession\tMap_rate" and chunk != ""}
-        logfile.contents["Step_2"]["processed_acc"] = {key : value if "failed" in value else float(value) for key, value in logfile.contents["Step_2"]["processed_acc"].items()}
+        logfile.contents["Step_2"]["processed_acc"] = {key : value if "failed" in value or "exception" in value else float(value) for key, value in logfile.contents["Step_2"]["processed_acc"].items()}
     logfile.update()
     
     #get accessions and sci name from logfile
@@ -405,13 +405,13 @@ if __name__ == "__main__":
     parallel_job(workers)
     with open(pathtoprocessed, "r") as f:
         logfile.contents["Step_2"]["processed_acc"] = {chunk.split("\t")[0]: chunk.split("\t")[1] for chunk in f.read().split("\n") if chunk != "Accession\tMap_rate" and chunk != ""}
-        logfile.contents["Step_2"]["processed_acc"] = {key : value if "failed" in value else float(value) for key, value in logfile.contents["Step_2"]["processed_acc"].items()}
+        logfile.contents["Step_2"]["processed_acc"] = {key : value if "failed" in value or "exception" in value else float(value) for key, value in logfile.contents["Step_2"]["processed_acc"].items()}
     logfile.update()
     print("\nChecking logs to re-attempt download of failed accessions....")
     parallel_job(workers)
     with open(pathtoprocessed, "r") as f:
         logfile.contents["Step_2"]["processed_acc"] = {chunk.split("\t")[0]: chunk.split("\t")[1] for chunk in f.read().split("\n") if chunk != "Accession\tMap_rate" and chunk != ""}
-        logfile.contents["Step_2"]["processed_acc"] = {key : value if "failed" in value else float(value) for key, value in logfile.contents["Step_2"]["processed_acc"].items()}
+        logfile.contents["Step_2"]["processed_acc"] = {key : value if "failed" in value or "exception" in value else float(value) for key, value in logfile.contents["Step_2"]["processed_acc"].items()}
     logfile.update()
     print("\nParallel download and pseudoalignment complete.\n")
     
