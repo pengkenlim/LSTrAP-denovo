@@ -206,7 +206,7 @@ def parallel_download(workers):
 
 if __name__ == "__main__":
     #retry limit determines the number of retries before aborting
-    retrylimit= 2
+    retrylimit= 1
     #arguments
     parser= argparse.ArgumentParser(description="HSS-Trans.SelectAccessions.py: Selection of representative accessions for transcriptome assembly.\n \
     NOTE: This is step 2 of 2 in the HSS-Trans pipeline. Requires prior run of step 1: MakeDraftCDS.py. \n\
