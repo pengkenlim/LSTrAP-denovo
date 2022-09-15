@@ -96,8 +96,8 @@ def parallel_job(workers):
     with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
         progress_bar= tqdm(total=len(accessions), desc="Accessions processed", unit="Acsn", leave=True)
         #results= [executor.submit(download_PS_job, accession, index) for index, accession in enumerate(accessions)]
-        results= [executor.submit(runjob,download_PS_job, accession, index, 120000) for index, accession in enumerate(accessions)]
-        for f in concurrent.futures.as_completed(results, timeout=12000): # 20 minutes
+        results= [executor.submit(runjob,download_PS_job, accession, index, 1200) for index, accession in enumerate(accessions)]
+        for f in concurrent.futures.as_completed(results): # 20 minutes
             accession , index , map_rate = f.result()
             if map_rate== "Already processed":
                 msg = f"{accession} already processed."
