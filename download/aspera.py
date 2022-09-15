@@ -122,31 +122,39 @@ def get_download_path_ffq(accession):
     
 def get_download_path_ffq2(accession):
     """wrapper for launch_ffq_ftp(). Parse json output to return download links of largest read file"""
-    ftp_metadata = launch_ffq_ftp(accession)
-    #hard-coded to retry fetching metadata ## this is a quick fix to occational failure of ffq
-    while type(ftp_metadata) != list:
+    try:
         ftp_metadata = launch_ffq_ftp(accession)
-    if ftp_metadata == []:
-        return ["NOT_FOUND"], ["NOT_FOUND"],[0]   
-    urls= [datadict.get("url") for datadict in ftp_metadata if datadict.get("filetype") == "fastq"]
-    #check if single ended / paried end
-    seq_type="single"
-    for name in urls:
-        if "_2.fastq.gz" in name:
-            seq_type="paired"
-    if seq_type == "paired":
-        ftp_fullpath = [url for url in urls if "_1.fastq.gz" in url or "_2.fastq.gz" in url]
-        ascp_fullpath = [url.replace("ftp://ftp.sra.ebi.ac.uk/", "era-fasp@fasp.sra.ebi.ac.uk:") for url in ftp_fullpath]
-        filesizes = [datadict.get("filesize") for datadict in ftp_metadata if "_1.fastq.gz" in datadict.get("url") or  "_2.fastq.gz" in datadict.get("url")]
+        #hard-coded to retry fetching metadata ## this is a quick fix to occational failure of ffq
+        for i in range(3):
+            if type(ftp_metadata) != list:
+                ftp_metadata = launch_ffq_ftp(accession)
+            else:
+                break
+        #while type(ftp_metadata) != list:
+            #ftp_metadata = launch_ffq_ftp(accession)
+        if ftp_metadata == []:
+            return ["NOT_FOUND"], ["NOT_FOUND"],[0]   
+        urls= [datadict.get("url") for datadict in ftp_metadata if datadict.get("filetype") == "fastq"]
+        #check if single ended / paried end
+        seq_type="single"
+        for name in urls:
+            if "_2.fastq.gz" in name:
+                seq_type="paired"
+        if seq_type == "paired":
+            ftp_fullpath = [url for url in urls if "_1.fastq.gz" in url or "_2.fastq.gz" in url]
+            ascp_fullpath = [url.replace("ftp://ftp.sra.ebi.ac.uk/", "era-fasp@fasp.sra.ebi.ac.uk:") for url in ftp_fullpath]
+            filesizes = [datadict.get("filesize") for datadict in ftp_metadata if "_1.fastq.gz" in datadict.get("url") or  "_2.fastq.gz" in datadict.get("url")]
+            
+            return ascp_fullpath , ftp_fullpath , filesizes
+        elif seq_type == "single":
+            ftp_fullpath = [url for url in urls if ".fastq.gz" in url]
+            ascp_fullpath = [url.replace("ftp://ftp.sra.ebi.ac.uk/", "era-fasp@fasp.sra.ebi.ac.uk:") for url in ftp_fullpath]
+            filesizes = [datadict.get("filesize") for datadict in ftp_metadata if ".fastq.gz" in datadict.get("url") ]
+            return ascp_fullpath , ftp_fullpath , filesizes
         
-        return ascp_fullpath , ftp_fullpath , filesizes
-    elif seq_type == "single":
-        ftp_fullpath = [url for url in urls if ".fastq.gz" in url]
-        ascp_fullpath = [url.replace("ftp://ftp.sra.ebi.ac.uk/", "era-fasp@fasp.sra.ebi.ac.uk:") for url in ftp_fullpath]
-        filesizes = [datadict.get("filesize") for datadict in ftp_metadata if ".fastq.gz" in datadict.get("url") ]
-        return ascp_fullpath , ftp_fullpath , filesizes
-    
-    return ["NOT_FOUND"], ["NOT_FOUND"],[0] 
+        return ["NOT_FOUND"], ["NOT_FOUND"],[0]
+    except:
+        return ["NOT_FOUND"], ["NOT_FOUND"],[0]
 
 
 __all__=["get_download_path", "check_filesize", "launch_ascp","launch_curl" , "get_download_path_ffq"]
