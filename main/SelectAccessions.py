@@ -22,22 +22,21 @@ from preprocess import read_map, classify
 def download_PS_job(accession, index):
     '''Job to validate download path -> download via FTP/ascp -> Peudoalignment(PS) by Kallisto'''
     #to slow down jobs
-    #sleep(1)
+    sleep(0.2)
     logfile.load()
     #to unsync workers
     if index < workers:
         sleep((index%workers)*5)
     if type(logfile.contents["Step_2"]["processed_acc"].get(accession)) == float:
         return accession, index , "Already processed"
-    if accession not in logfile.contents["Step_2"]["processed_acc"].keys() or logfile.contents["Step_2"]["processed_acc"].get(accession) == "Download failed" or logfile.contents["Step_2"]["processed_acc"].get(accession) == "Download failed because link not found": #check if accession has been downloaded/processed. Proceed with download if not.
+    if accession not in logfile.contents["Step_2"]["processed_acc"].keys() or logfile.contents["Step_2"]["processed_acc"].get(accession) == "Download failed" or logfile.contents["Step_2"]["processed_acc"].get(accession) == "Download failed because link not found" or logfile.contents["Step_2"]["processed_acc"].get(accession) == "Unknown exception" : #check if accession has been downloaded/processed. Proceed with download if not.
         ascp_fullpath, ftp_fullpath, filesize = aspera.get_download_path_ffq(accession)
         fastqpath =os.path.join(C_fastqdir,accession+".fastq.gz")
+        #remove fastq if exists
+        if os.path.exists(fastqpath):
+            os.system(f"rm {fastqpath}")
         if ascp_fullpath == "NOT_FOUND":
             return accession , index , "Download failed because link not found"
-            #logfile.load()
-            #logfile.contents["Step_2"]["processed_acc"][accession]= "Download link not found"
-            #logfile.update()
-            #return f"{accession}: Aborted. Download link not found."
         #download
         if download_method == "ascp":
             result= misc.run_with_retries(retrylimit,
@@ -53,14 +52,8 @@ def download_PS_job(accession, index):
             f"{accession}: Downloading file via ftp...\n")
         if result == "failed":
             return accession , index , "Download failed"
-            #logfile.load()
-            #logfile.contents["Step_2"]["processed_acc"][accession]= "Download failed"
-            #logfile.update()
-            #return f"{accession}: Aborted after {retrylimit} retries."
-        #logfile.load()
         logfile.contents["Step_2"]["processed_acc"][accession]= "Downloaded"
-        #logfile.update()
-    
+
     if  logfile.contents["Step_2"]["processed_acc"].get(accession)== "Downloaded" and os.path.exists(fastqpath):
         fastqpath =os.path.join(C_fastqdir,accession+".fastq.gz")
         kaloutdir= os.path.join(kaldir, accession)
@@ -69,21 +62,14 @@ def download_PS_job(accession, index):
         [threads, indexpath , kaloutdir , fastqpath],
         f"{accession}: Kallisto pseudoalignment failed. Retrying...",
         f"{accession}: Kallisto pseudoalignment of accession reads against draft CDSs...\n")
-        if result == "failed":
+        if result == "failed" or not os.path.exists(kaloutdir):
             #os.system(f"rm {fastqpath}") add in final build
             return accession , index , "PS failed"
-            #logfile.load()
-            #logfile.contents["Step_2"]["processed_acc"][accession]= "PS failed"
-            #logfile.update()
-            #return f"{accession}: Aborted after {retrylimit} retries."
         map_rate = read_map.write_quant_info(accession, kaloutdir, tpm_matpath)
         #os.system(f"rm {fastqpath}") add in in final build
         print(f"{accession}: Pseudoalignment completed.")
         return accession , index , float(map_rate)
-        #logfile.load()
-        #logfile.contents["Step_2"]["processed_acc"][accession]= float(map_rate)
-        #logfile.update()
-        #return f"{accession}: processed."
+
     return accession , index , "Unknown exception"
     
     
@@ -99,15 +85,10 @@ def parallel_job(workers):
         progress_bar= tqdm(total=len(accessions), desc="Accessions processed", unit="Acsn", leave=True)
         results= [executor.submit(download_PS_job, accession, index) for index, accession in enumerate(accessions)]
         for f in concurrent.futures.as_completed(results):
-            #print(f.result())
             accession , index , map_rate = f.result()
             if map_rate== "Already processed":
                 msg = f"{accession} already processed."
             else:
-                #logfile.contents["Step_2"]["processed_acc"][accession]=map_rate 
-                #if index%workers == 0:
-                    #logfile.update() #only one worker can trigger update of log file.
-                    #print("Checkpoint reached. Logfile updated")
                 with open(pathtoprocessed, "a") as f:
                     f.write(f"{accession}\t{map_rate}\n")
                 if map_rate == "Download failed because link not found":
@@ -206,7 +187,7 @@ def parallel_download(workers):
 
 if __name__ == "__main__":
     #retry limit determines the number of retries before aborting
-    retrylimit= 1
+    retrylimit= 0
     #arguments
     parser= argparse.ArgumentParser(description="HSS-Trans.SelectAccessions.py: Selection of representative accessions for transcriptome assembly.\n \
     NOTE: This is step 2 of 2 in the HSS-Trans pipeline. Requires prior run of step 1: MakeDraftCDS.py. \n\
