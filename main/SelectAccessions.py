@@ -85,7 +85,7 @@ def download_PS_job(accession, index):
         
 def parallel_job(workers):
     '''Wrapper to parallelize download and pseudolaignment jobs for each accession'''
-    logfile.load()
+    #logfile.load()
     with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
         progress_bar= tqdm(total=len(accessions), desc="Accessions processed", unit="Acsn", leave=True)
         results= [executor.submit(download_PS_job, accession, index) for index, accession in enumerate(accessions)]
@@ -111,7 +111,7 @@ def parallel_job(workers):
             
             print("\n")
         progress_bar.close()
-        logfile.load()
+        #logfile.load()
         
 
 def download_job(link, index):
@@ -333,6 +333,8 @@ if __name__ == "__main__":
          with open(pathtoprocessed, "w") as f:
                 f.write("Accession\tMap_rate\n")
     #load processed files into log and  update logfile.
+    logfile.update()
+    logfile.load()
     with open(pathtoprocessed, "r") as f:
         logfile.contents["Step_2"]["processed_acc"] = {chunk.split("\t")[0]: chunk.split("\t")[1] for chunk in f.read().split("\n") if chunk != "Accession\tMap_rate" and chunk != ""}
         logfile.contents["Step_2"]["processed_acc"] = {key : value if "failed" in value or "exception" in value else float(value) for key, value in logfile.contents["Step_2"]["processed_acc"].items()}
@@ -389,12 +391,14 @@ if __name__ == "__main__":
     
     #initiate parallel DL and PS of accessions
     parallel_job(workers)
+    logfile.load()
     with open(pathtoprocessed, "r") as f:
         logfile.contents["Step_2"]["processed_acc"] = {chunk.split("\t")[0]: chunk.split("\t")[1] for chunk in f.read().split("\n") if chunk != "Accession\tMap_rate" and chunk != ""}
         logfile.contents["Step_2"]["processed_acc"] = {key : value if "failed" in value or "exception" in value else float(value) for key, value in logfile.contents["Step_2"]["processed_acc"].items()}
     logfile.update()
     print("\nChecking logs to re-attempt download of failed accessions....")
     parallel_job(workers)
+    logfile.load()
     with open(pathtoprocessed, "r") as f:
         logfile.contents["Step_2"]["processed_acc"] = {chunk.split("\t")[0]: chunk.split("\t")[1] for chunk in f.read().split("\n") if chunk != "Accession\tMap_rate" and chunk != ""}
         logfile.contents["Step_2"]["processed_acc"] = {key : value if "failed" in value or "exception" in value else float(value) for key, value in logfile.contents["Step_2"]["processed_acc"].items()}
