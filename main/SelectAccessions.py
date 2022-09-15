@@ -80,9 +80,13 @@ def download_PS_job(accession, index):
         return accession , index , "Unknown exception"
     
     
-    
-
-        
+ def runjob(f, accession , index ,max_wait ):
+    '''Timeout wrapper for task'''
+    try:
+        return func_timeout.func_timeout(max_wait, f, args=(accession,index))
+    except func_timeout.FunctionTimedOut:
+        pass
+    return accession , index, "Unknown exception"
             
         
 def parallel_job(workers):
@@ -90,7 +94,8 @@ def parallel_job(workers):
     #logfile.load()
     with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
         progress_bar= tqdm(total=len(accessions), desc="Accessions processed", unit="Acsn", leave=True)
-        results= [executor.submit(download_PS_job, accession, index) for index, accession in enumerate(accessions)]
+        #results= [executor.submit(download_PS_job, accession, index) for index, accession in enumerate(accessions)]
+        results= [executor.submit(runjob,download_PS_job, accession, index, 120000) for index, accession in enumerate(accessions)]
         for f in concurrent.futures.as_completed(results, timeout=12000): # 20 minutes
             accession , index , map_rate = f.result()
             if map_rate== "Already processed":
