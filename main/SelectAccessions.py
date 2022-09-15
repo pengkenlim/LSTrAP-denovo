@@ -80,7 +80,7 @@ def download_PS_job(accession, index):
         return accession , index , "Unknown exception"
     
     
- def runjob(f, accession , index ,max_wait ):
+def runjob(f, accession , index ,max_wait ):
     '''Timeout wrapper for task'''
     try:
         return func_timeout.func_timeout(max_wait, f, args=(accession,index))
