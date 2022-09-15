@@ -21,56 +21,61 @@ from preprocess import read_map, classify
 
 def download_PS_job(accession, index):
     '''Job to validate download path -> download via FTP/ascp -> Peudoalignment(PS) by Kallisto'''
+    try:
     #to slow down jobs
-    sleep(0.2)
-    logfile.load()
-    #to unsync workers
-    if index < workers:
-        sleep((index%workers)*5)
-    if type(logfile.contents["Step_2"]["processed_acc"].get(accession)) == float:
-        return accession, index , "Already processed"
-    if accession not in logfile.contents["Step_2"]["processed_acc"].keys() or logfile.contents["Step_2"]["processed_acc"].get(accession) == "Download failed" or logfile.contents["Step_2"]["processed_acc"].get(accession) == "Download failed because link not found" or logfile.contents["Step_2"]["processed_acc"].get(accession) == "Unknown exception" : #check if accession has been downloaded/processed. Proceed with download if not.
-        ascp_fullpath, ftp_fullpath, filesize = aspera.get_download_path_ffq(accession)
-        fastqpath =os.path.join(C_fastqdir,accession+".fastq.gz")
-        #remove fastq if exists
-        if os.path.exists(fastqpath):
-            os.system(f"rm {fastqpath}")
-        if ascp_fullpath == "NOT_FOUND":
-            return accession , index , "Download failed because link not found"
-        #download
-        if download_method == "ascp":
-            result= misc.run_with_retries(retrylimit,
-            aspera.launch_ascp,
-            [ascp_fullpath,fastqpath,min([filesizelimit,filesize])],
-            f"{accession}: Download failed. Retrying...",
-            f"{accession}: Downloading file via ascp...\n")
-        elif download_method == "ftp":
-            result= misc.run_with_retries(retrylimit,
-            aspera.launch_curl,
-            [ftp_fullpath,fastqpath,min([filesizelimit,filesize])],
-            f"{accession}: Download failed. Retrying...",
-            f"{accession}: Downloading file via ftp...\n")
-        if result == "failed":
-            return accession , index , "Download failed"
-        logfile.contents["Step_2"]["processed_acc"][accession]= "Downloaded"
+        sleep(0.2)
+        logfile.load()
+        #to unsync workers
+        if index < workers:
+            sleep((index%workers)*5)
+        if type(logfile.contents["Step_2"]["processed_acc"].get(accession)) == float:
+            return accession, index , "Already processed"
+        if accession not in logfile.contents["Step_2"]["processed_acc"].keys() or logfile.contents["Step_2"]["processed_acc"].get(accession) == "Download failed" or logfile.contents["Step_2"]["processed_acc"].get(accession) == "Download failed because link not found" or logfile.contents["Step_2"]["processed_acc"].get(accession) == "Unknown exception" : #check if accession has been downloaded/processed. Proceed with download if not.
+            ascp_fullpath, ftp_fullpath, filesize = aspera.get_download_path_ffq(accession)
+            fastqpath =os.path.join(C_fastqdir,accession+".fastq.gz")
+            #remove fastq if exists
+            if os.path.exists(fastqpath):
+                os.system(f"rm {fastqpath}")
+            if ascp_fullpath == "NOT_FOUND":
+                return accession , index , "Download failed because link not found"
+            #download
+            if download_method == "ascp":
+                result= misc.run_with_retries(retrylimit,
+                aspera.launch_ascp,
+                [ascp_fullpath,fastqpath,min([filesizelimit,filesize])],
+                f"{accession}: Download failed. Retrying...",
+                f"{accession}: Downloading file via ascp...\n")
+            elif download_method == "ftp":
+                result= misc.run_with_retries(retrylimit,
+                aspera.launch_curl,
+                [ftp_fullpath,fastqpath,min([filesizelimit,filesize])],
+                f"{accession}: Download failed. Retrying...",
+                f"{accession}: Downloading file via ftp...\n")
+            if result == "failed":
+                return accession , index , "Download failed"
+            logfile.contents["Step_2"]["processed_acc"][accession]= "Downloaded"
 
-    if  logfile.contents["Step_2"]["processed_acc"].get(accession)== "Downloaded" and os.path.exists(fastqpath):
-        fastqpath =os.path.join(C_fastqdir,accession+".fastq.gz")
-        kaloutdir= os.path.join(kaldir, accession)
-        result= misc.run_with_retries(retrylimit,
-        read_map.launch_kallisto_quant,
-        [threads, indexpath , kaloutdir , fastqpath],
-        f"{accession}: Kallisto pseudoalignment failed. Retrying...",
-        f"{accession}: Kallisto pseudoalignment of accession reads against draft CDSs...\n")
-        if result == "failed" or not os.path.exists(kaloutdir):
-            #os.system(f"rm {fastqpath}") add in final build
-            return accession , index , "PS failed"
-        map_rate = read_map.write_quant_info(accession, kaloutdir, tpm_matpath)
-        #os.system(f"rm {fastqpath}") add in in final build
-        print(f"{accession}: Pseudoalignment completed.")
-        return accession , index , float(map_rate)
-
-    return accession , index , "Unknown exception"
+        if  logfile.contents["Step_2"]["processed_acc"].get(accession)== "Downloaded" and os.path.exists(fastqpath):
+            if os.path.getsize("fastqpath")==0:
+                os.system(f"rm {fastqpath}")
+                return accession , index , "Download failed"
+            fastqpath =os.path.join(C_fastqdir,accession+".fastq.gz")
+            kaloutdir= os.path.join(kaldir, accession)
+            result= misc.run_with_retries(retrylimit,
+            read_map.launch_kallisto_quant,
+            [threads, indexpath , kaloutdir , fastqpath],
+            f"{accession}: Kallisto pseudoalignment failed. Retrying...",
+            f"{accession}: Kallisto pseudoalignment of accession reads against draft CDSs...\n")
+            if result == "failed" or not os.path.exists(kaloutdir):
+                #os.system(f"rm {fastqpath}") add in final build
+                return accession , index , "PS failed"
+            map_rate = read_map.write_quant_info(accession, kaloutdir, tpm_matpath)
+            #os.system(f"rm {fastqpath}") add in in final build
+            print(f"{accession}: Pseudoalignment completed.")
+            return accession , index , float(map_rate)
+        return accession , index , "Unknown exception"
+    except:
+        return accession , index , "Unknown exception"
     
     
     
