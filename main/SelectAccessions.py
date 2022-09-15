@@ -13,6 +13,7 @@ from time import sleep
 from datetime import datetime
 from tqdm import tqdm
 import numpy as np
+import func_timeout
 
 from assembly import misc , report
 from download import aspera
