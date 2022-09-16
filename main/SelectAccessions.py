@@ -124,69 +124,65 @@ def parallel_job(workers):
 
 def download_job(link, index):
     '''Job to download accessions'''
-    #to slow down jobs
-    sleep(1)
-    logfile.load()
-    filename= link.split("/")[-1]
-    #to unsync workers
-    if index < workers:
-        sleep((index%workers)*5)
-    if filename in logfile.contents["Step_2"]["selected_accessions"]["download_progress"].keys():
-        if logfile.contents["Step_2"]["selected_accessions"]["download_progress"].get(filename) == "Downloaded":
-            return filename , index, "Already downloaded"
-            #return f"Skipping {filename} as it had already been downloaded."
-    fastqpath= os.path.join(F_fastqdir, filename)
-    if download_method == "ascp":
-        ascp_fullpath = link.replace("ftp://ftp.sra.ebi.ac.uk/", "era-fasp@fasp.sra.ebi.ac.uk:")
-        result= misc.run_with_retries(retrylimit,
-        aspera.launch_ascp,
-        [ascp_fullpath,fastqpath,0],#0 = no limit, full download
-        f"{filename}: Download failed. Retrying...",
-        f"{filename}: Downloading file via ascp...\n")
-    elif download_method == "ftp":
-         result= misc.run_with_retries(retrylimit,
-            aspera.launch_curl,
-            [link,fastqpath,0], #0 = no limit, full download
+    try:
+        #to slow down jobs
+        sleep(1)
+        logfile.load()
+        filename= link.split("/")[-1]
+        #to unsync workers
+        if index < workers:
+            sleep((index%workers)*5)
+        if filename in logfile.contents["Step_2"]["selected_accessions"]["download_progress"].keys():
+            if logfile.contents["Step_2"]["selected_accessions"]["download_progress"].get(filename) == "Downloaded":
+                return filename , index, "Already downloaded"
+        fastqpath= os.path.join(F_fastqdir, filename)
+        if download_method == "ascp":
+            ascp_fullpath = link.replace("ftp://ftp.sra.ebi.ac.uk/", "era-fasp@fasp.sra.ebi.ac.uk:")
+            result= misc.run_with_retries(retrylimit,
+            aspera.launch_ascp,
+            [ascp_fullpath,fastqpath,0],#0 = no limit, full download
             f"{filename}: Download failed. Retrying...",
-            f"{filename}: Downloading file via ftp...\n")
-    if result == "failed":
-        #logfile.load()
-        #logfile.contents["Step_2"]["selected_accessions"]["download_progress"][filename]= "Download failed"
-        #logfile.update()
+            f"{filename}: Downloading file via ascp...\n")
+        elif download_method == "ftp":
+             result= misc.run_with_retries(retrylimit,
+                aspera.launch_curl,
+                [link,fastqpath,0], #0 = no limit, full download
+                f"{filename}: Download failed. Retrying...",
+                f"{filename}: Downloading file via ftp...\n")
+        if result == "failed":
+            return filename , index, "Download failed"
+        else:
+            print(f"{filename}: Downloaded.")
+            return filename , index, "Downloaded"
         return filename , index, "Download failed"
-        #return f"{filename}: Download aborted after {retrylimit} retries."
-    else:
-        #unzip and rename headers (because trinity sometimes have issues with fastq directly downloaded from ENA)
-        #unzippedfastqpath= fastqpath.split(".gz")[0]
-        #if "_1" in unzippedfastqpath:
-        #    os.system(f"zcat {fastqpath} | awk \'{{print (NR%4 == 1) ? \"@1_\" ++i \"/1\": $0}}\' > {unzippedfastqpath}")
-        #elif "_2" in unzippedfastqpath:
-        #    os.system(f"zcat {fastqpath} | awk \'{{print (NR%4 == 1) ? \"@1_\" ++i \"/2\": $0}}\' > {unzippedfastqpath}")
-        #os.system(f"rm {fastqpath}")
-        #logfile.load()
-        #logfile.contents["Step_2"]["selected_accessions"]["download_progress"][filename]= "Downloaded"
-        #logfile.update()
-        print(f"{filename}: Downloaded.")
-        return filename , index, "Downloaded"
-        #return f"{filename}: Downloaded."
-    return filename , index, "Unknown exception"
+    except:
+        return filename , index, "Download failed"
     
+
+def runjob2(f, link , index ,max_wait ):
+    '''Timeout wrapper for task'''
+    filename= link.split("/")[-1]
+    try:
+        return func_timeout.func_timeout(max_wait, f, args=(link,index))
+    except func_timeout.FunctionTimedOut:
+        pass
+    return filename , index, "Download failed"
+
     
 def parallel_download(workers):
     '''Wrapper to parallelize download each file'''
     logfile.load()
     with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
         progress_bar= tqdm(total=len(FTP_links), desc="Fastq Downloaded", unit="fq", leave=True)
-        results= [executor.submit(download_job, link, index) for index, link in enumerate(FTP_links)]
+        results= [executor.submit(runjob2, download_job, link, index, 10800) for index, link in enumerate(FTP_links)] #3hours maximum wait per file
         for f in concurrent.futures.as_completed(results):
             
             filename , index, returncode = f.result()
             if returncode == "Already downloaded":
                 msg= f"{filename}: Already been downloaded."
             else:
-                logfile.contents["Step_2"]["selected_accessions"]["download_progress"][filename]= returncode
-                if index%workers == 0:
-                    logfile.update() #only one worker can trigger update of log file.
+                with open(pathtodownloaded, "a") as f:
+                    f.write(f"{filename}\t{returncode}\n")
                 if returncode== "Download failed":
                    msg=  f"{filename}: Download aborted after {retrylimit} retries."
                 elif returncode == "Downloaded":
@@ -331,6 +327,18 @@ if __name__ == "__main__":
 
 
         
+
+    #get accessions and sci name from logfile
+    accessions = logfile.contents["Step_1"].get("total_acc")
+    _, scientific_name, _, _, _ = logfile.contents["Step_1"]["run_info"].values()
+    taxid, _, _, _, _, _, _ , _, _, _ ,_, _ = logfile.contents["Step_1"]["run_var"].values()
+    
+    print(f"Organism name: {scientific_name} (NCBI TaxID: {taxid})\n")
+    #if len(accessions) == 2000:
+        #print(f"Total accessions fetched from ENA: {len(accessions)} (capped)\n")
+    #else:    
+    print(f"Total accessions fetched from ENA: {len(accessions)}\n")
+    
     #make subdirs if needed
     C_fastqdir= os.path.join(outputdir, "Step_2", "fastq") #to store downloaded fastq files
     if not os.path.exists(C_fastqdir):
@@ -348,106 +356,95 @@ if __name__ == "__main__":
         logfile.contents["Step_2"]["processed_acc"] = {key : value if "failed" in value or "exception" in value else float(value) for key, value in logfile.contents["Step_2"]["processed_acc"].items()}
     logfile.update()
     
-    #get accessions and sci name from logfile
-    accessions = logfile.contents["Step_1"].get("total_acc")
-    _, scientific_name, _, _, _ = logfile.contents["Step_1"]["run_info"].values()
-    taxid, _, _, _, _, _, _ , _, _, _ ,_, _ = logfile.contents["Step_1"]["run_var"].values()
-    
-    print(f"Organism name: {scientific_name} (NCBI TaxID: {taxid})\n")
-    #if len(accessions) == 2000:
-        #print(f"Total accessions fetched from ENA: {len(accessions)} (capped)\n")
-    #else:    
-    print(f"Total accessions fetched from ENA: {len(accessions)}\n")
-    
-    print("Transfering accession .fastq files downloaded in step 1 to new directory...")
-    for file in os.listdir(P_fastqdir): #xfer old files if not already done so
-        if "fastq.gz" in file and not os.path.exists(os.path.join(C_fastqdir,file)): 
-            os.system(f"cp {os.path.join(P_fastqdir , file)} {C_fastqdir}")
-            if os.path.getsize(os.path.join(C_fastqdir, file)) > filesizelimit:
-                os.system(f"truncate -s {filesizelimit}  {os.path.join(C_fastqdir, file)}")
-                print(f"{file} transfered and truncated to file size limit of {filesizelimit/1048576} mb")
-            else:
-                print(f"{file} transfered.")
-            logfile.contents["Step_2"]["processed_acc"][file.split(".")[0]]="Downloaded"
-    logfile.update()
-    
-    
-    
-    #directory to hold kallisto intermediate files
-    kaldir= os.path.join(outputdir, "Step_2", "kallisto")
-    if not os.path.exists(kaldir):
-        os.makedirs(kaldir)
-    
-    CT_int = logfile.contents["Step_2"]["run_info"]["Consensus_threshold_for_preliminary_assembly"]
-    
-    fastapath=  logfile.contents["Step_1"]["consensus"]["stats"].get(str(CT_int))[-1]
-    indexpath= os.path.join(kaldir, fastapath.split("/")[-1] + ".index")
-    if not os.path.exists(indexpath):
-        result= misc.run_with_retries(retrylimit,
-                read_map.launch_kallisto_index,
-                [fastapath,indexpath],
-                f"Kallisto index failed. Retrying...",
-                f"\nContructing Kallisto index using Preliminary Assembly (CT={str(CT_int)}) generated from step 1...\n")
-        if result == "failed":
-            sys.exit(f"Kallisto index step failed after {retrylimit} retries. Exiting...")
-    
-    
-    print(f"Initiating parallel download and pseudoalignment of {min(accessions_limit, len(accessions))} accessions...\n")
-    #subseting accessions based on accession limit
-    accessions = accessions[0:min(accessions_limit, len(accessions))]
-    tpm_matpath= os.path.join(kaldir,"Draft_CDS_exp_mat.tsv")
-    
-    #initiate parallel DL and PS of accessions
-    parallel_job(workers)
-    logfile.load()
-    with open(pathtoprocessed, "r") as f:
-        logfile.contents["Step_2"]["processed_acc"] = {chunk.split("\t")[0]: chunk.split("\t")[1] for chunk in f.read().split("\n") if chunk != "Accession\tMap_rate" and chunk != ""}
-        logfile.contents["Step_2"]["processed_acc"] = {key : value if "failed" in value or "exception" in value else float(value) for key, value in logfile.contents["Step_2"]["processed_acc"].items()}
-    logfile.update()
-    print("\nChecking logs to re-attempt download of failed accessions....")
-    parallel_job(workers)
-    logfile.load()
-    with open(pathtoprocessed, "r") as f:
-        logfile.contents["Step_2"]["processed_acc"] = {chunk.split("\t")[0]: chunk.split("\t")[1] for chunk in f.read().split("\n") if chunk != "Accession\tMap_rate" and chunk != ""}
-        logfile.contents["Step_2"]["processed_acc"] = {key : value if "failed" in value or "exception" in value else float(value) for key, value in logfile.contents["Step_2"]["processed_acc"].items()}
-    logfile.update()
-    print("\nParallel download and pseudoalignment complete.\n")
-    
-    logfile.load()
-    #Quality control of accessions bassed on user-defined/ automatically determined PS threshold
-    total, failed, passed, cutoff= classify.thresholder({key:val for key, val in logfile.contents["Step_2"].get("processed_acc").items() if type(val) is not str}, pseudoalignment_threshold)
-    if pseudoalignment_threshold ==0:
-        print(f"A total of {len(total)} accessions has been downloaded and pseudoaligned.\n{len(failed)} accessions failed QC based on auto-determined psedoalignment threshold of {cutoff}%\n")
-    elif pseudoalignment_threshold > 0:
-        print(f"A total of {len(total)} accessions has been downloaded and pseudoaligned.\n{len(failed)} accessions failed QC based on user-defined psedoalignment threshold of {cutoff}%\n")
-    #write to log
-    logfile.contents["Step_2"]["qc"]["threshold"] = cutoff
-    logfile.contents["Step_2"]["qc"]["total"] = total
-    logfile.contents["Step_2"]["qc"]["passed"] = passed
-    logfile.contents["Step_2"]["qc"]["failed"] = failed
-    logfile.update()
-    
-    print(f"Reducing dimensions of TPM expression matrix ({len(passed)} accessions) using PCA-transformation...\n")
-    
-    #read TPM expression matrix from file path and return subsetted matrix (without failed accessions)\
-    Matrix= classify.mat_parser(tpm_matpath, passed)
-    #normalise TPM values within each accession, PCA transfrom. Context manager to limit core usage
-    with threadpool_limits(user_api="openmp", limits=threadpool):
-        pca_data , pc_variances = classify.PCA_transformer(Matrix)    
-    print(f"PCA-transformation complete with {np.round(sum(pc_variances))}% of variance retained. (PC1= {pc_variances[0]}%)\n")
-    #extract k-means minimum and maximum values from range k_range variable parsed from arguments
-    if k_range == "auto":
-        kmin = 5
-        kmax= 20
-        if kmax > len(passed):
-            print(f"Number of accessions that passed QC is below upper limit of k range {kmax}.\nRange changed to {kmin}:{len(passed)}.")
-            kmax = len(passed)
-    else:
-        kmin = int(k_range.split(":")[0])
-        kmax= int(k_range.split(":")[1])+1 #non-inclusive
-        if kmax > len(passed):
-            print(f"Number of accessions that passed QC is below upper limit of k range {kmax}.\nRange changed to {kmin}:{len(passed)}.")
-            kmax = len(passed)
+    if "cluster_assignment_stats" not in logfile.contents["Step_2"]["kmeans"].keys():
+        print("Transfering accession .fastq files downloaded in step 1 to new directory...")
+        for file in os.listdir(P_fastqdir): #xfer old files if not already done so
+            if "fastq.gz" in file and not os.path.exists(os.path.join(C_fastqdir,file)): 
+                os.system(f"cp {os.path.join(P_fastqdir , file)} {C_fastqdir}")
+                if os.path.getsize(os.path.join(C_fastqdir, file)) > filesizelimit:
+                    os.system(f"truncate -s {filesizelimit}  {os.path.join(C_fastqdir, file)}")
+                    print(f"{file} transfered and truncated to file size limit of {filesizelimit/1048576} mb")
+                else:
+                    print(f"{file} transfered.")
+                logfile.contents["Step_2"]["processed_acc"][file.split(".")[0]]="Downloaded"
+        logfile.update()
+           
+        
+        #directory to hold kallisto intermediate files
+        kaldir= os.path.join(outputdir, "Step_2", "kallisto")
+        if not os.path.exists(kaldir):
+            os.makedirs(kaldir)
+        
+        CT_int = logfile.contents["Step_2"]["run_info"]["Consensus_threshold_for_preliminary_assembly"]
+        
+        fastapath=  logfile.contents["Step_1"]["consensus"]["stats"].get(str(CT_int))[-1]
+        indexpath= os.path.join(kaldir, fastapath.split("/")[-1] + ".index")
+        if not os.path.exists(indexpath):
+            result= misc.run_with_retries(retrylimit,
+                    read_map.launch_kallisto_index,
+                    [fastapath,indexpath],
+                    f"Kallisto index failed. Retrying...",
+                    f"\nContructing Kallisto index using Preliminary Assembly (CT={str(CT_int)}) generated from step 1...\n")
+            if result == "failed":
+                sys.exit(f"Kallisto index step failed after {retrylimit} retries. Exiting...")
+        
+        
+        print(f"Initiating parallel download and pseudoalignment of {min(accessions_limit, len(accessions))} accessions...\n")
+        #subseting accessions based on accession limit
+        accessions = accessions[0:min(accessions_limit, len(accessions))]
+        tpm_matpath= os.path.join(kaldir,"Draft_CDS_exp_mat.tsv")
+        
+        #initiate parallel DL and PS of accessions
+        parallel_job(workers)
+        logfile.load()
+        with open(pathtoprocessed, "r") as f:
+            logfile.contents["Step_2"]["processed_acc"] = {chunk.split("\t")[0]: chunk.split("\t")[1] for chunk in f.read().split("\n") if chunk != "Accession\tMap_rate" and chunk != ""}
+            logfile.contents["Step_2"]["processed_acc"] = {key : value if "failed" in value or "exception" in value else float(value) for key, value in logfile.contents["Step_2"]["processed_acc"].items()}
+        logfile.update()
+        print("\nChecking logs to re-attempt download of failed accessions....")
+        parallel_job(workers)
+        logfile.load()
+        with open(pathtoprocessed, "r") as f:
+            logfile.contents["Step_2"]["processed_acc"] = {chunk.split("\t")[0]: chunk.split("\t")[1] for chunk in f.read().split("\n") if chunk != "Accession\tMap_rate" and chunk != ""}
+            logfile.contents["Step_2"]["processed_acc"] = {key : value if "failed" in value or "exception" in value else float(value) for key, value in logfile.contents["Step_2"]["processed_acc"].items()}
+        logfile.update()
+        print("\nParallel download and pseudoalignment complete.\n")
+        
+        logfile.load()
+        #Quality control of accessions bassed on user-defined/ automatically determined PS threshold
+        total, failed, passed, cutoff= classify.thresholder({key:val for key, val in logfile.contents["Step_2"].get("processed_acc").items() if type(val) is not str}, pseudoalignment_threshold)
+        if pseudoalignment_threshold ==0:
+            print(f"A total of {len(total)} accessions has been downloaded and pseudoaligned.\n{len(failed)} accessions failed QC based on auto-determined psedoalignment threshold of {cutoff}%\n")
+        elif pseudoalignment_threshold > 0:
+            print(f"A total of {len(total)} accessions has been downloaded and pseudoaligned.\n{len(failed)} accessions failed QC based on user-defined psedoalignment threshold of {cutoff}%\n")
+        #write to log
+        logfile.contents["Step_2"]["qc"]["threshold"] = cutoff
+        logfile.contents["Step_2"]["qc"]["total"] = total
+        logfile.contents["Step_2"]["qc"]["passed"] = passed
+        logfile.contents["Step_2"]["qc"]["failed"] = failed
+        logfile.update()
+        
+        print(f"Reducing dimensions of TPM expression matrix ({len(passed)} accessions) using PCA-transformation...\n")
+        
+        #read TPM expression matrix from file path and return subsetted matrix (without failed accessions)\
+        Matrix= classify.mat_parser(tpm_matpath, passed)
+        #normalise TPM values within each accession, PCA transfrom. Context manager to limit core usage
+        with threadpool_limits(user_api="openmp", limits=threadpool):
+            pca_data , pc_variances = classify.PCA_transformer(Matrix)    
+        print(f"PCA-transformation complete with {np.round(sum(pc_variances))}% of variance retained. (PC1= {pc_variances[0]}%)\n")
+        #extract k-means minimum and maximum values from range k_range variable parsed from arguments
+        if k_range == "auto":
+            kmin = 5
+            kmax= 20
+            if kmax > len(passed):
+                print(f"Number of accessions that passed QC is below upper limit of k range {kmax}.\nRange changed to {kmin}:{len(passed)}.")
+                kmax = len(passed)
+        else:
+            kmin = int(k_range.split(":")[0])
+            kmax= int(k_range.split(":")[1])+1 #non-inclusive
+            if kmax > len(passed):
+                print(f"Number of accessions that passed QC is below upper limit of k range {kmax}.\nRange changed to {kmin}:{len(passed)}.")
+                kmax = len(passed)
     if "cluster_assignment_stats" not in logfile.contents["Step_2"]["kmeans"].keys():
         print(f"Initiating k-Medoids clustering of accesions based on PCA data.\nClustering iterations will walk from k={kmin} to k={kmax-1} to determine optimal number of clusters(k)...\n")
         #k-means walk proper under context manager (threadpool_limits) to limit core usage. kmeans package uses all available cores by default.
@@ -499,23 +496,18 @@ if __name__ == "__main__":
         else:    
             logfile.contents["Step_2"]["selected_accessions"][cluster]={}
             master_cluster_assignment_dict
-            libsize=0
+            libsize=[]
             for accession, info_list in master_cluster_assignment_dict[cluster].items(): #moving down the list of accessions, sorted based on distance to centroids in master dict
-                if libsize < (cluster_lib_size * 1048*1048):
-                    forward, reverse = "ERR", "ERR"
-                    ftp_links= aspera.launch_ffq_ftp(accession)
-                        #check if paired end
-                    if len(ftp_links) > 1:
-                        for file in ftp_links:
-                            if file["filenumber"] == 1:
-                                forward = file
-                            elif file["filenumber"] == 2:
-                                reverse = file
-                        if forward != "ERR" and  reverse != "ERR":
-                            libsize+= forward.get("filesize") + reverse.get("filesize")
-                            logfile.contents["Step_2"]["selected_accessions"][cluster][accession]={"Library_size": forward.get("filesize") + reverse.get("filesize") ,"Distance": info_list[0], "PS": info_list[1]}
-                            logfile.contents["Step_2"]["selected_accessions"]["FTP_links"] += [forward.get("url") ,reverse.get("url")]
+                if sum(libsize) < (cluster_lib_size * 1048*1048):
+                    #forward, reverse = "ERR", "ERR"
+                    ascp_fullpath , ftp_fullpath , filesizes = aspera.get_download_path_ffq2(accession)
+                    if len(ftp_fullpath) > 1: #check if paired end
+                        if sum(libsize + filesizes) < ((cluster_lib_size + 1048)* 1048*1048) #cluster lib + 1GB. If exceed this amount, remove this accession
+                            logfile.contents["Step_2"]["selected_accessions"][cluster][accession]={"Library_size": sum(filesizes) ,"Distance": info_list[0], "PS": info_list[1]}
+                            logfile.contents["Step_2"]["selected_accessions"]["FTP_links"] += ftp_fullpath
+                            libsize += filesizes
                             logfile.update()
+                    
             print(f"Cluster {cluster}: cluster representatives selected.\n")
     
     FTP_links = logfile.contents["Step_2"]["selected_accessions"]["FTP_links"]
@@ -528,8 +520,22 @@ if __name__ == "__main__":
     F_fastqdir=os.path.join(outputdir,"Step_2","selected_accessions")
     if not os.path.exists(F_fastqdir):
         os.makedirs(F_fastqdir)
-     
+    
+    pathtodownloaded = os.path.join(outputdir, "Step_2", "downloaded.tsv")
+    if not os.path.exists(pathtodownloaded):
+        with open(pathtodownloaded, "w") as f:
+            f.write("Filename\tStatus\n")
+    with open(pathtoprocessed, "r") as f:
+        logfile.contents["Step_2"]["selected_accessions"]["download_progress"] = {chunk.split("\t")[0]: chunk.split("\t")[1] for chunk in f.read().split("\n") if chunk != "Filename\tStatus" and chunk != ""}
+    logfile.update()
+    
+    #download 
+    retrylimit= 2
     parallel_download(workers)
+    
+    with open(pathtoprocessed, "r") as f:
+        logfile.contents["Step_2"]["selected_accessions"]["download_progress"] = {chunk.split("\t")[0]: chunk.split("\t")[1] for chunk in f.read().split("\n") if chunk != "Filename\tStatus" and chunk != ""}
+    logfile.update()
     
     #make samples_file for trinity
     with open(os.path.join(outputdir, "Samples_for_trinity.tsv"), "w") as f:
