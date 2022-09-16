@@ -506,7 +506,7 @@ if __name__ == "__main__":
                             logfile.contents["Step_2"]["selected_accessions"][cluster][accession]={"Library_size": sum(filesizes) ,"Distance": info_list[0], "PS": info_list[1]}
                             logfile.contents["Step_2"]["selected_accessions"]["FTP_links"] += ftp_fullpath
                             libsize += filesizes
-                            logfile.update()
+                logfile.update()
                     
             print(f"Cluster {cluster}: cluster representatives selected.\n")
     
@@ -525,7 +525,7 @@ if __name__ == "__main__":
     if not os.path.exists(pathtodownloaded):
         with open(pathtodownloaded, "w") as f:
             f.write("Filename\tStatus\n")
-    with open(pathtoprocessed, "r") as f:
+    with open(pathtodownloaded, "r") as f:
         logfile.contents["Step_2"]["selected_accessions"]["download_progress"] = {chunk.split("\t")[0]: chunk.split("\t")[1] for chunk in f.read().split("\n") if chunk != "Filename\tStatus" and chunk != ""}
     logfile.update()
     
@@ -533,7 +533,7 @@ if __name__ == "__main__":
     retrylimit= 2
     parallel_download(workers)
     
-    with open(pathtoprocessed, "r") as f:
+    with open(pathtodownloaded, "r") as f:
         logfile.contents["Step_2"]["selected_accessions"]["download_progress"] = {chunk.split("\t")[0]: chunk.split("\t")[1] for chunk in f.read().split("\n") if chunk != "Filename\tStatus" and chunk != ""}
     logfile.update()
     
