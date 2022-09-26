@@ -20,7 +20,8 @@ For more information refer to: *Place-holder for publication DOI*
 ```
 git clone https://github.com/pengkenlim/HSS-Trans.git
 ```
-**Create environment and install relavent packages (grab the latest version of ffq)**
+**Create environment, install packages and grab the latest version of FFQ**\
+
 ```
 cd HSS-Trans
 virtualenv -p python3 <MY_ENV>
@@ -29,7 +30,7 @@ pip install --upgrade pip
 pip install -r ./setup/requirements.txt
 pip install ffq
 ```
-**Install dependencies into programs sub-directory **
+**Install dependencies into programs sub-directory**
 ```
 python3 ./setup/install.py
 ```
@@ -84,8 +85,7 @@ For download via FTP using cURL:
 ```
 python3 ./main/MakeDraftCDS.py --output_dir <output directory> -i <NCBI TaxID> -g <Genetic code> -dm ftp
 ```
-**Continuing an interrupted run / Overwriting a previous run in the same directory**
-
+**Continuing an interrupted run / Overwriting a previous run in the same directory**\
 Running the main pipeline (steps 1 and 2) might take quite long especially if there are many accessions to download for the organism of interest or if the user has limited internet bandwidth.
 Therefore, a logging system (in a logs.json file) has been incorporated into the pipeline for users to continue an interrupted run using the --conti option.
 Simply state the output directory and the pipeline will parse the log file, inherit arguments from the interrupted run and pickup from where it left off.
