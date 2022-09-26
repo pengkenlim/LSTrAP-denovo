@@ -85,6 +85,7 @@ For download via FTP using cURL:
 python3 ./main/MakeDraftCDS.py --output_dir <output directory> -i <NCBI TaxID> -g <Genetic code> -dm ftp
 ```
 **Continuing an interrupted run / Overwriting a previous run in the same directory**
+
 Running the main pipeline (steps 1 and 2) might take quite long especially if there are many accessions to download for the organism of interest or if the user has limited internet bandwidth.
 Therefore, a logging system (in a logs.json file) has been incorporated into the pipeline for users to continue an interrupted run using the --conti option.
 Simply state the output directory and the pipeline will parse the log file, inherit arguments from the interrupted run and pickup from where it left off.
