@@ -42,7 +42,7 @@ python3 ./main/MakeDraftCDS.py --output_dir <working directory> -i <NCBI TaxID> 
 
 Full options:
 ```
-    _  _ ___ ___    _____
+     _  _ ___ ___    _____
     | || / __/ __|__|_   _| _ __ _ _ _  ___
     | __ \__ \__ \___|| || '_/ _` | ' \(_-<
     |_||_|___/___/    |_||_| \__,_|_||_/__/ MakeDraftCDS.py
@@ -76,7 +76,7 @@ optional arguments:
   -con, --conti         Resume incomplete run based on output directory. Only requires -o to run.
 ```
 **Alternative download methods**
-For high-speed download using IBM Aspera file transfer framework:
+ For high-speed download using IBM Aspera file transfer framework:
 ```
 python3 ./main/MakeDraftCDS.py --output_dir <output directory> -i <NCBI TaxID> -g <Genetic code> -dm ascp
 ```
