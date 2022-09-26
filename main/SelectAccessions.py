@@ -232,6 +232,13 @@ if __name__ == "__main__":
     parser.add_argument("-f", "--force", action="store_true",
     help = "Delete data from previous SelectAccessions.py run and start a fresh SelectAccessions.py in output directory.")
     
+    #banner
+    print("\n \
+    _  _ ___ ___    _____\n\
+    | || / __/ __|__|_   _| _ __ _ _ _  ___\n\
+    | __ \__ \__ \___|| || '_/ _` | ' \(_-<\n\
+    |_||_|___/___/    |_||_| \__,_|_||_/__/ SelectAccessions.py\n")
+    
     #parse args
     args=parser.parse_args()
 
@@ -530,7 +537,14 @@ if __name__ == "__main__":
     logfile.update()
     
     #download 
-    retrylimit= 2
+    parallel_download(workers)
+    
+    with open(pathtodownloaded, "r") as f:
+        logfile.contents["Step_2"]["selected_accessions"]["download_progress"] = {chunk.split("\t")[0]: chunk.split("\t")[1] for chunk in f.read().split("\n") if chunk != "Filename\tStatus" and chunk != ""}
+    logfile.update()
+    
+    #redownload failed accessions
+    print("\nChecking logs to re-attempt download of failed accessions....")
     parallel_download(workers)
     
     with open(pathtodownloaded, "r") as f:
@@ -543,13 +557,15 @@ if __name__ == "__main__":
             condition= f"Cluster_{cluster}"
             for index , accession in enumerate(logfile.contents["Step_2"]["selected_accessions"][cluster]):
                 replicate=  f"Cluster_{cluster}_rep{index}"
-                #forwardpath , reversepath = os.path.join(F_fastqdir,accession+"_1.fastq"), os.path.join(F_fastqdir,accession+"_2.fastq")
                 forwardpath , reversepath = os.path.join(F_fastqdir,accession+"_1.fastq.gz"), os.path.join(F_fastqdir,accession+"_2.fastq.gz")
-                f.write(f"{condition}\t{replicate}\t{forwardpath}\t{reversepath}\n")
+                #only write if download is successful
+                if accession+"_1.fastq.gz" in logfile.contents["Step_2"]["selected_accessions"]["download_progress"].keys() and accession+"_2.fastq.gz" in logfile.contents["Step_2"]["selected_accessions"]["download_progress"].keys():
+                    if logfile.contents["Step_2"]["selected_accessions"]["download_progress"][accession+"_1.fastq.gz"] == "Downloaded" and logfile.contents["Step_2"]["selected_accessions"]["download_progress"][accession+"_2.fastq.gz"] == "Downloaded":
+                        f.write(f"{condition}\t{replicate}\t{forwardpath}\t{reversepath}\n")
                 
                 
     print("\nTrinity sample file have been created at "+ os.path.join(outputdir, "Samples_for_trinity.tsv.\n"))
-    print("Install Trinity (https://github.com/trinityrnaseq/), edit and run Run_Trinity.py to start de novo / genome-guided transcriptome assembly.\n")
+    print("Install Trinity (https://github.com/trinityrnaseq/), edit and run helper/Run_Trinity.py to start de novo transcriptome assembly using Trinity.\n")
     logfile.contents["Step_2"]["status"]= "completed"
     logfile.update()
     print("HSS-Trans.SelectAccessions.py completed.\nGenerating html report...\n")

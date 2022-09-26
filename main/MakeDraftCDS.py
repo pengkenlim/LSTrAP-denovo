@@ -259,13 +259,19 @@ if __name__ == "__main__":
     help = "Number of single-accession-assemblies to combine in order to generate the preliminary assembly.")
     parser.add_argument("-a", "--accessions", type=str, metavar="",
     help= "User-defined list of SRA run accessions to fetch for preliminary assembly. If insufficient accessions provided, run will be supplemented with other public accessions. E.g.: SRR123456,SRR654321,ERR246810,...")
-    
     #mutually exclusive argumentss for initial run or resume incomplete run
     ME_group_1 = parser.add_mutually_exclusive_group(required=True)
     ME_group_1.add_argument("-i", "--id", type=int, metavar="", 
     help= "NCBI TaxID of organism for fetching SRA run accessions.")
     ME_group_1.add_argument("-con", "--conti", action="store_true",
     help = "Resume incomplete run based on output directory. Only requires -o to run.")
+    
+    #banner
+    print("\n \
+    _  _ ___ ___    _____\n\
+    | || / __/ __|__|_   _| _ __ _ _ _  ___\n\
+    | __ \__ \__ \___|| || '_/ _` | ' \(_-<\n\
+    |_||_|___/___/    |_||_| \__,_|_||_/__/ MakeDraftCDS.py\n")
     
     args=parser.parse_args()
     outputdir= args.output_dir
