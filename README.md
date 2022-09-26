@@ -77,6 +77,7 @@ optional arguments:
   -con, --conti         Resume incomplete run based on output directory. Only requires -o to run.
 ```
 **Alternative download methods**
+
 For high-speed download using IBM Aspera file transfer framework:
 ```
 python3 ./main/MakeDraftCDS.py --output_dir <output directory> -i <NCBI TaxID> -g <Genetic code> -dm ascp
@@ -85,6 +86,61 @@ For download via FTP using cURL:
 ```
 python3 ./main/MakeDraftCDS.py --output_dir <output directory> -i <NCBI TaxID> -g <Genetic code> -dm ftp
 ```
+
+# Step 2. Selecting representative acccessions for transcriptome assembly
+**Simplest implementation**
+```
+python3 ./main/SelectAccessions.py --output_dir <output directory> --accessions_limit 1000
+```
+Full options:
+```
+     _  _ ___ ___    _____
+    | || / __/ __|__|_   _| _ __ _ _ _  ___
+    | __ \__ \__ \___|| || '_/ _` | ' \(_-<
+    |_||_|___/___/    |_||_| \__,_|_||_/__/ SelectAccessions.py
+
+usage: SelectAccessions.py [-h] -o  [-ps] [-s] [-t] [-w] [-dm] [-al] [-kr] [-ct] [-clib] [-con] [-f]
+
+HSS-Trans.SelectAccessions.py: Selection of representative accessions for transcriptome assembly. NOTE: This is step 2 of 2 in the
+HSS-Trans pipeline. Requires prior run of step 1: MakeDraftCDS.py. Refer to https://github.com/pengkenlim/HSS-Trans for more
+information on pipeline usage and implmentation
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -o , --output_dir     Directory for data output. Directory needs to be same as for step 1 (MakeDraftCDS.py).
+  -ps , --pseudoalignment_threshold
+                        Specifies reads pseudoaligned (%PS) threshold for quality control. Expression data of accessions that do not
+                        meet this threshold will be excluded as features for clustering. Set to 0 by default where %PS threshold will
+                        be set to be the lower bound of the %PS distribution (Q1 - 1.5 *IQR) or 20%, whichever is higher.
+  -s , --filesizelimit
+                        Specifies the size limit(mb) for the partial download of accession read files (gzip compressed) for
+                        pseudoalignment. Limit set to 500 (mb) by default. Size maybe decreased to improve the overall runtime
+                        (Download and Psudoalignment) and storage used in this step of the pipeline. However, doing so might
+                        compromise accurate gene expression quantification as a result of limited sequencing depth.
+  -t , --threads        Total thread pool for workers. Needs to be divisible by number of workers.
+  -w , --workers        Specify the maximum workers for running multiple download-pseudoalignment jobs in parallel. Set to 4 by
+                        default.
+  -dm , --download_method
+                        Method to download accession runs. ftp/ascp. Set to aspera download (ascp) by default.
+  -al , --accessions_limit
+                        Specifies the upper limit for number of accessions to download and process. Accessions will be selected from a
+                        pre-randomised list that was fetched during MakeDraftCDS.py run and stored in in the logs.json file. Default
+                        set to 500.
+  -kr , --k_range       Specifies the range of k (number of clusters) to iterate through during clustering. Lower and upper limit
+                        seperated by colon(:). Set to auto(5:20) by default. Optimal k will be chosen from this range based on
+                        silhouette coefficient, a clustering performance metric. As such, please set range within expectations based
+                        on heterogenity of expression data for that organism.
+  -ct , --consensus_threshold
+                        Specifies consensus threshold of preliminary assembly. Default set to 0 where optimal threshold determined
+                        automatically in step 1 will be used.
+  -clib , --cluster_lib_size
+                        Specifies the minimum library size (mb) for each cluster to guide the selection of representative accessions
+                        to download. Total file sizes of read files (gzipped) to download for each cluster is used as an approximation
+                        of libary size instead of number of reads.
+  -con, --conti         Resume incomplete run based on output directory. Only requires -o to run.
+  -f, --force           Delete data from previous SelectAccessions.py run and start a fresh SelectAccessions.py in output directory.
+```
+
 # Continuing an interrupted run/overwriting a previous run in the same directory
 **Continuing an interrupted run**
 
