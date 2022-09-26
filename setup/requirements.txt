@@ -9,6 +9,7 @@ cycler==0.11.0
 ffq==0.3.0
 fonttools==4.29.1
 frozendict==2.3.2
+func-timeout==4.3.5
 idna==3.3
 joblib==1.1.0
 k-means-constrained==0.7.1
