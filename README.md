@@ -75,8 +75,8 @@ optional arguments:
   -i , --id             NCBI TaxID of organism for fetching SRA run accessions.
   -con, --conti         Resume incomplete run based on output directory. Only requires -o to run.
 ```
-**Alternative download methods**
- For high-speed download using IBM Aspera file transfer framework:
+**Alternative download methods**\
+For high-speed download using IBM Aspera file transfer framework:
 ```
 python3 ./main/MakeDraftCDS.py --output_dir <output directory> -i <NCBI TaxID> -g <Genetic code> -dm ascp
 ```
