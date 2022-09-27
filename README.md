@@ -184,5 +184,15 @@ In both steps of the pipeline, the number of workers for parallelization can be 
 
 RNA-seq accessions of the specified taxa are fetched from ENA. However the number of RNA-seq accessioons for some taxa (especially model species; >80k for *A. thaliana*) might be too large to be practically processed by the pipeline. As such, step 2 of the pipeline is limited to process up to 500 accessions (chosen randomly) by default. Users can adjust this upper limit using the `--accessions_limit` option
 
-**File size options**
-In Step 1, 
+# File size options 
+
+Note: integers arguments after `--filesizelimit` and `--cluster_lib_size` correspond to the size in megabytes (mb) of gunzipped FASTQ files. 
+
+**Specifying file size requirements for Single-sample assemblies (SSAs)**
+
+To make sure that Single-sample assemblies are assembled from RNA-seq libraries of similar sequencing depth, RNA-seq gunzipped FASTQs are partially downloaded to the same file size before assembly. Using the `--filesizelimit` option, user can specify the file size to partially download. In addition, this argument also serves the minimal size requirement for accessions to be considered for SSA.
+
+
+**Limiting file size for partially download **
+
+Due to the large size of some RNA-seq libraries, 
