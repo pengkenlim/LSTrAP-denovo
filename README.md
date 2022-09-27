@@ -2,8 +2,8 @@
  **High-throughput Sample Selection for Transcriptome assembly**  
  An automated pipeline to quality control and select public RNA-seq accessions for the transcriptome assembly of species without reference genomes using unsupervised machine learning
  
-<iframe src="https://drive.google.com/file/d/1nY08OjMso7PhPAqYQ7PlOV_WtKFDv6Rf/preview" width="640" height="480" allow="autoplay"></iframe>
- 
+<img src="https://drive.google.com/uc?id=1nY08OjMso7PhPAqYQ7PlOV_WtKFDv6Rf" alt="Google Drive Image" />
+
  **Features**  
  - Simplest implementation of HSS-Trans only requires taxonomic id for species of interest
  - Construction of high confidence draft coding sequences (CDSs) using an efficient *de novo* assembler (SOAPdenovo-Trans) coupled with a novel consensus-based approach to retain common CDSs assembled independently in multiple RNA-seq accessions
