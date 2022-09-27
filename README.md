@@ -193,6 +193,6 @@ Note: integers arguments after `--filesizelimit` and `--cluster_lib_size` corres
 To make sure that Single-sample assemblies are assembled from RNA-seq libraries of similar sequencing depth, RNA-seq gunzipped FASTQs are partially downloaded to the same file size before assembly. Using the `--filesizelimit` option, user can specify the file size to partially download. In addition, this argument also serves the minimal size requirement for accessions to be considered for SSA.
 
 
-**Limiting file size for partially download **
+**Limiting file size for partially download**
 
 Due to the large size of some RNA-seq libraries, 
