@@ -188,11 +188,12 @@ RNA-seq accessions of the specified taxa are fetched from ENA. However the numbe
 
 Note: integers arguments after `--filesizelimit` and `--cluster_lib_size` correspond to the size in megabytes (mb) of gunzipped FASTQ files. 
 
-**Specifying file size requirements for Single-sample assemblies (SSAs)**
+**Step 1. (MakeDraftCDS.py): Specifying required library size for Single-sample assemblies (SSAs)**
 
-To make sure that Single-sample assemblies are assembled from RNA-seq libraries of similar sequencing depth, RNA-seq gunzipped FASTQs are partially downloaded to the same file size before assembly. Using the `--filesizelimit` option, user can specify the file size to partially download. In addition, this argument also serves the minimal size requirement for accessions to be considered for SSA.
+To make sure that Single-sample assemblies are assembled from RNA-seq libraries of similar sequencing depth, RNA-seq gunzipped FASTQs are partially downloaded to the same file size before assembly. Using the `--filesizelimit` option, user can specify the file size to partially download. In addition, this limit also serves the minimal size requirement for accessions to be considered for SSA.
 
 
-**Limiting file size for partially download**
+**Step 2. (SelectAccessions.py): Specifying library size limit for gene expression estimation **
 
-Due to the large size of some RNA-seq libraries, 
+Due to the large size of some RNA-seq libraries, RNA-seq gunzipped FASTQs are partially downloaded to the same file size before pseudoalignment using Kallisto. Using the `--filesizelimit` option, user can specify the file size to partially download. Accessions that do not exceed the specifed limit will be downloaded in full.
+
