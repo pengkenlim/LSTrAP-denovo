@@ -2,6 +2,8 @@
  **High-throughput Sample Selection for Transcriptome assembly**  
  An automated pipeline to quality control and select public RNA-seq accessions for the transcriptome assembly of species without reference genomes using unsupervised machine learning
  
+![Pipeline schematic](https://drive.google.com/file/d/1nY08OjMso7PhPAqYQ7PlOV_WtKFDv6Rf/view?usp=sharing)
+ 
  **Features**  
  - Simplest implementation of HSS-Trans only requires taxonomic id for species of interest
  - Construction of high confidence draft coding sequences (CDSs) using an efficient *de novo* assembler (SOAPdenovo-Trans) coupled with a novel consensus-based approach to retain common CDSs assembled independently in multiple RNA-seq accessions
@@ -197,10 +199,12 @@ To make sure that Single-sample assemblies are assembled from RNA-seq libraries 
 
 Due to the large size of some RNA-seq libraries, RNA-seq gunzipped FASTQs are partially downloaded to the same file size before pseudoalignment using Kallisto to improve runtime. Using the `--filesizelimit` option, user can specify the file size to partially download. Accessions that do not exceed the specifed limit will be downloaded in full.
 
-**Step 2. (SelectAccessions.py): Specifying total library size of representative accessions to download for each cluster**
+**Step 2. (SelectAccessions.py): Specifying total library size for each cluster for downloading of representative RNA-seq accessions**
 
-# Quality control and clustering options for Step 2 (SelectAccessions.py)
+# Quality control and clustering options for Step 2
 **Pseudoalignment rate for quality control of RNA-seq accessions**
+
+Mention interquartile range (IQR) and refer to users to DOI
 
 `--pseudoalignment_threshold`
 
@@ -214,7 +218,7 @@ Mention k-range and silhouette coefficient
 
 # After running HSS-Trans (Step 1 and Step 2) 
 
-**interpreting report**
+**Interpreting HSS-Trans output report**
 
 <insert link to example HTML file>
 
