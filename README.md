@@ -15,7 +15,7 @@
 
 For more information refer to: *Place-holder for publication DOI*
 
-# Setup
+# Setting up
 **clone repository to local machine**
 ```
 $ git clone https://github.com/pengkenlim/HSS-Trans.git
@@ -38,7 +38,7 @@ $ python3 ./setup/install.py
 # Step 1. Assembling Draft CDSs  
 **Simplest implementation**
 ```
-$ python3 ./main/MakeDraftCDS.py --output_dir <working directory> -i <NCBI TaxID> -g <Genetic code>
+$ python3 ./main/MakeDraftCDS.py --output_dir <output directory> -i <NCBI TaxID> -g <Genetic code>
 ```
 
 Full options:
@@ -135,7 +135,7 @@ optional arguments:
 **Continuing an interrupted run**
 
 Running the main pipeline (steps 1 and 2) might take quite long especially if there are many accessions to download for the organism of interest or if the user has limited internet bandwidth.
-Therefore, a logging system (in a logs.json file) has been incorporated into the pipeline for users to continue an interrupted run using the --conti option.
+Therefore, a logging system (in a logs.json file) has been incorporated into the pipeline for users to continue an interrupted run using the `--conti` option.
 Simply state the output directory and the pipeline will parse the log file, inherit arguments from the interrupted run and pickup from where it left off.
 ```
 $ python3 ./main/MakeDraftCDS.py --output_dir <output directory> --conti
@@ -150,7 +150,7 @@ To re-run Step 1, users must first delete all contents within the output directo
 $ rm <output directory>/* -r
 $ python3 ./main/MakeDraftCDS.py --output_dir <output directory> -i <NCBI TaxID>
 ```
-To re-run Step 2, users can delete data files specific to Step 2 and roll-back logs using the --force option:
+To re-run Step 2, users can delete data files specific to Step 2 and roll-back logs using the `--force` option:
 ```
 $ python3 ./main/MakeDraftCDS.py --output_dir <output directory> --force
 ``` 
@@ -160,7 +160,7 @@ HSS-Trans downloads RNA-seq data directly from the servers of the European Nucle
 
 **Alternative download methods**
 
-HSS-Trans can be download RNA-seq FASTQ files in one of two methods. In the event that one method doesn't work due to reasons server-side, users are encouraged to use the other alternative. Download method can be specified using the --download_method argument.
+HSS-Trans can be download RNA-seq FASTQ files in one of two methods. In the event that one method doesn't work due to reasons server-side, users are encouraged to use the other alternative. Download method can be specified using the `--download_method` option.
 
 For high-speed download using IBM Aspera file transfer framework:
 ```
@@ -178,7 +178,11 @@ $ python3 ./main/SelectAccessions.py --output_dir <output directory> --download_
 **Download parallization**
 
 In HSS-Trans, downloading and processing of accessions are coupled into individual jobs and spawned as parallel worker processes. This coupling allows for downloaded data to be immediately fed into compute-heavy tasks (assembly in MakeDraftCDS.py / pseudoalignment in SelectAccessions.py) without waiting for all downloads to finish. In the event where the user has high download speed, this parallelization can allow user to overcome connection bandwidth limitations through multiple concurrent download connections.
-In both steps of the pipeline, the number of workers for parallelization can be specified with the `--workers` argument.
+In both steps of the pipeline, the number of workers for parallelization can be specified with the `--workers` option.
 
+**Limit the number of accessions to download and process in step 2**
 
+RNA-seq accessions of the specified taxa are fetched from ENA. However the number of RNA-seq accessioons for some taxa (especially model species; >80k for *A. thaliana*) might be too large to be practically processed by the pipeline. As such, step 2 of the pipeline is limited to process up to 500 accessions (chosen randomly) by default. Users can adjust this upper limit using the `--accessions_limit` option
 
+**File size options**
+In Step 1, 
