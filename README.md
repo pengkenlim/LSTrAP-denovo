@@ -160,18 +160,25 @@ HSS-Trans downloads RNA-seq data directly from the servers of the European Nucle
 
 **Alternative download methods**
 
-HSS-Trans can be download RNA-seq FASTQ files in one of two methods. In the event that one method doesn't work due to server-side reasons, users are encouraged to use the other alternative. Download method can be specified using the --download_method argument.\
+HSS-Trans can be download RNA-seq FASTQ files in one of two methods. In the event that one method doesn't work due to reasons server-side, users are encouraged to use the other alternative. Download method can be specified using the --download_method argument.
 
 For high-speed download using IBM Aspera file transfer framework:
 ```
 $ python3 ./main/MakeDraftCDS.py --output_dir <output directory> -i <NCBI TaxID> -g <Genetic code> --download_method ascp
+
 $ python3 ./main/SelectAccessions.py --output_dir <output directory> --download_method ascp
 ```
 For download via FTP using cURL:
 ```
 $ python3 ./main/MakeDraftCDS.py --output_dir <output directory> -i <NCBI TaxID> -g <Genetic code> --download_method ftp
+
 $ python3 ./main/SelectAccessions.py --output_dir <output directory> --download_method ftp
 ```
  
-**Advanced download options**
+**Download parallization**
+
+In HSS-Trans, downloading and processing of accessions are coupled into individual jobs and spawned as parallel worker processes. This coupling allows for downloaded data to be immediately fed into compute-heavy tasks (assembly in MakeDraftCDS.py / pseudoalignment in SelectAccessions.py) without waiting for all downloads to finish. In the event where the user has high download speed, this parallelization can allow user to overcome connection bandwidth limitations through multiple concurrent download connections.
+In both steps of the pipeline, the number of workers for parallelization can be specified with the `--workers` argument.
+
+
 
