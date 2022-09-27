@@ -18,27 +18,27 @@ For more information refer to: *Place-holder for publication DOI*
 # Setup
 **clone repository to local machine**
 ```
-git clone https://github.com/pengkenlim/HSS-Trans.git
+$ git clone https://github.com/pengkenlim/HSS-Trans.git
 ```
 **Create environment, install packages and grab the latest version of FFQ**
 
 ```
-cd HSS-Trans
-virtualenv -p python3 <MY_ENV>
-source ./<MY_ENV>/bin/activate
-pip install --upgrade pip
-pip install -r ./setup/requirements.txt
-pip install ffq
+$ cd HSS-Trans
+$ virtualenv -p python3 <MY_ENV>
+$ source ./<MY_ENV>/bin/activate
+$ pip install --upgrade pip
+$ pip install -r ./setup/requirements.txt
+$ pip install ffq
 ```
 **Install dependencies into programs sub-directory**
 ```
-python3 ./setup/install.py
+$ python3 ./setup/install.py
 ```
 
 # Step 1. Assembling Draft CDSs  
 **Simplest implementation**
 ```
-python3 ./main/MakeDraftCDS.py --output_dir <working directory> -i <NCBI TaxID> -g <Genetic code>
+$ python3 ./main/MakeDraftCDS.py --output_dir <working directory> -i <NCBI TaxID> -g <Genetic code>
 ```
 
 Full options:
@@ -75,16 +75,6 @@ optional arguments:
                         provided, run will be supplemented with other public accessions. E.g.: SRR123456,SRR654321,ERR246810,...
   -i , --id             NCBI TaxID of organism for fetching SRA run accessions.
   -con, --conti         Resume incomplete run based on output directory. Only requires -o to run.
-```
-**Alternative download methods**
-
-For high-speed download using IBM Aspera file transfer framework:
-```
-python3 ./main/MakeDraftCDS.py --output_dir <output directory> -i <NCBI TaxID> -g <Genetic code> -dm ascp
-```
-For download via FTP using cURL:
-```
-python3 ./main/MakeDraftCDS.py --output_dir <output directory> -i <NCBI TaxID> -g <Genetic code> -dm ftp
 ```
 
 # Step 2. Selecting representative acccessions for transcriptome assembly
@@ -141,28 +131,47 @@ optional arguments:
   -f, --force           Delete data from previous SelectAccessions.py run and start a fresh SelectAccessions.py in output directory.
 ```
 
-# Continuing an interrupted run/overwriting a previous run in the same directory
+# Continuing an interrupted run in the same directory
 **Continuing an interrupted run**
 
 Running the main pipeline (steps 1 and 2) might take quite long especially if there are many accessions to download for the organism of interest or if the user has limited internet bandwidth.
 Therefore, a logging system (in a logs.json file) has been incorporated into the pipeline for users to continue an interrupted run using the --conti option.
 Simply state the output directory and the pipeline will parse the log file, inherit arguments from the interrupted run and pickup from where it left off.
 ```
-python3 ./main/MakeDraftCDS.py --output_dir <output directory> --conti
+$ python3 ./main/MakeDraftCDS.py --output_dir <output directory> --conti
 
-python3 ./main/SelectAccessions.py --output_dir <output directory> --conti 
+$ python3 ./main/SelectAccessions.py --output_dir <output directory> --conti 
 ```
-**overwriting a previous run in the same directory**
+**Overwriting a previous run in the same directory**
 
 To prevent corruption of data files, the pipeline will not allow users to re-run pipeline steps that has previously been initialized in the output directory implicitly.
 To re-run Step 1, users must first delete all contents within the output directory recursively:
 ```
-rm <output directory>/* -r
-python3 ./main/MakeDraftCDS.py --output_dir <output directory> -i <NCBI TaxID>
+$ rm <output directory>/* -r
+$ python3 ./main/MakeDraftCDS.py --output_dir <output directory> -i <NCBI TaxID>
 ```
 To re-run Step 2, users can delete data files specific to Step 2 and roll-back logs using the --force option:
 ```
-python3 ./main/MakeDraftCDS.py --output_dir <output directory> --force
+$ python3 ./main/MakeDraftCDS.py --output_dir <output directory> --force
 ``` 
 
+# Data downloading
+HSS-Trans downloads RNA-seq data directly from the servers of the European Nucleotide Archive (ENA). This is favoured over other popular methods of fetching fastq files through fastq-dump / fasterq-dump (SRA-tools) as it facillitates the partial (truncated) download of deep-sequencing accessions in compressed (gunzipped) FASTQ files.
+
+**Alternative download methods**
+
+HSS-Trans can be download RNA-seq FASTQ files in one of two methods. In the event that one method doesn't work due to server-side reasons, users are encouraged to use the other alternative. Download method can be specified using the --download_method argument.\
+
+For high-speed download using IBM Aspera file transfer framework:
+```
+$ python3 ./main/MakeDraftCDS.py --output_dir <output directory> -i <NCBI TaxID> -g <Genetic code> --download_method ascp
+$ python3 ./main/SelectAccessions.py --output_dir <output directory> --download_method ascp
+```
+For download via FTP using cURL:
+```
+$ python3 ./main/MakeDraftCDS.py --output_dir <output directory> -i <NCBI TaxID> -g <Genetic code> --download_method ftp
+$ python3 ./main/SelectAccessions.py --output_dir <output directory> --download_method ftp
+```
  
+**Advanced download options**
+
