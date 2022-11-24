@@ -4,8 +4,11 @@ import sys
 import numpy as np
 import concurrent.futures
 import subprocess
+from datetime import datetime
+datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 
-concat_fastapath="/shared/scratch/ken/pipeline_output/TAXID_4565/Step_2/selected_accessions/concat_renamed_wo_all_2.fasta"
+#concat_fastapath="/shared/scratch/ken/pipeline_output/TAXID_4565/Step_2/selected_accessions/concat_renamed_wo_all_2.fasta"
+concat_fastapath="/shared/scratch/ken/pipeline_output/TAXID_4565/Step_2/selected_accessions/AnnotatePredictORFs/concat_test.fasta"
 tempdir="/shared/scratch/ken/pipeline_output/TAXID_4565/Step_2/selected_accessions/AnnotatePredictORFs"
 pathtotransdecoderdir="~/LSTrAP-denovo/programs/TransDecoder"
 pathtohmmsearch="hmmsearch"
@@ -28,6 +31,7 @@ def Pfam_hmmsearch(outdir, domtbloutpath):
     
 
 def run_job(file_name):
+    jobstart
     print(f"{file_name}: Running Transdecoder.LongOrfs...")
     filepath = os.path.join(tempdir ,file_name) #path/to/splitfile_partx.fasta
     outdir = os.path.join(tempdir ,file_name.split(".fasta")[0]) #path/to/splitfile_partx
@@ -35,8 +39,10 @@ def run_job(file_name):
     print(f"{file_name}: Transdecoder.LongOrfs done. Running hmmsearch for Pfam domains...")
     domtbloutpath = os.path.join(outdir, "longest_orfs.domtblout")
     Pfam_hmmsearch(outdir, domtbloutpath)
+    endtime = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    return f"{file_name} completed at {endtime}"
     
-    
+print(datetime.now().strftime("%d/%m/%Y %H:%M:%S"))   
 if not os.path.exists(tempdir):
     os.system(f"mkdir {tempdir}")
 
@@ -64,4 +70,8 @@ for i in range(0,workers):
     
 
 with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
-    pass
+    results= [executor.submit(run_job, file_name) for file_name in file_names]
+    for f in concurrent.futures.as_completed(results):
+        print(f.result())
+
+print("script completed", datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
