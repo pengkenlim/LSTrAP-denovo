@@ -13,7 +13,7 @@ tempdir="/shared/scratch/ken/pipeline_output/TAXID_4565/Step_2/selected_accessio
 pathtotransdecoderdir="~/LSTrAP-denovo/programs/TransDecoder"
 pathtohmmsearch="hmmsearch"
 pathtoPfamHMM= "~/my_interproscan/interproscan-5.59-91.0/data/pfam/Pfam-A.hmm"
-workers= 10
+workers= 1
 worker_cpu= 4
 genetic_code = "Universal"
 min_prot_len= 100
@@ -21,7 +21,8 @@ min_prot_len= 100
 def extract_ORFs(filepath,outdir):
     returncode=subprocess.run(["bash",os.path.join(pathtotransdecoderdir, "TransDecoder.LongOrfs"),
     "-t", filepath, "--outputdir", outdir, "--genetic_code", genetic_code, "-m", str(min_prot_len)],
-    stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+    #stdout=subprocess.DEVNULL, 
+    Sstderr=subprocess.STDOUT)
     return returncode.returncode
 
 def Pfam_hmmsearch(outdir, domtbloutpath):
