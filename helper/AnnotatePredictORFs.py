@@ -36,8 +36,6 @@ def run_job(file_name):
     print(f"{file_name}: Running Transdecoder.LongOrfs...")
     filepath = os.path.join(tempdir ,file_name) #path/to/splitfile_partx.fasta
     outdir = os.path.join(tempdir ,file_name.split(".fasta")[0]) #path/to/splitfile_partx
-    print(filepath,outdir,genetic_code,min_prot_len)
-    sys.exit()
     returncode = extract_ORFs(filepath, outdir)
     print(f"{file_name}: Transdecoder.LongOrfs done. Running hmmsearch for Pfam domains...")
     domtbloutpath = os.path.join(outdir, "longest_orfs.domtblout")
