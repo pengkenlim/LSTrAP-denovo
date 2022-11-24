@@ -41,7 +41,7 @@ if not os.path.exists(tempdir):
     os.system(f"mkdir {tempdir}")
 
 #read content
-with open(fastapath) as f:
+with open(concat_fastapath) as f:
    contents = f.read()
    contents= contents.split(">")
 
