@@ -5,7 +5,7 @@ import numpy as np
 import concurrent.futures
 import subprocess
 from datetime import datetime
-datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+
 
 #concat_fastapath="/shared/scratch/ken/pipeline_output/TAXID_4565/Step_2/selected_accessions/concat_renamed_wo_all_2.fasta"
 concat_fastapath="/shared/scratch/ken/pipeline_output/TAXID_4565/Step_2/selected_accessions/AnnotatePredictORFs/concat_test.fasta"
@@ -22,7 +22,7 @@ def extract_ORFs(filepath,outdir):
     returncode=subprocess.run(["bash",os.path.join(pathtotransdecoderdir, "TransDecoder.LongOrfs"),
     "-t", filepath, "--outputdir", outdir, "--genetic_code", genetic_code, "-m", str(min_prot_len)],
     #stdout=subprocess.DEVNULL, 
-    Sstderr=subprocess.STDOUT)
+    stderr=subprocess.STDOUT)
     return returncode.returncode
 
 def Pfam_hmmsearch(outdir, domtbloutpath):
