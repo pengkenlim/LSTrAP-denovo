@@ -57,10 +57,10 @@ for i in range(0,workers):
     else:    
         towrite= contents[(i*n_seq_per_chunk):((i+1)*n_seq_per_chunk)]
     towrite=">".join(towrite)
-    with open(os.path.join(tempdir, f"splitfile_part{i}.fasta"), "w")as f:
+    with open(os.path.join(tempdir, f"splitfile_part{i+1}.fasta"), "w")as f:
         f.write(towrite)
-    file_names += ["splitfile_part{i}.fasta"]
-    print(f"splitfile_part{i}.fasta created")
+    file_names += [f"splitfile_part{i+1}.fasta"]
+    print(f"splitfile_part{i+1}.fasta created")
     
 
 with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
