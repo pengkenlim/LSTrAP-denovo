@@ -20,7 +20,7 @@ min_prot_len= 100
 
 def extract_ORFs(filepath,dirname):
     os.system(f"cd {tempdir}; " + os.path.join(pathtotransdecoderdir, "TransDecoder.LongOrfs") + " " + 
-    f"-t {filepath} --output_dir {dirname} -G {genetic_code} -m {str(min_prot_len)}")
+    f"-t {filepath} --output_dir {dirname} -G {genetic_code} -m {str(min_prot_len)} > ")
     #returncode=subprocess.run([os.path.join(pathtotransdecoderdir, "TransDecoder.LongOrfs"),
     #"-t", filepath, "--output_dir", dirname, "--genetic_code", genetic_code, "-m", str(min_prot_len)],
     #stdout=subprocess.DEVNULL, 
@@ -32,7 +32,7 @@ def extract_ORFs(filepath,dirname):
 def Pfam_hmmsearch(outdir, domtbloutpath):
     input_pep = os.path.join(outdir, "longest_orfs.pep") #path/to/splitfile_partx/longest_orfs.pep
     logpath = os.path.join(outdir, "PfamHMM.log") #path/to/splitfile_partx/PfamHMM.log
-    os.system(f"{pathtohmmsearch} --cpu {worker_cpu} --domtblout {domtbloutpath} {pathtoPfamHMM} >{logpath}")
+    os.system(f"{pathtohmmsearch} --cpu {worker_cpu} --domtblout {domtbloutpath} {pathtoPfamHMM} {input_pep} >{logpath}")
     
 
 def run_job(file_name):
