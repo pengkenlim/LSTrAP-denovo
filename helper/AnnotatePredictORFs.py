@@ -25,7 +25,7 @@ def extract_ORFs(filepath,dirname):
     #"-t", filepath, "--output_dir", dirname, "--genetic_code", genetic_code, "-m", str(min_prot_len)],
     #stdout=subprocess.DEVNULL, 
     #stderr=subprocess.STDOUT
-    shell=True, cwd=tempdir)
+    #shell=True, cwd=tempdir)
 
 
 
