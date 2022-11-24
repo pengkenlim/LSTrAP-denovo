@@ -56,7 +56,7 @@ for i in range(0,workers):
         towrite= contents[(i*n_seq_per_chunk):]
     else:    
         towrite= contents[(i*n_seq_per_chunk):((i+1)*n_seq_per_chunk)]
-    towrite=">".join(towite)
+    towrite=">".join(towrite)
     with open(os.path.join(tempdir, f"splitfile_part{i}.fasta"))as f:
         f.write(towrite)
     file_names += ["splitfile_part{i}.fasta"]
