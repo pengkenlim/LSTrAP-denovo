@@ -45,16 +45,22 @@ with open(fastapath) as f:
    contents = f.read()
    contents= contents.split(">")
 
+print(f"Total number of transcripts in fasta: {len(contents)}")
 n_seq_per_chunk = int((len(contents) - (len(contents)%workers))/workers) #<--- number of sequences in each split file
+
 
 #create each seq_chunk in tempdir
 file_names=[]
 for i in range(0,workers):
-    towrite= contents[(i*n_seq_per_chunk):((i+1)*n_seq_per_chunk)]
+    if i == workers-1:
+        towrite= contents[(i*n_seq_per_chunk):]
+    else:    
+        towrite= contents[(i*n_seq_per_chunk):((i+1)*n_seq_per_chunk)]
     towrite=">".join(towite)
     with open(os.path.join(tempdir, f"splitfile_part{i}.fasta"))as f:
         f.write(towrite)
     file_names += ["splitfile_part{i}.fasta"]
+    print(f"splitfile_part{i}.fasta created")
     
 
 with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
