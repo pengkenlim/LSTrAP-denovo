@@ -20,7 +20,7 @@ min_prot_len= 100
 
 def extract_ORFs(filepath,dirname):
     os.system(f"cd {tempdir}; " + os.path.join(pathtotransdecoderdir, "TransDecoder.LongOrfs") + " " + 
-    f"-t {filepath} --output_dir {dirname} -G {genetic_code} -m {str(min_prot_len)} > ./{dirname}/TD_ORF.logs")
+    f"-t {filepath} --output_dir {dirname} -G {genetic_code} -m {str(min_prot_len)} > {tempdir}/{dirname}/TD_ORF.logs")
     #returncode=subprocess.run([os.path.join(pathtotransdecoderdir, "TransDecoder.LongOrfs"),
     #"-t", filepath, "--output_dir", dirname, "--genetic_code", genetic_code, "-m", str(min_prot_len)],
     #stdout=subprocess.DEVNULL, 
