@@ -7,14 +7,14 @@ import subprocess
 from datetime import datetime
 
 
-#concat_fastapath="/shared/scratch/ken/pipeline_output/TAXID_4565/Step_2/selected_accessions/concat_renamed_wo_all_2.fasta"
-concat_fastapath="/shared/scratch/ken/pipeline_output/TAXID_4565/Step_2/selected_accessions/AnnotatePredictORFs/concat_test.fasta"
+concat_fastapath="/shared/scratch/ken/pipeline_output/TAXID_4565/Step_2/selected_accessions/concat_renamed_wo_all_2.fasta"
+#concat_fastapath="/shared/scratch/ken/pipeline_output/TAXID_4565/Step_2/selected_accessions/AnnotatePredictORFs/concat_test.fasta"
 tempdir="/shared/scratch/ken/pipeline_output/TAXID_4565/Step_2/selected_accessions/AnnotatePredictORFs"
 pathtotransdecoderdir="~/LSTrAP-denovo/programs/TransDecoder"
 pathtohmmsearch="hmmsearch"
 pathtoPfamHMM= "~/my_interproscan/interproscan-5.59-91.0/data/pfam/Pfam-A.hmm"
-workers= 10
-worker_cpu= 4
+workers= 15
+worker_cpu= 3
 genetic_code = "Universal"
 min_prot_len= 100
 
