@@ -41,7 +41,7 @@ if not os.path.exists(tempdir):
     os.system(f"mkdir {tempdir}")
 
 #read content
-with open(concat_fastapath) as f:
+with open(concat_fastapath, "r") as f:
    contents = f.read()
    contents= contents.split(">")
 
@@ -57,7 +57,7 @@ for i in range(0,workers):
     else:    
         towrite= contents[(i*n_seq_per_chunk):((i+1)*n_seq_per_chunk)]
     towrite=">".join(towrite)
-    with open(os.path.join(tempdir, f"splitfile_part{i}.fasta"))as f:
+    with open(os.path.join(tempdir, f"splitfile_part{i}.fasta"), "w")as f:
         f.write(towrite)
     file_names += ["splitfile_part{i}.fasta"]
     print(f"splitfile_part{i}.fasta created")
