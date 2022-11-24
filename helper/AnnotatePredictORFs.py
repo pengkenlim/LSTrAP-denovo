@@ -31,7 +31,6 @@ def Pfam_hmmsearch(outdir, domtbloutpath):
     
 
 def run_job(file_name):
-    jobstart
     print(f"{file_name}: Running Transdecoder.LongOrfs...")
     filepath = os.path.join(tempdir ,file_name) #path/to/splitfile_partx.fasta
     outdir = os.path.join(tempdir ,file_name.split(".fasta")[0]) #path/to/splitfile_partx
