@@ -18,13 +18,14 @@ worker_cpu= 4
 genetic_code = "Universal"
 min_prot_len= 100
 
-def extract_ORFs(filepath,outdir):
+def extract_ORFs(filepath,dirname):
     returncode=subprocess.run([os.path.join(pathtotransdecoderdir, "TransDecoder.LongOrfs"),
-    "-t", filepath, "--output_dir", outdir, "--genetic_code", genetic_code, "-m", str(min_prot_len)],
+    "-t", filepath, "--output_dir", dirname, "--genetic_code", genetic_code, "-m", str(min_prot_len)],
     #stdout=subprocess.DEVNULL, 
     #stderr=subprocess.STDOUT
-    shell=True)
+    shell=True, cwd=tempdir)
     return returncode.returncode
+
 
 def Pfam_hmmsearch(outdir, domtbloutpath):
     input_pep = os.path.join(outdir, "longest_orfs.pep") #path/to/splitfile_partx/longest_orfs.pep
@@ -36,7 +37,7 @@ def run_job(file_name):
     print(f"{file_name}: Running Transdecoder.LongOrfs...")
     filepath = os.path.join(tempdir ,file_name) #path/to/splitfile_partx.fasta
     outdir = os.path.join(tempdir ,file_name.split(".fasta")[0]) #path/to/splitfile_partx
-    returncode = extract_ORFs(filepath, outdir)
+    returncode = extract_ORFs(filepath, file_name.split(".fasta")[0])
     print(f"{file_name}: Transdecoder.LongOrfs done. Running hmmsearch for Pfam domains...")
     domtbloutpath = os.path.join(outdir, "longest_orfs.domtblout")
     Pfam_hmmsearch(outdir, domtbloutpath)
