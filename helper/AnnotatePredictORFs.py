@@ -40,7 +40,7 @@ def run_job(file_name):
     outdir = os.path.join(tempdir ,file_name.split(".fasta")[0]) #path/to/splitfile_partx
     #extract_ORFs(filepath, file_name.split(".fasta")[0])
     print(f"{file_name}: Transdecoder.LongOrfs done. Running hmmsearch for Pfam domains...")
-    #domtbloutpath = os.path.join(outdir, "longest_orfs.domtblout")
+    domtbloutpath = os.path.join(outdir, "longest_orfs.domtblout")
     #Pfam_hmmsearch(outdir, domtbloutpath)
     print(f"{file_name}: hmmsearch done. Running hmmsearch for Pfam domains...")
     predict_ORFs(filepath,file_name.split(".fasta")[0], domtbloutpath)
