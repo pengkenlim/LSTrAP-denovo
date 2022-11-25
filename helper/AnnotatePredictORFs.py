@@ -36,12 +36,12 @@ def Pfam_hmmsearch(outdir, domtbloutpath):
 
 def run_job(file_name):
     print(f"{file_name}: Running Transdecoder.LongOrfs...")
-    filepath = os.path.join(tempdir ,file_name) #path/to/splitfile_partx.fasta
-    outdir = os.path.join(tempdir ,file_name.split(".fasta")[0]) #path/to/splitfile_partx
-    extract_ORFs(filepath, file_name.split(".fasta")[0])
+    #filepath = os.path.join(tempdir ,file_name) #path/to/splitfile_partx.fasta
+    #outdir = os.path.join(tempdir ,file_name.split(".fasta")[0]) #path/to/splitfile_partx
+    #extract_ORFs(filepath, file_name.split(".fasta")[0])
     print(f"{file_name}: Transdecoder.LongOrfs done. Running hmmsearch for Pfam domains...")
-    domtbloutpath = os.path.join(outdir, "longest_orfs.domtblout")
-    Pfam_hmmsearch(outdir, domtbloutpath)
+    #domtbloutpath = os.path.join(outdir, "longest_orfs.domtblout")
+    #Pfam_hmmsearch(outdir, domtbloutpath)
     print(f"{file_name}: hmmsearch done. Running hmmsearch for Pfam domains...")
     predict_ORFs(filepath,dirname, domtbloutpath)
     endtime = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
