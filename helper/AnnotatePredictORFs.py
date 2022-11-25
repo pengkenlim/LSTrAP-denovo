@@ -43,7 +43,7 @@ def run_job(file_name):
     #domtbloutpath = os.path.join(outdir, "longest_orfs.domtblout")
     #Pfam_hmmsearch(outdir, domtbloutpath)
     print(f"{file_name}: hmmsearch done. Running hmmsearch for Pfam domains...")
-    predict_ORFs(filepath,dirname, domtbloutpath)
+    predict_ORFs(filepath,file_name.split(".fasta")[0], domtbloutpath)
     endtime = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     return f"{file_name} completed at {endtime}"
     
