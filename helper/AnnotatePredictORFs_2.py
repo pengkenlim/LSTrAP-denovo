@@ -28,13 +28,13 @@ def Pfam_hmmsearch(outdir, domtbloutpath):
     
 def swap_target_query(input_domtblout, output_domtblout):
     with open(input_domtblout, "r") as f:
-    contents = f.readlines()
+        contents = f.readlines()
     with open(output_domtblout, "w")as f:
-    for line in contents:
-        if "#" in line:
-            f.write(line)
-        else:
-            f.write(line[38:76]+line[:38]+line[76:])
+        for line in contents:
+            if "#" in line:
+                f.write(line)
+            else:
+                f.write(line[38:76]+line[:38]+line[76:])
 
 
 def run_job(file_name):
