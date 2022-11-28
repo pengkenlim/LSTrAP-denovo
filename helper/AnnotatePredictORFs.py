@@ -42,8 +42,10 @@ def run_job(file_name):
     print(f"{file_name}: Transdecoder.LongOrfs done. Running hmmsearch for Pfam domains...")
     domtbloutpath = os.path.join(outdir, "longest_orfs.domtblout")
     #Pfam_hmmsearch(outdir, domtbloutpath)
-    print(f"{file_name}: hmmsearch done. Running hmmsearch for Pfam domains...")
-    predict_ORFs(filepath,file_name.split(".fasta")[0], domtbloutpath)
+    flipped_domtbloutpath== os.path.join(outdir, "longest_orfs_flipped.domtblout")
+    #os.system("awk \'BEGIN{OFS=FS=\" \"} NR<=3{print}; NR>3{tmp=$1; $1=$4; $4=tmp; tmp=$2; $2=$5; $5=tmp; print}\'" + f" {domtbloutpath} > {flipped_domtbloutpath}")
+    print(f"{file_name}: hmmsearch done. Transdecoder.Predict...")
+    predict_ORFs(filepath,file_name.split(".fasta")[0], flipped_domtbloutpath)
     endtime = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     return f"{file_name} completed at {endtime}"
     
