@@ -9,12 +9,12 @@ import argparse
 
 
 def extract_ORFs(filepath,dirname):
-    return_code= os.system(f"cd {working_dir}; " + os.path.join(pathtotransdecoderdir, "TransDecoder.LongOrfs") + " " + 
+    return_code= os.system(f"cd {working_dir}; " + os.path.join(transdecoder_bin_dir, "TransDecoder.LongOrfs") + " " + 
     f"-t {filepath} --output_dir {dirname} -G {genetic_code} -m {str(min_prot_len)} > {working_dir}/{dirname}.logs")
     return return_code
     
 def predict_ORFs(filepath,dirname, domtbloutpath):
-    return_code= os.system(f"cd {working_dir}; " + os.path.join(pathtotransdecoderdir, "TransDecoder.Predict") + " " + 
+    return_code= os.system(f"cd {working_dir}; " + os.path.join(transdecoder_bin_dir, "TransDecoder.Predict") + " " + 
     f"-t {filepath} --output_dir {dirname} -G {genetic_code} --retain_pfam_hits {domtbloutpath} >> {working_dir}/{dirname}.logs")
     return return_code
 
@@ -22,7 +22,7 @@ def predict_ORFs(filepath,dirname, domtbloutpath):
 def Pfam_hmmsearch(outdir, domtbloutpath):
     input_pep = os.path.join(outdir, "longest_orfs.pep") #path/to/splitfile_partx/longest_orfs.pep
     logpath = os.path.join(outdir, "PfamHMM.log") #path/to/splitfile_partx/PfamHMM.log
-    return_code= os.system(f"{pathtohmmsearch} --cpu {worker_cpu} --domtblout {domtbloutpath} {pathtoPfamHMM} {input_pep} >{logpath}")
+    return_code= os.system(f"{hmmsearch_bin} --cpu {worker_cpu} --domtblout {domtbloutpath} {pathtoPfamHMM} {input_pep} >{logpath}")
     return return_code
     
 
@@ -47,7 +47,7 @@ def run_job(file_name):
         return f"{file_name}: ERROR. hmmsearch Failed."
     
     #flipping targets and queries in domtblouts output by hmmsearch so that it is consistent with hmmscan
-    flipped_domtbloutpath== os.path.join(outdir, "longest_orfs_flipped.domtblout")
+    flipped_domtbloutpath = os.path.join(outdir, "longest_orfs_flipped.domtblout")
     os.system("awk \'BEGIN{OFS=FS=\" \"} NR<=3{print}; NR>3{tmp=$1; $1=$4; $4=tmp; tmp=$2; $2=$5; $5=tmp; print}\'" + f" {domtbloutpath} > {flipped_domtbloutpath}")
     
     #predcit ORFs hmmsearch
@@ -131,6 +131,20 @@ if __name__ == "__main__":
     
     threads=int(threadpool/workers)
     
+    #check if path to hmmsearch, hmmpress and transdecoder binaries are valid.
+    if hmmsearch_bin!= "hmmsearch":
+        if not os.path.exists(hmmsearch_bin):
+            sys.exit(f"Error: hmmsearch not found at {hmmsearch_bin}. Exiting...")
+    
+    if hmmpress_bin!= "hmmpress":
+        if not os.path.exists(hmmpress_bin):
+            sys.exit(f"Error: hmmpress_bin not found at {hmmpress_bin}. Exiting...")
+    
+    if transdecoder_bin_dir!= "":
+        if not os.path.exists(os.path.join(transdecoder_bin_dir, "TransDecoder.LongORFs")):
+            sys.exit(f"Error: TransDecoder.LongORFs not found in {transdecoder_bin_dir}. Exiting...")
+        if not os.path.exists(os.path.join(transdecoder_bin_dir, "TransDecoder.Predict")):
+            sys.exit(f"Error: TransDecoder.Predict not found in {transdecoder_bin_dir}. Exiting...")
 
     #check if Pfam hmm is downloaded in directory
 
