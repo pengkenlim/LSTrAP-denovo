@@ -149,7 +149,8 @@ if __name__ == "__main__":
     #check if Pfam hmm is downloaded in directory
 
     if not os.path.exists(pfam_dir):
-        sys.exit(f"Error: User specified pfam directory ({pfam_dir}) cannot be found inthe system. Exiting...")
+        print(f"User specified pfam directory ({pfam_dir}) is created as it cannot be found in the system.")
+    os.makedirs(pfam_dir)
     pathtoPfamHMM =os.path.join(pfam_dir, "Pfam-A.hmm")
     if not os.path.exists(pathtoPfamHMM):
         print(f"Pfam-A.hmm not detected in user specifed pfam directory. Attempting to download from ftp://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam35.0/Pfam-A.hmm.gz...")
