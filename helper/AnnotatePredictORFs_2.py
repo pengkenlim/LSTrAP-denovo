@@ -154,7 +154,7 @@ if __name__ == "__main__":
     pathtoPfamHMM =os.path.join(pfam_dir, "Pfam-A.hmm")
     if not os.path.exists(pathtoPfamHMM):
         print(f"Pfam-A.hmm not detected in user specifed pfam directory. Attempting to download from ftp://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam35.0/Pfam-A.hmm.gz...")
-        return_code = os.system("wget ftp://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam35.0/Pfam-A.hmm.gz "+ os.path.join(pfam_dir,"Pfam-A.hmm.gz"))
+        return_code = os.system(f"wget ftp://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam35.0/Pfam-A.hmm.gz --directory-prefix={pfam_dir}")
         if return_code != 0:
             sys.exit("Error in downloading Pfam-A.hmm. Please download and decompress manaully into Pfam directory . Exiting...")
         print("un-gunzipping Pfam-A.hmm ... ")
