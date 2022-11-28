@@ -42,7 +42,7 @@ def run_job(file_name):
     print(f"{file_name}: Transdecoder.LongOrfs done. Running hmmsearch for Pfam domains...")
     domtbloutpath = os.path.join(outdir, "longest_orfs.domtblout")
     #Pfam_hmmsearch(outdir, domtbloutpath)
-    flipped_domtbloutpath== os.path.join(outdir, "longest_orfs_flipped.domtblout")
+    flipped_domtbloutpath = os.path.join(outdir, "longest_orfs_flipped.domtblout")
     #os.system("awk \'BEGIN{OFS=FS=\" \"} NR<=3{print}; NR>3{tmp=$1; $1=$4; $4=tmp; tmp=$2; $2=$5; $5=tmp; print}\'" + f" {domtbloutpath} > {flipped_domtbloutpath}")
     print(f"{file_name}: hmmsearch done. Transdecoder.Predict...")
     predict_ORFs(filepath,file_name.split(".fasta")[0], flipped_domtbloutpath)
