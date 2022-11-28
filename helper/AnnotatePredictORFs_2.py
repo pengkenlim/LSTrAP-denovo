@@ -22,7 +22,7 @@ def predict_ORFs(filepath,dirname, domtbloutpath):
 def Pfam_hmmsearch(outdir, domtbloutpath):
     input_pep = os.path.join(outdir, "longest_orfs.pep") #path/to/splitfile_partx/longest_orfs.pep
     logpath = os.path.join(outdir, "PfamHMM.log") #path/to/splitfile_partx/PfamHMM.log
-    return_code= os.system(f"{hmmsearch_bin} --cpu {worker_cpu} --domtblout {domtbloutpath} {pathtoPfamHMM} {input_pep} >{logpath}")
+    return_code= os.system(f"{hmmsearch_bin} --cpu {threads} --domtblout {domtbloutpath} {pathtoPfamHMM} {input_pep} >{logpath}")
     return return_code
     
 
@@ -164,10 +164,11 @@ if __name__ == "__main__":
     if not os.path.exists(pathtoPfamHMM):
         sys.exit("Error in un-gunzipping Pfam-A.hmm. Please download and decompress manaully into Pfam directory . Exiting...")
     
-    print(f"Generating hmm database from Pfam-A.hmm using hmmpress...")
-    return_code = os.system(f"{hmmpress_bin} {pathtoPfamHMM}")
-    if return_code != 0:
-        sys.exit("Error in running hmmpress on Pfam-A.hmm. Exiting...")
+    if not os.path.exists(os.path.join(pfam_dir,"Pfam-A.hmm.h3i")):
+        print(f"Generating hmm database from Pfam-A.hmm using hmmpress...")
+        return_code = os.system(f"{hmmpress_bin} {pathtoPfamHMM}")
+        if return_code != 0:
+            sys.exit("Error in running hmmpress on Pfam-A.hmm. Exiting...")
     
     #make working directory if not already exists
     working_dir= os.path.join(output_dir, "AnnotatePredictORFs")
