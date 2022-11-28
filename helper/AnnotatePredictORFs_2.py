@@ -101,7 +101,7 @@ if __name__ == "__main__":
     #parse args
     args=parser.parse_args()
 
-    outputdir= args.output_dir
+    output_dir= args.output_dir
     threadpool =args.threads
     workers =args.workers
     genetic_code = args.genetic_code
@@ -113,7 +113,7 @@ if __name__ == "__main__":
     
 
     #check for trinity_dir, findout name of assembly fasta. set path for assembly fasta.
-    Trinity_dir= os.path.join(outputdir, "Trinity_output")
+    Trinity_dir= os.path.join(output_dir, "Trinity_output")
     if not os.path.exists(Trinity_dir):
          sys.exit("Error in output directory. Trinity directory not found. Exiting...")
     if "Trinity_over-assembly_nr.fasta" not in os.listdir(Trinity_dir) and "Trinity_all_samples.fasta" not in os.listdir(Trinity_dir):
