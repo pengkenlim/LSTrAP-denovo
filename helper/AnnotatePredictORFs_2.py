@@ -8,6 +8,7 @@ from datetime import datetime
 import argparse
 
 
+
 def extract_ORFs(filepath,dirname):
     return_code= os.system(f"cd {working_dir}; " + os.path.join(transdecoder_bin_dir, "TransDecoder.LongOrfs") + " " + 
     f"-t {filepath} --output_dir {dirname} -G {genetic_code} -m {str(min_prot_len)} > {working_dir}/{dirname}.logs")
@@ -51,13 +52,21 @@ def run_job(file_name):
     os.system("awk \'BEGIN{OFS=FS=\" \"} NR<=3{print}; NR>3{tmp=$1; $1=$4; $4=tmp; tmp=$2; $2=$5; $5=tmp; print}\'" + f" {domtbloutpath} > {flipped_domtbloutpath}")
     
     #predcit ORFs hmmsearch
-    return_code= predict_ORFs(filepath,dirname, flipped_domtbloutpath)
+    return_code= predict_ORFs(filepath,file_name.split(".fasta")[0], flipped_domtbloutpath)
     endtime = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     if return_code ==0:
         return f"{file_name} completed at {endtime}"
     else:
         return f"{file_name}: ERROR. Transdecoder.Predict Failed."
     
+def combine(filenames):
+    #combining 
+    pass
+
+def parse_domtblout():
+    pass
+    
+
     
 if __name__ == "__main__":
     #specify arguments
