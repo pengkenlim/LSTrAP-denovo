@@ -81,10 +81,10 @@ if __name__ == "__main__":
     help= "Specifies the maximum workers for running Transdecoder and hmmsearch in parallel. Reccomended to set to (thread pool)/3. Set to 2 by default.")
     
     parser.add_argument("-G", "--genetic_code", type=str, metavar="", default="Universal", 
-    help= "Genetic code passed to Transdecoder.LongORFs and Transdecoder.Predict. Set to \"Universal\" by default. Refer to ... for more information.")
+    help= "Genetic code passed to TransDecoder.LongOrfs and Transdecoder.Predict. Set to \"Universal\" by default. Refer to ... for more information.")
     
     parser.add_argument("-m", "--min_prot_len", type=int, metavar="", default=100,
-    help= "Minimal protein length (aa) passed to Transdecoder.LongORFs. Set to 100 by default.")
+    help= "Minimal protein length (aa) passed to TransDecoder.LongOrfs. Set to 100 by default.")
     
     parser.add_argument("-pdir","--pfam_dir", type=str, metavar="", required=True,
     help="Path to directory containing Pfam hmm model (Pfam-A.hmm). If directory specified do not contain Pfam-A.hmm, it will be downloaded auotmatically." )
@@ -141,8 +141,8 @@ if __name__ == "__main__":
             sys.exit(f"Error: hmmpress_bin not found at {hmmpress_bin}. Exiting...")
     
     if transdecoder_bin_dir!= "":
-        if not os.path.exists(os.path.join(transdecoder_bin_dir, "TransDecoder.LongORFs")):
-            sys.exit(f"Error: TransDecoder.LongORFs not found in {transdecoder_bin_dir}. Exiting...")
+        if not os.path.exists(os.path.join(transdecoder_bin_dir, "TransDecoder.LongOrfs")):
+            sys.exit(f"Error: TransDecoder.LongOrfs not found in {transdecoder_bin_dir}. Exiting...")
         if not os.path.exists(os.path.join(transdecoder_bin_dir, "TransDecoder.Predict")):
             sys.exit(f"Error: TransDecoder.Predict not found in {transdecoder_bin_dir}. Exiting...")
 
