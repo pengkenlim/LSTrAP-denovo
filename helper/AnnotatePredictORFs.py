@@ -33,6 +33,16 @@ def Pfam_hmmsearch(outdir, domtbloutpath):
     logpath = os.path.join(outdir, "PfamHMM.log") #path/to/splitfile_partx/PfamHMM.log
     os.system(f"{pathtohmmsearch} --cpu {worker_cpu} --domtblout {domtbloutpath} {pathtoPfamHMM} {input_pep} >{logpath}")
     
+def swap_target_query(input_domtblout, output_domtblout):
+    with open(input_domtblout, "r") as f:
+        contents = f.readlines()
+    with open(output_domtblout, "w")as f:
+        for line in contents:
+            if "#" in line:
+                f.write(line)
+            else:
+                f.write(line[38:76]+line[:38]+line[76:])
+    
 
 def run_job(file_name):
     print(f"{file_name}: Running Transdecoder.LongOrfs...")
@@ -44,6 +54,7 @@ def run_job(file_name):
     #Pfam_hmmsearch(outdir, domtbloutpath)
     flipped_domtbloutpath = os.path.join(outdir, "longest_orfs_flipped.domtblout")
     #os.system("awk \'BEGIN{OFS=FS=\" \"} NR<=3{print}; NR>3{tmp=$1; $1=$4; $4=tmp; tmp=$2; $2=$5; $5=tmp; print}\'" + f" {domtbloutpath} > {flipped_domtbloutpath}")
+    swap_target_query(domtbloutpath, flipped_domtbloutpath)
     print(f"{file_name}: hmmsearch done. Transdecoder.Predict...")
     predict_ORFs(filepath,file_name.split(".fasta")[0], flipped_domtbloutpath)
     endtime = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
