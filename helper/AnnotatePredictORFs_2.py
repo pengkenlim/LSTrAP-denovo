@@ -78,7 +78,7 @@ def combine():
     os.system("cat "+ os.path.join(working_dir,"*.transdecoder.cds")+">" + os.path.join(annot_dir,"cds_from_transcripts.fasta"))
     os.system("cat "+ os.path.join(working_dir,"*.transdecoder.pep")+">" + os.path.join(annot_dir,"translated_cds.fasta"))
     os.system("cat "+ os.path.join(working_dir,"*.transdecoder.gff3")+">" + os.path.join(annot_dir,"transcripts.gff3"))
-    os.system("cp "+ fastapath " " + os.path.join(annot_dir,"transcripts.fasta"))
+    os.system("cp "+ fastapath + " " + os.path.join(annot_dir,"transcripts.fasta"))
 
 def parse_domtblout():
     
