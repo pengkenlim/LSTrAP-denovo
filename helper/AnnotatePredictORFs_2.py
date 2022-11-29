@@ -75,10 +75,18 @@ def run_job(file_name):
         return f"{file_name}: ERROR. Transdecoder.Predict Failed."
     
 def combine():
+    #combine cds extracted from each splitfile
     os.system("cat "+ os.path.join(working_dir,"*.transdecoder.cds")+">" + os.path.join(annot_dir,"cds_from_transcripts.fasta"))
+    #combine pep
     os.system("cat "+ os.path.join(working_dir,"*.transdecoder.pep")+">" + os.path.join(annot_dir,"translated_cds.fasta"))
+    #combine gff3
     os.system("cat "+ os.path.join(working_dir,"*.transdecoder.gff3")+">" + os.path.join(annot_dir,"transcripts.gff3"))
+    #copy trinity output assembly inot annot dir
     os.system("cp "+ fastapath + " " + os.path.join(annot_dir,"transcripts.fasta"))
+    #combine domtblout from hmmsearches. Establish headers.
+    os.system("head -n 3 " + os.path.join(working_dir,"splitfile_part1", "longest_orfs_flipped.domtblout") + ">" + os.path.join(annot_dir,"translated_cds.domtblout"))
+    os.system("awk \'!/#/\' " + os.path.join(working_dir,"splitfile_part*", "longest_orfs_flipped.domtblout") + ">>" + os.path.join(annot_dir,"translated_cds.domtblout"))
+
 
 def parse_domtblout():
     
