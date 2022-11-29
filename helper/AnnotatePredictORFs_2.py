@@ -50,12 +50,16 @@ def run_job(file_name):
         return f"{file_name}: ERROR. Transdecoder.LongOrfs Failed."
     
     domtbloutpath = os.path.join(outdir, "longest_orfs.domtblout")
+    
     #Pfam hmmsearch
-    return_code= Pfam_hmmsearch(outdir, domtbloutpath)
-    if return_code ==0:
-        print(f"{file_name}: hmmsearch done. Running Transdecoder.Predict...")
+    if not os.path.exists(outdir+".__checkpoints"): #check if not done
+        return_code= Pfam_hmmsearch(outdir, domtbloutpath)
+        if return_code ==0:
+            print(f"{file_name}: hmmsearch done. Running Transdecoder.Predict...")
+        else:
+            return f"{file_name}: ERROR. hmmsearch Failed."
     else:
-        return f"{file_name}: ERROR. hmmsearch Failed."
+        print(f"{file_name}: hmmsearch done. Running Transdecoder.Predict...")
     
     #flipping targets and queries in domtblouts output by hmmsearch so that it is consistent with hmmscan
     flipped_domtbloutpath = os.path.join(outdir, "longest_orfs_flipped.domtblout")
@@ -70,11 +74,11 @@ def run_job(file_name):
     else:
         return f"{file_name}: ERROR. Transdecoder.Predict Failed."
     
-def combine(filenames):
-    #combining 
-    
-    #working_dir
-    pass
+def combine():
+    os.system("cat "+ os.path.join(working_dir,"*.transdecoder.cds")+">" + os.path.join(annot_dir,"cds_from_transcripts.fasta"))
+    os.system("cat "+ os.path.join(working_dir,"*.transdecoder.pep")+">" + os.path.join(annot_dir,"translated_cds.fasta"))
+    os.system("cat "+ os.path.join(working_dir,"*.transdecoder.gff3")+">" + os.path.join(annot_dir,"transcripts.gff3"))
+    os.system("cp "+ fastapath +">" + os.path.join(annot_dir,"transcripts.gff3"))
 
 def parse_domtblout():
     pass
@@ -225,6 +229,14 @@ if __name__ == "__main__":
         results= [executor.submit(run_job, file_name) for file_name in file_names]
         for f in concurrent.futures.as_completed(results):
             print(f.result())
+    
+    #make dir to hold annotations
+    annot_dir = os.path.join(output_dir, "Annotations") 
+    if not os.path.exists(annot_dir):
+        os.makedirs(annot_dir)
+    
+    #combine transdecoder output to form annotation files
+    combine()
 
     print("script completed", datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
 
