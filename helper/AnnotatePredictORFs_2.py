@@ -160,6 +160,7 @@ def create_annotation_desc():
     annotation_df["Pfam Domains"] = pfam_col
     annotation_df["Interpro Entries"] = interpro_col
     annotation_df["Go Terms"] = GO_col
+    return annotation_df
         
         
     
@@ -323,6 +324,11 @@ if __name__ == "__main__":
     
     #combine transdecoder output to form annotation files
     combine()
+
+    #write cds, descriptions, pfam , interopro entries and Go terms
+    annotation_df = create_annotation_desc()
+    annotation_df.to_csv(os.path.join(annot_dir,"cds_annotations.tsv"), sep="\t")
+    print("Descriptions, pfam domains, interopro entries and Go terms associated with each Coding sequence written to" + os.path.join(annot_dir,"cds_annotations.tsv"))
 
     print("script completed", datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
 
