@@ -96,7 +96,7 @@ if __name__ == "__main__":
 
     if not os.path.exists(kaldir):
         os.makedirs(kaldir)
-    indexpath= os.path.join(kaldir, fastapath.split("/")[-1] + ".index")
+    indexpath= os.path.join(kaldir, cds_fastapath.split("/")[-1] + ".index")
 
     if not os.path.exists(indexpath):
         result= misc.run_with_retries(retrylimit,
