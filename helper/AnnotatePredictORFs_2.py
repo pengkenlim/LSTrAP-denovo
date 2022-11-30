@@ -132,7 +132,6 @@ def parse_interpro2go(interpro2gopath):
     
 
 def create_annotation_desc():
-    des_list= []
     cds_annot_dict = parse_domtblout(os.path.join(annot_dir,"translated_cds.domtblout"))
     Pfam_descriptions = pd.read_csv(os.path.join(data_dir, "Pfam_descriptions.tsv"), sep = "\t")
     Pfam2desc_dict = Pfam_descriptions[["Accession", "Name"]].set_index("Accession").to_dict()["Name"]
@@ -148,12 +147,15 @@ def create_annotation_desc():
         Eval_pfam_tuple = [(value, key) for key, value in cds_annot_dict[cds].items()]
         Eval_pfam_tuple.sort
         pfam_list = [pfam for Eval, pfam in Eval_pfam_tuple]
-        pfam_col+= [pfam_list]
+        interpro_list =[]
+        des_list= []
+        GO_list=[]
         for pfam in pfam_list:
             des_list += [Pfam2desc_dict[pfam.split(".")[0]]]
             interpro_list += [Pfam2interpro_dict[pfam.split(".")[0]]]
             GO_list += interpro2go_dict.get(Pfam2interpro_dict[pfam.split(".")[0]], [])
         interpro_list = [interpro for interpro in interpro_list if type(interpro)!=float]
+        pfam_col+= [pfam_list]
         interpro_col += [list(set(interpro_list))]
         des_col += [list(set(des_list))]
         GO_col += [list(set(GO_list))]
