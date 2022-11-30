@@ -225,7 +225,7 @@ if __name__ == "__main__":
     hmmpress_bin = args.hmmpress_bin
     transdecoder_bin_dir = args.transdecoder_bin_dir
     
-    print("\nAnnotatePredictORFS.py started running on ", datetime.now().strftime("%d/%m/%Y %H:%M:%S")+ "\n")
+    print("\nAnnotatePredictORFs.py started running on ", datetime.now().strftime("%d/%m/%Y %H:%M:%S")+ "\n")
     
     #check for trinity_dir, findout name of assembly fasta. set path for assembly fasta.
     Trinity_dir= os.path.join(output_dir, "Trinity_output")
