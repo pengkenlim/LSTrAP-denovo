@@ -90,7 +90,8 @@ def parallel_job():
 
 
 if __name__ == "__main__":
-    logfile=misc.logfile(os.path.join(outputdir,"logs.json"))
+    #logfile=misc.logfile(os.path.join(outputdir,"logs.json"))
+    logfile=misc.logfile(pathtologfile)
     passed_accessions = logfile.contents["Step_2"].get("qc").get("passed")
 
     if not os.path.exists(kaldir):
