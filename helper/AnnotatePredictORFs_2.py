@@ -11,12 +11,12 @@ abspath=os.getcwd()
 
 def extract_ORFs(filepath,dirname):
     return_code= os.system(f"cd {working_dir}; " + os.path.join(transdecoder_bin_dir, "TransDecoder.LongOrfs") + " " + 
-    f"-t {filepath} --output_dir {dirname} -G {genetic_code} -m {str(min_prot_len)} 2>&1> {working_dir}/{dirname}.logs")
+    f"-t {filepath} --output_dir {dirname} -G {genetic_code} -m {str(min_prot_len)} 2>{working_dir}/{dirname}.logs")
     return return_code
     
 def predict_ORFs(filepath,dirname, domtbloutpath):
     return_code= os.system(f"cd {working_dir}; " + os.path.join(transdecoder_bin_dir, "TransDecoder.Predict") + " " + 
-    f"-t {filepath} --output_dir {dirname} -G {genetic_code} --retain_pfam_hits {domtbloutpath} 2>&1>> {working_dir}/{dirname}.logs")
+    f"-t {filepath} --output_dir {dirname} -G {genetic_code} --retain_pfam_hits {domtbloutpath} 2>>{working_dir}/{dirname}.logs")
     return return_code
 
 
