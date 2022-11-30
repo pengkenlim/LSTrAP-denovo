@@ -302,8 +302,7 @@ if __name__ == "__main__":
     print(f"\nTotal number of transcripts in assembly fasta: {len(contents)}")
     n_seq_per_file = int((len(contents) - (len(contents)%workers))/workers)
     
-    print(f"Number of specified workers= {workers} \n\
-    {len(contents)}Sequences in assembly fasta file will be split into {workers} splitfiles containing approx. {n_seq_per_file} sequences each.\n")
+    print(f"Number of specified workers= {workers} \n{len(contents)} Sequences in assembly fasta file will be split into {workers} splitfiles each containing approx. {n_seq_per_file} sequences.\n")
     
     #create each seq_chunk in working_dir
     file_names=[]
@@ -318,7 +317,7 @@ if __name__ == "__main__":
         file_names += [f"splitfile_part{i+1}.fasta"]
         print(f"splitfile_part{i+1}.fasta created")
     
-    print("Annotating splitfiles in parallel...\n")
+    print("\nFinished splitting files. Annotating splitfiles in parallel...\n")
     with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
         results= [executor.submit(run_job, file_name) for file_name in file_names]
         for f in concurrent.futures.as_completed(results):
