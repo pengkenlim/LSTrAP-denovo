@@ -49,7 +49,7 @@ def write_quant_info(accession ,outdirpath, tpm_matpath):
     return map_rate
 
 
-def re_mapping(assemblydir, cluster, cluster_list, threads, basedir, rankingthreshold):
+def re_mapping(assemblydir, cluster, cluster_list, threads, basedir, rankingthreshold): #not in use
     '''outputdir = assemblydir (i.e. final/cluster_{cluster}/assembly/) . Cluster the assembly to map against. Cluster_list holds the list of clusters
     basdir = .../final/'''
     if not os.path.exists(os.path.join(assemblydir, "remap")):

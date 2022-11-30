@@ -225,7 +225,8 @@ if __name__ == "__main__":
     hmmpress_bin = args.hmmpress_bin
     transdecoder_bin_dir = args.transdecoder_bin_dir
     
-
+    print("\nAnnotatePredictORFS.py started running on ", datetime.now().strftime("%d/%m/%Y %H:%M:%S")+ "\n")
+    
     #check for trinity_dir, findout name of assembly fasta. set path for assembly fasta.
     Trinity_dir= os.path.join(output_dir, "Trinity_output")
     if not os.path.exists(Trinity_dir):
@@ -236,7 +237,7 @@ if __name__ == "__main__":
         fastapath = os.path.join(Trinity_dir, "Trinity_over-assembly_nr.fasta")
     else:
         fastapath = os.path.join(Trinity_dir, "Trinity_all_samples.fasta")
-    print(f"Assembly file detected in {fastapath}.\n")
+    print(f"\nAssembly file detected in {fastapath}.\n")
     
     #check and set threads. Check if threadpool can be divided by number of workers. Else set to appropriate threads
     if threadpool%workers != 0:
