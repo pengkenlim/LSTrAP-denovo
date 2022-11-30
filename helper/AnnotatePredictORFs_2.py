@@ -318,12 +318,13 @@ if __name__ == "__main__":
         file_names += [f"splitfile_part{i+1}.fasta"]
         print(f"splitfile_part{i+1}.fasta created")
     
-    print(f"Annotating splitfiles in parallel...\n")
+    print("Annotating splitfiles in parallel...\n")
     with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
         results= [executor.submit(run_job, file_name) for file_name in file_names]
         for f in concurrent.futures.as_completed(results):
             print(f.result())
     
+    print("\nParallel anotation of splitfiles completed.\n")
     #make dir to hold annotations
     annot_dir = os.path.join(output_dir, "Annotations") 
     if not os.path.exists(annot_dir):
@@ -337,5 +338,5 @@ if __name__ == "__main__":
     annotation_df.to_csv(os.path.join(annot_dir,"cds_annotations.tsv"), sep="\t")
     print("\nDescriptions, pfam domains, interopro entries and Go terms associated with each Coding sequence written to" + os.path.join(annot_dir,"cds_annotations.tsv"))
 
-    print("\nscript completed", datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
+    print("\nAnnotatePredictORFS.py finished running on ", datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
 
