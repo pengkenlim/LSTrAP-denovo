@@ -160,10 +160,12 @@ def create_annotation_desc():
         des_col += [list(set(des_list))]
         GO_col += [list(set(GO_list))]
     #make dataframe
+    annotation_df["Protein"] = cds_col
     annotation_df["Descriptions"] = des_col
     annotation_df["Pfam Domains"] = pfam_col
     annotation_df["Interpro Entries"] = interpro_col
     annotation_df["Go Terms"] = GO_col
+    annotation_df.set_index("Protein")
     return annotation_df
         
         
