@@ -11,19 +11,19 @@ abspath=os.getcwd()
 
 def extract_ORFs(filepath,dirname):
     return_code= os.system(f"cd {working_dir}; " + os.path.join(transdecoder_bin_dir, "TransDecoder.LongOrfs") + " " + 
-    f"-t {filepath} --output_dir {dirname} -G {genetic_code} -m {str(min_prot_len)} > {working_dir}/{dirname}.logs")
+    f"-t {filepath} --output_dir {dirname} -G {genetic_code} -m {str(min_prot_len)} 2>&1> {working_dir}/{dirname}.logs")
     return return_code
     
 def predict_ORFs(filepath,dirname, domtbloutpath):
     return_code= os.system(f"cd {working_dir}; " + os.path.join(transdecoder_bin_dir, "TransDecoder.Predict") + " " + 
-    f"-t {filepath} --output_dir {dirname} -G {genetic_code} --retain_pfam_hits {domtbloutpath} >> {working_dir}/{dirname}.logs")
+    f"-t {filepath} --output_dir {dirname} -G {genetic_code} --retain_pfam_hits {domtbloutpath} 2>&1>> {working_dir}/{dirname}.logs")
     return return_code
 
 
 def Pfam_hmmsearch(outdir, domtbloutpath):
     input_pep = os.path.join(outdir, "longest_orfs.pep") #path/to/splitfile_partx/longest_orfs.pep
     logpath = os.path.join(outdir, "PfamHMM.log") #path/to/splitfile_partx/PfamHMM.log
-    return_code= os.system(f"{hmmsearch_bin} --cpu {threads} --domtblout {domtbloutpath} {pathtoPfamHMM} {input_pep} >{logpath}")
+    return_code= os.system(f"{hmmsearch_bin} --cpu {threads} --domtblout {domtbloutpath} {pathtoPfamHMM} {input_pep} > {logpath}")
     return return_code
     
 def swap_target_query(input_domtblout, output_domtblout):
@@ -165,7 +165,7 @@ def create_annotation_desc():
     annotation_df["Pfam Domains"] = pfam_col
     annotation_df["Interpro Entries"] = interpro_col
     annotation_df["Go Terms"] = GO_col
-    annotation_df.set_index("Protein")
+    annotation_df = annotation_df.set_index("Protein")
     return annotation_df
         
         
@@ -236,11 +236,11 @@ if __name__ == "__main__":
         fastapath = os.path.join(Trinity_dir, "Trinity_over-assembly_nr.fasta")
     else:
         fastapath = os.path.join(Trinity_dir, "Trinity_all_samples.fasta")
-    print(f"Assembly file detected in {fastapath}.")
+    print(f"Assembly file detected in {fastapath}.\n")
     
     #check and set threads. Check if threadpool can be divided by number of workers. Else set to appropriate threads
     if threadpool%workers != 0:
-        print(f"Threadpool of {threadpool} specified by user is not divisible by {workers} workers. Threadpool corrected to {int((threadpool - (threadpool%workers)))}.")
+        print(f"Threadpool of {threadpool} specified by user is not divisible by {workers} workers. Threadpool corrected to {int((threadpool - (threadpool%workers)))}.\n")
         threadpool = int((threadpool - (threadpool%workers)))
     
     threads=int(threadpool/workers)
@@ -299,11 +299,11 @@ if __name__ == "__main__":
        contents = f.read()
        contents= contents.split(">")
     
-    print(f"Total number of transcripts in assembly fasta: {len(contents)}")
+    print(f"\nTotal number of transcripts in assembly fasta: {len(contents)}")
     n_seq_per_file = int((len(contents) - (len(contents)%workers))/workers)
     
     print(f"Number of specified workers= {workers} \n\
-    {len(contents)}Sequences in assembly fasta file will be split into {workers}splitfiles containing approx. {n_seq_per_file} sequences each.\n")
+    {len(contents)}Sequences in assembly fasta file will be split into {workers} splitfiles containing approx. {n_seq_per_file} sequences each.\n")
     
     #create each seq_chunk in working_dir
     file_names=[]
@@ -318,6 +318,7 @@ if __name__ == "__main__":
         file_names += [f"splitfile_part{i+1}.fasta"]
         print(f"splitfile_part{i+1}.fasta created")
     
+    print(f"Annotating splitfiles in parallel...\n")
     with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
         results= [executor.submit(run_job, file_name) for file_name in file_names]
         for f in concurrent.futures.as_completed(results):
@@ -334,7 +335,7 @@ if __name__ == "__main__":
     #write cds, descriptions, pfam , interopro entries and Go terms
     annotation_df = create_annotation_desc()
     annotation_df.to_csv(os.path.join(annot_dir,"cds_annotations.tsv"), sep="\t")
-    print("Descriptions, pfam domains, interopro entries and Go terms associated with each Coding sequence written to" + os.path.join(annot_dir,"cds_annotations.tsv"))
+    print("\nDescriptions, pfam domains, interopro entries and Go terms associated with each Coding sequence written to" + os.path.join(annot_dir,"cds_annotations.tsv"))
 
-    print("script completed", datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
+    print("\nscript completed", datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
 
