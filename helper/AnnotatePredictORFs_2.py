@@ -1,4 +1,3 @@
-#Replace with 
 import os
 import sys
 import numpy as np
@@ -6,8 +5,9 @@ import concurrent.futures
 import subprocess
 from datetime import datetime
 import argparse
+import pandas as pd
 
-
+abspath=os.getcwd()
 
 def extract_ORFs(filepath,dirname):
     return_code= os.system(f"cd {working_dir}; " + os.path.join(transdecoder_bin_dir, "TransDecoder.LongOrfs") + " " + 
@@ -77,20 +77,92 @@ def run_job(file_name):
 def combine():
     #combine cds extracted from each splitfile
     os.system("cat "+ os.path.join(working_dir,"*.transdecoder.cds")+">" + os.path.join(annot_dir,"cds_from_transcripts.fasta"))
+    print(os.path.join(annot_dir,"cds_from_transcripts.fasta") + " generated")
+
     #combine pep
     os.system("cat "+ os.path.join(working_dir,"*.transdecoder.pep")+">" + os.path.join(annot_dir,"translated_cds.fasta"))
+    print(os.path.join(annot_dir,"translated_cds.fasta") + " generated")
+    
     #combine gff3
     os.system("cat "+ os.path.join(working_dir,"*.transdecoder.gff3")+">" + os.path.join(annot_dir,"transcripts.gff3"))
+    print(os.path.join(annot_dir,"transcripts.gff3") + " generated")
+    
     #copy trinity output assembly inot annot dir
     os.system("cp "+ fastapath + " " + os.path.join(annot_dir,"transcripts.fasta"))
+    print(os.path.join(annot_dir,"transcripts.fasta") + " generated")
+    
     #combine domtblout from hmmsearches. Establish headers.
     os.system("head -n 3 " + os.path.join(working_dir,"splitfile_part1", "longest_orfs_flipped.domtblout") + ">" + os.path.join(annot_dir,"translated_cds.domtblout"))
     os.system("awk \'!/#/\' " + os.path.join(working_dir,"splitfile_part*", "longest_orfs_flipped.domtblout") + ">>" + os.path.join(annot_dir,"translated_cds.domtblout"))
+    print(os.path.join(annot_dir,"translated_cds.domtblout") + " generated")
 
 
-def parse_domtblout():
+def parse_domtblout(dombloutpath):
+    with open(dombloutpath, "r") as f:
+        contents= f.read()
+    contents= [line for line in contents.split("\n") if "#" not in line and line != "" ]
+    cds_annot_dict = {}
+    for line in contents:
+        target = line[21:31].strip()
+        query = line[38:59].strip()
+        i_E_val = float(line[116:127].strip())
+        if query not in cds_annot_dict.keys():
+            cds_annot_dict[query] = {target: i_E_val}
+        else:
+            if target not in cds_annot_dict[query].keys():
+                cds_annot_dict[query][target] = i_E_val
+            else:
+                if cds_annot_dict[query][target] > i_E_val:
+                    cds_annot_dict[query][target] = i_E_val
+    return cds_annot_dict
     
-    pass
+def parse_interpro2go(interpro2gopath):
+    with open(interpro2gopath, "r") as f:
+        interpro2go= f.read().split("\n")
+        interpro2go_dict = {}
+    for line in interpro2go:
+        if "InterPro:" in line:
+            acc = line.split("InterPro:")[1].split(" ")[0]
+            GO_term= line.split("; ")[1]
+            if acc not in interpro2go_dict.keys():
+                interpro2go_dict[acc]= [GO_term]
+            else:
+                interpro2go_dict[acc] += [GO_term]
+    return interpro2go_dict
+    
+
+def create_annotation_desc():
+    des_list= []
+    cds_annot_dict = parse_domtblout(os.path.join(annot_dir,"translated_cds.domtblout"))
+    Pfam_descriptions = pd.read_csv(os.path.join(data_dir, "Pfam_descriptions.tsv"), sep = "\t")
+    interpro2go_dict = parse_interpro2go(os.path.join(data_dir, "interpro2go"))
+    annotation_df = pd.DataFrame()
+    cds_col = cds_annot_dict.keys()
+    pfam_col= []
+    des_col= []
+    interpro_col = []
+    GO_col=[]
+    for cds in cds_col:
+        Eval_pfam_tuple = [(value, key) for key, value in cds_annot_dict[cds].items()]
+        Eval_pfam_tuple.sort
+        pfam_list = [pfam for Eval, pfam in Eval_pfam_tuple]
+        pfam_col+= [pfam_list]
+        for pfam in pfam_list:
+            des_list += [Pfam2desc_dict[pfam.split(".")[0]]]
+            interpro_list += [Pfam2interpro_dict[pfam.split(".")[0]]]
+            GO_list += interpro2go_dict.get(Pfam2interpro_dict[pfam.split(".")[0]], [])
+        interpro_list = [interpro for interpro in interpro_list if type(interpro)!=float]
+        interpro_col += [list(set(interpro_list))]
+        des_col += [list(set(des_list))]
+        GO_col += [list(set(GO_list))]
+    #make dataframe
+    annotation_df["Descriptions"] = des_col
+    annotation_df["Pfam Domains"] = pfam_col
+    annotation_df["Interpro Entries"] = interpro_col
+    annotation_df["Go Terms"] = GO_col
+        
+        
+    
     
 
     
@@ -181,6 +253,11 @@ if __name__ == "__main__":
         if not os.path.exists(os.path.join(transdecoder_bin_dir, "TransDecoder.Predict")):
             sys.exit(f"Error: TransDecoder.Predict not found in {transdecoder_bin_dir}. Exiting...")
 
+    #check if HSS-Trans/data folder exists
+    data_dir = os.path.join(abspath, "data")
+    if not os.path.exists(data_dir):
+        sys.exit("Error: Cannot find data directory, please make sure script is run in HSS-Trans directory (i.e. /path/to/HSS-Trans/). Exiting...")
+    
     #check if Pfam hmm is downloaded in directory
 
     if not os.path.exists(pfam_dir):
