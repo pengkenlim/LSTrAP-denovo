@@ -135,6 +135,8 @@ def create_annotation_desc():
     des_list= []
     cds_annot_dict = parse_domtblout(os.path.join(annot_dir,"translated_cds.domtblout"))
     Pfam_descriptions = pd.read_csv(os.path.join(data_dir, "Pfam_descriptions.tsv"), sep = "\t")
+    Pfam2desc_dict = Pfam_descriptions[["Accession", "Name"]].set_index("Accession").to_dict()["Name"]
+    Pfam2interpro_dict = Pfam_descriptions[["Accession", "Integrated Into"]].set_index("Accession").to_dict()["Integrated Into"]
     interpro2go_dict = parse_interpro2go(os.path.join(data_dir, "interpro2go"))
     annotation_df = pd.DataFrame()
     cds_col = cds_annot_dict.keys()
