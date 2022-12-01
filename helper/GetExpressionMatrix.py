@@ -108,7 +108,7 @@ if __name__ == "__main__":
     #load processed files into dict
     with open(pathtoprocessed, "r") as f:
         processed_acc_dict = {chunk.split("\t")[0]: chunk.split("\t")[1] for chunk in f.read().split("\n") if chunk != "Accession\tMap_rate" and chunk != ""}
-        processed_acc_dict = {key : value if "failed" in value or "exception" in value else float(value) for key, value in processed_acc_dict}
+        processed_acc_dict = {key : value if "failed" in value or "exception" in value else float(value) for key, value in processed_acc_dict.items()}
     
     if not os.path.exists(indexpath):
         result= misc.run_with_retries(retrylimit,
