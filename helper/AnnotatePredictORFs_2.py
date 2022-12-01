@@ -105,7 +105,7 @@ def parse_domtblout(dombloutpath):
     for line in contents:
         target = line[21:31].strip()
         query = line[38:59].strip()
-        i_E_val = float(line[116:127].strip())
+        i_E_val = float(line[117:127].strip())
         if query not in cds_annot_dict.keys():
             cds_annot_dict[query] = {target: i_E_val}
         else:
