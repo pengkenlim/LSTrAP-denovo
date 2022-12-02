@@ -23,9 +23,9 @@ fastqdir = "/shared/scratch/ken/pipeline_output/TAXID_4565/Step_2/fastq"
 pathtologfile= "/shared/scratch/ken/pipeline_output/TAXID_4565/logs.json"
 kaldir=os.path.join("/shared/scratch/ken/pipeline_output/TAXID_4565/GetExpressonMatrix/kallisto")
 tpm_matpath= os.path.join(kaldir,"Draft_CDS_exp_mat.tsv")
-workers= 5
+workers= 2
 threadpool= 20
-threads = 2
+threads = 4
 retrylimit = 1
 
 from setup import constants
