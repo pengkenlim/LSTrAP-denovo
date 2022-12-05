@@ -99,4 +99,36 @@ def get_truncate_sizes(accessions, fastqdir ,lib_limit):
         
     return sizes, cap
     
+class logfile_expmat:
+    ''' logfile object to store, retrieve and update checkpoint information'''
+    def __init__(self, path):
+        self.path= path
+        self.template={"run_info":{"taxid":None, "sci_name":None, "n_total_acc":None, "command_issued": None, "init_time": None}, 
+        "run_var":None ,
+        "total_acc": None,
+        "processed_acc":None,
+        "status":"incomplete"}
+
+        if not os.path.exists(path):
+            with open(path, "w") as f:
+                json.dump(self.template,f, indent=2)
+                self.contents = self.template
+        else:   
+            with open(path, "r") as f:
+               self.contents= json.load(f)
     
+    def update(self):
+        path= self.path
+        with open(path, "w") as f:
+            json.dump(self.contents,f, indent=2)
+    
+    def load(self):
+        path= self.path
+        with open(path, "r") as f:
+            self.contents= json.load(f)
+    
+    def clear(self): # reset log file
+        self.contents = self.template
+        path= self.path
+        with open(path, "w") as f:
+            json.dump(self.contents,f, indent=2)

@@ -59,7 +59,7 @@ def download_PS_job(accession, index):
             logfile.contents["Step_2"]["processed_acc"][accession]= "Downloaded"
 
         if  logfile.contents["Step_2"]["processed_acc"].get(accession)== "Downloaded" and os.path.exists(fastqpath):
-            if os.path.getsize("fastqpath")==0:
+            if os.path.getsize(fastqpath)==0:
                 os.system(f"rm {fastqpath}")
                 return accession , index , "Download failed"
             fastqpath =os.path.join(C_fastqdir,accession+".fastq.gz")
