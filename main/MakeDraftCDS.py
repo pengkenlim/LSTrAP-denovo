@@ -169,9 +169,7 @@ def parallel_ssa(workers):
                 progress_bar.close()
                 logfile.load()
                 
-                #conditional to sense when something is really wrong (i.e. every accession fails)
-                if len([k for k in logfile.contents["Step_1"]["processed_acc"].values() if type(k) is int ]) ==0:
-                    sys.exit("Unexpected error occured. Exiting...")
+
 
                     
                     
@@ -423,6 +421,9 @@ if __name__ == "__main__":
         logfile.contents["Step_1"]["processed_acc"] = {chunk.split("\t")[0]: chunk.split("\t")[1] for chunk in f.read().split("\n") if chunk != "Accession\tn_CDS" and chunk != ""}
         logfile.contents["Step_1"]["processed_acc"] = {key : value if "failed" in value else int(value) for key, value in logfile.contents["Step_1"]["processed_acc"].items()}
     logfile.update()
+    #conditional to sense when something is really wrong (i.e. every accession fails)
+    if len([k for k in logfile.contents["Step_1"]["processed_acc"].values() if type(k) is int ]) ==0:
+        sys.exit("Unexpected error occured. Exiting...")
     ssa_consensus(ssadir)
     logfile.load()
     logfile.contents["Step_1"]["status"]= "completed"
