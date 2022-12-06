@@ -70,10 +70,10 @@ def download_PS_job(accession, index):
             f"{accession}: Kallisto pseudoalignment failed. Retrying...",
             f"{accession}: Kallisto pseudoalignment of accession reads against draft CDSs...\n")
             if result == "failed" or not os.path.exists(kaloutdir):
-                #os.system(f"rm {fastqpath}") add in final build
+                #os.system(f"rm {fastqpath}") #add in final build
                 return accession , index , "PS failed"
             map_rate = read_map.write_quant_info(accession, kaloutdir, tpm_matpath)
-            #os.system(f"rm {fastqpath}") add in in final build
+            #os.system(f"rm {fastqpath}") #add in in final build
             print(f"{accession}: Pseudoalignment completed.")
             return accession , index , float(map_rate)
         return accession , index , "Unknown exception"
