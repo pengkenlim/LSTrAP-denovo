@@ -513,7 +513,7 @@ if __name__ == "__main__":
                             logfile.contents["Step_2"]["selected_accessions"][cluster][accession]={"Library_size": sum(filesizes) ,"Distance": info_list[0], "PS": info_list[1]}
                             logfile.contents["Step_2"]["selected_accessions"]["FTP_links"] += ftp_fullpath
                             libsize += filesizes
-                logfile.update()
+            logfile.update()
                     
             print(f"Cluster {cluster}: cluster representatives selected.\n")
     
