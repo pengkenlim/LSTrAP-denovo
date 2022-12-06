@@ -509,7 +509,7 @@ if __name__ == "__main__":
                     #forward, reverse = "ERR", "ERR"
                     ascp_fullpath , ftp_fullpath , filesizes = aspera.get_download_path_ffq2(accession)
                     if len(ftp_fullpath) > 1: #check if paired end
-                        if sum(libsize + filesizes) < ((cluster_lib_size + 1048)* 1048*1048): #cluster lib + 1GB. If exceed this amount, remove this accession
+                        if sum(libsize + filesizes) < ((cluster_lib_size + 1048 +1048)* 1048*1048): #cluster lib + 2GB. If exceed this amount, remove this accession
                             logfile.contents["Step_2"]["selected_accessions"][cluster][accession]={"Library_size": sum(filesizes) ,"Distance": info_list[0], "PS": info_list[1]}
                             logfile.contents["Step_2"]["selected_accessions"]["FTP_links"] += ftp_fullpath
                             libsize += filesizes
