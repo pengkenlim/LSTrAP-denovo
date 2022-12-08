@@ -13,20 +13,21 @@ from preprocess import read_map, classify
 from assembly import misc
 import pandas as pd
 
-tpm_matpath="/home/pengken001/pipeline_output/TAXID_3702/reference/tpm_mat.tsv"
-mapratepath= "/home/pengken001/pipeline_output/TAXID_3702/reference/map_rate.tsv"
-infopath="/home/pengken001/pipeline_output/TAXID_3702/reference/info.csv"
-referencepath="/home/pengken001/pipeline_output/TAXID_3702/reference/Araport_cds_20210622_representative_gene_model.fasta"
-indexpath="/home/pengken001/pipeline_output/TAXID_3702/reference/Araport_cds_20210622_representative_gene_model.index"
-kaldir="/home/pengken001/pipeline_output/TAXID_3702/reference/kallisto"
-failedaccpath="/home/pengken001/pipeline_output/TAXID_3702/reference/failed.tsv"
+tpm_matpath="/home/pengken001/pipeline_output/TAXID_3649/reference/tpm_mat.tsv"
+mapratepath= "/home/pengken001/pipeline_output/TAXID_3649/reference/map_rate.tsv"
+infopath="/home/pengken001/pipeline_output/TAXID_3649/reference/info.csv"
+referencepath="/home/pengken001/pipeline_output/TAXID_3649/reference/cds_from_genomic.fna"
+indexpath="/home/pengken001/pipeline_output/TAXID_3649/reference/cds_from_genomic.index"
+kaldir="/home/pengken001/pipeline_output/TAXID_3649/reference/kallisto"
+failedaccpath="/home/pengken001/pipeline_output/TAXID_3649/reference/failed.tsv"
 retrylimit=2
 workers=16
 threads=2
 fastqdir="/home/pengken001/pipeline_output/TAXID_3702/Step_2/fastq"
-kmin=2
-kmax=88
+kmin=5
+kmax=20
 pseudoalignment_threshold=0
+
 def ps_job(accession, index):
     fastqpath =os.path.join(fastqdir,accession+".fastq.gz")
     kaloutdir= os.path.join(kaldir, accession)
@@ -52,11 +53,11 @@ def parallel_job(workers):
             print(f.result())
 
 if __name__ == "__main__":
-    #accessions=  [file.split(".fastq")[0] for file in os.listdir(fastqdir) if ".gz" in file]
-    #print("kallisto index....")
-    #read_map.launch_kallisto_index(referencepath, indexpath)
-    #print("Parallel PS...")
-    #parallel_job(workers)
+    accessions=  [file.split(".fastq")[0] for file in os.listdir(fastqdir) if ".gz" in file]
+    print("kallisto index....")
+    read_map.launch_kallisto_index(referencepath, indexpath)
+    print("Parallel PS...")
+    parallel_job(workers)
     maprate_df = pd.read_csv(mapratepath, sep="\t", header=None)
     maprate_dict= maprate_df.set_index(0).to_dict()[1]
     total, failed, passed, cutoff= classify.thresholder({key:val for key, val in maprate_dict.items()}, pseudoalignment_threshold)

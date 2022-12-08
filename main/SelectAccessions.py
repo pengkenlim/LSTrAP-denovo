@@ -499,7 +499,7 @@ if __name__ == "__main__":
     for cluster in clusters:
         #check if selection is complete for cluster
         if cluster in logfile.contents["Step_2"]["selected_accessions"].keys():
-            print(f"Cluster{cluster}: cluster representatives selected.\n")
+            print(f"Cluster {cluster}: cluster representatives selected.\n")
         else:    
             logfile.contents["Step_2"]["selected_accessions"][cluster]={}
             master_cluster_assignment_dict
