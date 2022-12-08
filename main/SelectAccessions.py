@@ -24,7 +24,7 @@ def download_PS_job(accession, index):
     '''Job to validate download path -> download via FTP/ascp -> Peudoalignment(PS) by Kallisto'''
     try:
     #to slow down jobs
-        sleep(0.2)
+        sleep(0.1)
         logfile.load()
         #to unsync workers
         if index < workers:
