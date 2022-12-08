@@ -10,6 +10,7 @@ import argparse
 from time import sleep
 
 from setup import constants
+from assembly import misc
 
 if __name__ == "__main__":
     #arguments
