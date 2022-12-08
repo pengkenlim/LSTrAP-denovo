@@ -3,7 +3,7 @@ import os
 import sys
 if __name__ == "__main__":
         abspath= os.getcwd()
-        parent_module= os.path.join(abspath.split("HSS-Trans")[0], "HSS-Trans")
+        parent_module= os.path.join(abspath.split("LSTrAP-denovo")[0], "LSTrAP-denovo")
         sys.path.insert(0, parent_module)
         
 
@@ -132,3 +132,12 @@ class logfile_expmat:
         path= self.path
         with open(path, "w") as f:
             json.dump(self.contents,f, indent=2)
+
+def print_logo(msg):
+    print(f"\n\
+     _      ____  _____        _     ____              _\n\
+    | |    / ___||_   _|_ __  / \   |  _ \          __| |  ___  _ __    ___ __   __ ___ \n\
+    | |    \___ \  | | | '__|/ _ \  | |_) | _____  / _` | / _ \| '_ \  / _ \\\ \ / // _ \ \n\
+    | |___  ___) | | | | |  / ___ \ |  __/ |_____|| (_| ||  __/| | | || (_) |\ V /| (_) | \n\
+    |_____||____/  |_| |_| /_/   \_\|_|            \__,_| \___||_| |_| \___/  \_/  \___/ {msg}\n")
+                                                                                     

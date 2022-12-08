@@ -3,7 +3,7 @@ import os
 import sys
 if __name__ == "__main__":
         abspath= os.getcwd()
-        parent_module= os.path.join(abspath.split("HSS-Trans")[0], "HSS-Trans")
+        parent_module= os.path.join(abspath.split("LSTrAP-denovo")[0], "LSTrAP-denovo")
         sys.path.insert(0, parent_module)
 
 from threadpoolctl import threadpool_limits
@@ -199,9 +199,9 @@ if __name__ == "__main__":
     #retry limit determines the number of retries before aborting
     retrylimit= 0
     #arguments
-    parser= argparse.ArgumentParser(description="HSS-Trans.SelectAccessions.py: Selection of representative accessions for transcriptome assembly.\n \
-    NOTE: This is step 2 of 2 in the HSS-Trans pipeline. Requires prior run of step 1: MakeDraftCDS.py. \n\
-    Refer to https://github.com/pengkenlim/HSS-Trans for more information on pipeline usage and implmentation")
+    parser= argparse.ArgumentParser(description="LSTrAP-denovo.SelectAccessions.py: Selection of representative accessions for transcriptome assembly.\n \
+    NOTE: This is step 2 of 2 in the LSTrAP-denovo pipeline. Requires prior run of step 1: MakeDraftCDS.py. \n\
+    Refer to https://github.com/pengkenlim/LSTrAP-denovo for more information on pipeline usage and implmentation")
     parser.add_argument("-o", "--output_dir", type=str, metavar= "", required=True,
     help= "Directory for data output. Directory needs to be same as for step 1 (MakeDraftCDS.py).")
     parser.add_argument("-ps", "--pseudoalignment_threshold", type=int ,metavar="", default=0 , choices=range(0, 70+1),
@@ -234,11 +234,7 @@ if __name__ == "__main__":
     help = "Delete data from previous SelectAccessions.py run and start a fresh SelectAccessions.py in output directory.")
     
     #banner
-    print("\n \
-    _  _ ___ ___    _____\n\
-    | || / __/ __|__|_   _| _ __ _ _ _  ___\n\
-    | __ \__ \__ \___|| || '_/ _` | ' \(_-<\n\
-    |_||_|___/___/    |_||_| \__,_|_||_/__/ SelectAccessions.py\n")
+    misc.print_logo("SelectAccessions.py")
     
     #parse args
     args=parser.parse_args()
@@ -259,7 +255,7 @@ if __name__ == "__main__":
     #create logfile object, exit if step 1 not completed.
     logfile=misc.logfile(os.path.join(outputdir,"logs.json"))
     if  logfile.contents["Step_1"]["status"] != "completed":
-        sys.exit("Step 1 (MakeDraftCDS.py) is either incomplete or not started at all. \nNOTE: This is step 2 of 3 in the HSS-Trans pipeline.\nExiting...")
+        sys.exit("Step 1 (MakeDraftCDS.py) is either incomplete or not started at all. \nNOTE: This is step 2 of the LSTrAP-denovo pipeline.\nExiting...")
 
     
     #assigning arguments to variables, writing to log OR fetching variables from log
@@ -566,11 +562,11 @@ if __name__ == "__main__":
                 
                 
     print("\nTrinity sample file have been created at "+ os.path.join(outputdir, "Samples_for_trinity.tsv.\n"))
-    print("Install Trinity (https://github.com/trinityrnaseq/), edit and run helper/Run_Trinity.py to start de novo transcriptome assembly using Trinity.\n")
+    print("Install Trinity (https://github.com/trinityrnaseq/), run helper script \"python helper/RunTrinity.py -h\" to start de novo transcriptome assembly using Trinity.\n")
     logfile.contents["Step_2"]["status"]= "completed"
     logfile.update()
-    print("HSS-Trans.SelectAccessions.py completed.\nGenerating html report...\n")
-    report.generate_from_json_log(logfile.path, os.path.join(outputdir, "HSS-Trans.html"), 2)
+    print("LSTrAP-denovo.SelectAccessions.py completed.\nGenerating html report...\n")
+    report.generate_from_json_log(logfile.path, os.path.join(outputdir, "LSTrAP-denovo_report.html"), 2)
     
     
     

@@ -2,7 +2,7 @@ import sys
 import os
 if __name__ == "__main__":
         abspath= os.getcwd()
-        parent_module= os.path.join(abspath.split("HSS-Trans")[0], "HSS-Trans")
+        parent_module= os.path.join(abspath.split("LSTrAP-denovo")[0], "LSTrAP-denovo")
         sys.path.insert(0, parent_module)
 
 import numpy as np        
@@ -12,7 +12,6 @@ from sklearn.neighbors import KernelDensity
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
-#from k_means_constrained import KMeansConstrained
 from sklearn_extra.cluster import KMedoids
 import pandas as pd
 from scipy.stats import iqr
@@ -47,7 +46,6 @@ def thresholder(maprate_dict, cutoff):
     """wrapper function for kdecutoff(). takes in the dictionary of {accession:PS%,...} in log file.
     upacks the dictionary and return lists of total, failed and passed accession as well"""
     if cutoff==0:
-        #cutoff= kdecutoff(list(maprate_dict.values()))
         cutoff= lowerfence_iqr_cutoff(list(maprate_dict.values()))
     total= list(maprate_dict.keys())
     failed= [accession for accession, maprate in maprate_dict.items() if maprate < cutoff or maprate == cutoff]
@@ -56,15 +54,11 @@ def thresholder(maprate_dict, cutoff):
 
 def kmeans_kwalk(data, k_min, k_max):
     """do kmeans iteration walk"""
-    #kmeans_kwargs = {"init": "k-means++", "n_init": 100,"max_iter": 2000,"random_state": 42} #remove random state (seed) after development
-    #kmeans_kwargs = {"init": "k-means++", "n_init": 100,"max_iter": 2000,"random_state": 42, "size_min": 10} #for kmeans constrained
     kmeans_kwargs = {"init": "k-medoids++", "method":"pam" ,"max_iter": 2000,"random_state": 42}
     silhouette_coefficients = []
     k_cluster_assignment_dict={}
     k_centroids_dict={}
     for k in range(k_min,k_max):
-        #kmeans = KMeans(n_clusters=k, **kmeans_kwargs)
-        #kmeans = KMeansConstrained(n_clusters=k, **kmeans_kwargs)
         kmeans = KMedoids(n_clusters=k, **kmeans_kwargs)
         kmeans.fit(data)
         silhouette_coefficients.append(silhouette_score(data, kmeans.labels_))

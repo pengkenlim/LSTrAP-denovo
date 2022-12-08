@@ -3,7 +3,7 @@ import os
 import sys
 if __name__ == "__main__":
         abspath= os.getcwd()
-        parent_module= os.path.join(abspath.split("HSS-Trans")[0], "HSS-Trans")
+        parent_module= os.path.join(abspath.split("LSTrAP-denovo")[0], "LSTrAP-denovo")
         sys.path.insert(0, parent_module)
 
 from setup import constants

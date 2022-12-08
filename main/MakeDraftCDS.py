@@ -3,7 +3,7 @@ import os
 import sys
 if __name__ == "__main__":
         abspath= os.getcwd()
-        parent_module= os.path.join(abspath.split("HSS-Trans")[0], "HSS-Trans")
+        parent_module= os.path.join(abspath.split("LSTrAP-denovo")[0], "LSTrAP-denovo")
         sys.path.insert(0, parent_module)
 
 import argparse
@@ -232,13 +232,11 @@ if __name__ == "__main__":
     retrylimit=2
     
     #arguments
-    parser= argparse.ArgumentParser(description="HSS-Trans.MakeDraftCDS.py: Assemble a reduced but high-confidence assembly from public RNA-seq data")
+    parser= argparse.ArgumentParser(description="LSTrAP-denovo.MakeDraftCDS.py: Assemble draft coding sequences from public RNA-seq data")
     parser.add_argument("-o", "--output_dir", type=str, metavar= "", required=True,
     help= "Directory for data output.")
     parser.add_argument("-k", "--kmer_len", type=int, metavar="", default=35, choices=range(21, 49+1,2), 
     help = "Specifies K-mer length (odd integer only) for assembly using Soapdenovo-Trans. K-mer length will be set to 35 by default.")
-    ##parser.add_argument("-ct", "--consensus_threshold", type=int ,metavar="", default=0 , choices=range(0, 10+1),
-    ##help = "Specifies consensus threshold during filtering. Threshold will be determined automatically by default.")
     parser.add_argument("-s","--filesizelimit" , type=int, metavar="", default=1500, 
     help="Specifies the parital download limit/ file size requirement(mb) of accession read files. Limit set to 1500 (mb) by default.")
     parser.add_argument("-t", "--threads", type=int, metavar="", default=4, 
@@ -256,20 +254,16 @@ if __name__ == "__main__":
     parser.add_argument("-na", "--n_accessions", type=int, metavar="", default=10, choices=range(10,50+1), 
     help = "Number of single-accession-assemblies to combine in order to generate the preliminary assembly.")
     parser.add_argument("-a", "--accessions", type=str, metavar="",
-    help= "User-defined list of SRA run accessions to fetch for preliminary assembly. If insufficient accessions provided, run will be supplemented with other public accessions. E.g.: SRR123456,SRR654321,ERR246810,...")
+    help= "User-defined list of ENA run accessions to fetch for preliminary assembly. If insufficient accessions provided, run will be supplemented with other public accessions. E.g.: SRR123456,SRR654321,ERR246810,...")
     #mutually exclusive argumentss for initial run or resume incomplete run
     ME_group_1 = parser.add_mutually_exclusive_group(required=True)
     ME_group_1.add_argument("-i", "--id", type=int, metavar="", 
-    help= "NCBI TaxID of organism for fetching SRA run accessions.")
+    help= "NCBI TaxID of organism for fetching ENA run accessions.")
     ME_group_1.add_argument("-con", "--conti", action="store_true",
     help = "Resume incomplete run based on output directory. Only requires -o to run.")
     
     #banner
-    print("\n \
-    _  _ ___ ___    _____\n\
-    | || / __/ __|__|_   _| _ __ _ _ _  ___\n\
-    | __ \__ \__ \___|| || '_/ _` | ' \(_-<\n\
-    |_||_|___/___/    |_||_| \__,_|_||_/__/ MakeDraftCDS.py\n")
+    misc.print_logo("MakeDraftCDS.py")
     
     args=parser.parse_args()
     outputdir= args.output_dir
@@ -428,6 +422,6 @@ if __name__ == "__main__":
     logfile.load()
     logfile.contents["Step_1"]["status"]= "completed"
     logfile.update()
-    print("HSS-Trans.MakeDraftCDS.py completed.\nGenerating html report...")
-    report.generate_from_json_log(logfile.path, os.path.join(outputdir, "HSS-Trans.html"))
+    print("LSTrAP-denovo.MakeDraftCDS.py completed.\nGenerating html report...")
+    report.generate_from_json_log(logfile.path, os.path.join(outputdir, "LSTrAP-denovo_report.html"))
     

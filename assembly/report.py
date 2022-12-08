@@ -3,7 +3,7 @@ import os
 import sys
 if __name__ == "__main__":
         abspath= os.getcwd()
-        parent_module= os.path.join(abspath.split("HSS-Trans")[0], "HSS-Trans")
+        parent_module= os.path.join(abspath.split("LSTrAP-denovo")[0], "LSTrAP-denovo")
         sys.path.insert(0, parent_module)
         
 import json
@@ -85,7 +85,7 @@ def generate_from_json_log(logpath, reportpath,step=1):
     html_string= f'''
             <html>
 	<head>
-		<title>HSS-Trans report</title>
+		<title>LSTrAP-denovo report</title>
 		<style>
 			table, td, th {{
 			  border: 1px solid black;
@@ -183,10 +183,11 @@ def generate_from_json_log(logpath, reportpath,step=1):
 	</script>
 	</head>
 	<body>
-		<h1 style="background-color:#D6EEEE;">HSS-Trans Report</h1>
+		<h1 style="background-color:#D6EEEE;">LSTrAP-denovo Report</h1>
 		<h2><u>H</u>igh-throughput <u>S</u>ample <u>S</u>election pipeline for <u>Trans</u>criptome assembly</h2>
-		<p>For more information, please visit our <a href="https://github.com/pengkenlim/HSS-Trans">GitHub repository</a>.</p>
-		<h2 style="background-color:#D6EEEE;" >Step 1. Assembling Draft CDSs (reduced but high-confidence assembly)</h2>
+        LSTrAP-denovo<h2><u>L</u>arge-<u>S</u>cale <u>Tr</u>anscriptome <u>A</u>ssembly <u>P</u>ipeline-<u>denovo</u></h2>
+		<p>For more information, please visit our <a href="https://github.com/pengkenlim/LSTrAP-denovo">GitHub repository</a>.</p>
+		<h2 style="background-color:#D6EEEE;" >Step 1. Assembling Draft CDSs</h2>
 		<h3>Run Info</h3>
 		<table>
 			<tr>

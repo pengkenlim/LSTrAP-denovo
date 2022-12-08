@@ -3,7 +3,7 @@ import os
 import sys
 if __name__ == "__main__":
         abspath= os.getcwd()
-        parent_module= os.path.join(abspath.split("HSS-Trans")[0], "HSS-Trans")
+        parent_module= os.path.join(abspath.split("LSTrAP-denovo")[0], "LSTrAP-denovo")
         sys.path.insert(0, parent_module)
 
 
@@ -23,13 +23,11 @@ def extract_orf(fastainputpath, fastaoutputpath, orfminlen, startcodon, geneticc
     
     
 def launch_soap(configoutpath, kmerlen, outputpath_prefix, threads):
-    #returncode=subprocess.run([constants.soappath, "all", "-s", configoutpath, "-o", outputpath_prefix+"_temp", "-K", str(kmerlen), "-p", str(threads), "-M", "3", "-t", "20"],
     returncode=subprocess.run([constants.soappath, "all", "-s", configoutpath, "-o", outputpath_prefix+"_temp", "-K", str(kmerlen), "-p", str(threads), "-t", "20"],
     stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
     return returncode.returncode
     
 def launch_soap_verbose(configoutpath, kmerlen, outputpath_prefix, threads):
-    #returncode=subprocess.run([constants.soappath, "all", "-s", configoutpath, "-o", outputpath_prefix+"_temp", "-K", str(kmerlen), "-p", str(threads), "-M", "3", "-t", "20"])
     returncode=subprocess.run([constants.soappath, "all", "-s", configoutpath, "-o", outputpath_prefix+"_temp", "-K", str(kmerlen), "-p", str(threads), "-t", "20"])
     return returncode.returncode
 

@@ -53,16 +53,6 @@ if __name__ == "__main__":
     else:
         print("CD-HIT found.")
 
-    #installing Transdecoder if not installed
-    installpath= os.path.join(programdir, "TransDecoder")
-    if not os.path.exists(installpath):
-        print("Downloading and installing TransDecoder into programs directory")
-        os.system("wget https://github.com/TransDecoder/TransDecoder/archive/refs/tags/TransDecoder-v5.5.0.tar.gz -O trashme.tar.gz")
-        os.system("tar -xf trashme.tar.gz")
-        os.system("rm trashme.tar.gz")
-        os.system(f"mv TransDecoder-TransDecoder-v5.5.0 {installpath}")
-    else:
-        print("TransDecoder found.")
         
      
     installpath= os.path.join(programdir, "ORFfinder")
@@ -84,24 +74,5 @@ if __name__ == "__main__":
         os.system(f"mv kallisto {installpath}")
     else:
         print("Kallisto found.")
-
-    installpath= os.path.join(programdir, "CPC2")
-    if not os.path.exists(installpath):
-        print("Downloading and installing CPC2 into programs directory")
-        os.system("wget https://github.com/gao-lab/CPC2_standalone/archive/refs/tags/v1.0.1.tar.gz -O trashme.tar.gz")
-        os.system("tar -xf trashme.tar.gz")
-        os.system("rm trashme.tar.gz")
-        os.system(f"mv CPC2_standalone-1.0.1 {installpath}")
-        os.system(f"cd {installpath}/libs/libsvm && tar -xf libsvm-3.18.tar.gz")
-        os.system(f"cd {installpath}/libs/libsvm/libsvm-3.18 && make clean && make ")
-    else:
-        print("CPC2 found")
-
-    installpath= os.path.join(programdir,"ORNA")
-    if not os.path.exists(installpath):
-        print("Cloning and installing ORNA into programs directory")
-        os.system(f"git clone https://github.com/SchulzLab/ORNA {installpath}")
-        os.system(f"cd {installpath} ; bash install.sh")
-
 
     

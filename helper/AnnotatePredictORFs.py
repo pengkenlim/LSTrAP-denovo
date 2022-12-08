@@ -7,7 +7,12 @@ from datetime import datetime
 import argparse
 import pandas as pd
 
-abspath=os.getcwd()
+if __name__ == "__main__":
+        abspath= os.getcwd()
+        parent_module= os.path.join(abspath.split("LSTrAP-denovo")[0], "LSTrAP-denovo")
+        sys.path.insert(0, parent_module)
+        
+from assembly import misc
 
 def extract_ORFs(filepath,dirname):
     return_code= os.system(f"cd {working_dir}; " + os.path.join(transdecoder_bin_dir, "TransDecoder.LongOrfs") + " " + 
@@ -175,17 +180,17 @@ def create_annotation_desc():
     
 if __name__ == "__main__":
     #specify arguments
-    parser= argparse.ArgumentParser(description="AnnotatePredictORFs.py: Helper script that uses Transdecoder's ORF prediction to extract Coding sequences (CDS) and annotate protein function based on Pfam domains.\n \
-    NOTE: This is to be run following completion of the HSS-Trans pipeline and Trinity transcriptome assembly (Run_Trinity).\n\
+    parser= argparse.ArgumentParser(description="LSTrAP-denovo.AnnotatePredictORFs.py: Helper script that uses Transdecoder's ORF prediction to extract Coding sequences (CDS) and annotate protein function based on Pfam domains.\n \
+    NOTE: This is to be run following completion of the LSTrAP-denovo pipeline and Trinity transcriptome assembly (Run_Trinity).\n\
     Please make sure binaries for TransDecoder, hmmsearch, hmmpress are installed and added into $PATH.\n\
     \n\
-    Refer to https://github.com/pengkenlim/HSS-Trans for more information on pipeline usage and implmentation.\n\
+    Refer to https://github.com/pengkenlim/LSTrAP-denovo for more information on pipeline usage and implmentation.\n\
     Refer to https://github.com/TransDecoder/TransDecoder/wiki for more information on Transdecoder.\n\
     Refer to http://hmmer.org/documentation.html for more information on hmmsearch and hmmpress.\n\
     Refer to https://www.ebi.ac.uk/interpro/ for more information pfam domains.")
     
     parser.add_argument("-o", "--output_dir", type=str, metavar= "", required=True,
-    help= "Directory for data output. Directory needs to be same as for step 1 and step 2 of HSS-Trans pipeline (i.e. MakeDraftCDS.py, SelectAccessions.py).")
+    help= "Directory for data output. Directory needs to be same as for step 1 and step 2 of LSTrAP-denovo pipeline (i.e. MakeDraftCDS.py, SelectAccessions.py).")
     
    
     parser.add_argument("-t", "--threads", type=int, metavar="", default=4, 
@@ -210,11 +215,8 @@ if __name__ == "__main__":
     help= "Path to directory containing transdecoder binaries (Transdecoder.LongORFs and Transdecoder.Predict). Not required if hmmsearch binary directory has been added to $PATH.")
     
     #banner
-    print("\n \
-    _  _ ___ ___    _____\n\
-    | || / __/ __|__|_   _| _ __ _ _ _  ___\n\
-    | __ \__ \__ \___|| || '_/ _` | ' \(_-<\n\
-    |_||_|___/___/    |_||_| \__,_|_||_/__/ AnnotatePredictORFs.py\n")
+    misc.print_logo("AnnotatePredictORFs.py")
+    
     
     #parse args
     args=parser.parse_args()
@@ -263,10 +265,10 @@ if __name__ == "__main__":
         if not os.path.exists(os.path.join(transdecoder_bin_dir, "TransDecoder.Predict")):
             sys.exit(f"Error: TransDecoder.Predict not found in {transdecoder_bin_dir}. Exiting...")
 
-    #check if HSS-Trans/data folder exists
+    #check if LSTrAP-denovo/data folder exists
     data_dir = os.path.join(abspath, "data")
     if not os.path.exists(data_dir):
-        sys.exit("Error: Cannot find data directory, please make sure script is run in HSS-Trans directory (i.e. /path/to/HSS-Trans/). Exiting...")
+        sys.exit("Error: Cannot find data directory, please make sure script is run in LSTrAP-denovo directory (i.e. /path/to/LSTrAP-denovo/). Exiting...")
     
     #check if Pfam hmm is downloaded in directory
 

@@ -3,7 +3,7 @@ import os
 import sys
 if __name__ == "__main__":
         abspath= os.getcwd()
-        parent_module= os.path.join(abspath.split("HSS-Trans")[0], "HSS-Trans")
+        parent_module= os.path.join(abspath.split("LSTrAP-denovo")[0], "LSTrAP-denovo")
         sys.path.insert(0, parent_module)
         
 import subprocess
@@ -44,8 +44,6 @@ def write_quant_info(accession ,outdirpath, tpm_matpath):
     else:
         with open(tpm_matpath, "a") as f:
             f.write(f"{accession}\t"+"\t".join([str(tpm) for tpm in tpm_data])+ "\n")
-    
-    #shutil.rmtree(outdirpath) ###might include this to remove kallisto output directory
     return map_rate
 
 

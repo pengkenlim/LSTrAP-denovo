@@ -3,7 +3,7 @@ import os
 import sys
 if __name__ == "__main__":
         abspath= os.getcwd()
-        parent_module= os.path.join(abspath.split("HSS-Trans")[0], "HSS-Trans")
+        parent_module= os.path.join(abspath.split("LSTrAP-denovo")[0], "LSTrAP-denovo")
         sys.path.insert(0, parent_module)
 
 from threadpoolctl import threadpool_limits
@@ -122,11 +122,11 @@ def parallel_job(workers):
 
 if __name__ == "__main__":
     #ARGPARSE
-    parser= argparse.ArgumentParser(description="GetExpressionMatrix.py: Helper script to generate gene expression matrix via downloading and pseudolaigning of RNA-seq accessions from ENA en masse to assembled CDS.\n\
-    Refer to https://github.com/pengkenlim/HSS-Trans for more information on pipeline usage and implmentation.\n")
+    parser= argparse.ArgumentParser(description="LSTrAP-denovo.GetExpressionMatrix.py: Helper script to generate gene expression matrix via downloading and pseudolaigning of RNA-seq accessions from ENA en masse to assembled CDS.\n\
+    Refer to https://github.com/pengkenlim/LSTrAP-denovo for more information on pipeline usage and implmentation.\n")
     
     parser.add_argument("-o", "--output_dir", type=str, metavar= "", required=True,
-    help= "Directory for data output. Directory needs to be same as for Step 1 and Step 2 of the HSS=Trans pipeline.")
+    help= "Directory for data output. Directory needs to be same as for Step 1 and Step 2 of the LSTrAP-denovo pipeline.")
     
     parser.add_argument("-s","--filesizelimit" , type=int, metavar="", default=500,
     help="Specifies the size limit(mb) for the partial download of accession read files (gzip compressed) for pseudoalignment. Limit set to 500 (mb) by default. \
@@ -157,11 +157,7 @@ if __name__ == "__main__":
     help = "Resume incomplete run based on output directory. Only requires -o to run.")
     
     #banner
-    print("\n \
-    _  _ ___ ___    _____\n\
-    | || / __/ __|__|_   _| _ __ _ _ _  ___\n\
-    | __ \__ \__ \___|| || '_/ _` | ' \(_-<\n\
-    |_||_|___/___/    |_||_| \__,_|_||_/__/ GetExpressionMatrix.py\n")
+    misc.print_logo("GetExpressionMatrix.py")
     
     #parse args
     args=parser.parse_args()

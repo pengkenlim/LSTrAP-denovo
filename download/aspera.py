@@ -3,7 +3,7 @@ import os
 import sys
 if __name__ == "__main__":
         abspath= os.getcwd()
-        parent_module= os.path.join(abspath.split("HSS-Trans")[0], "HSS-Trans")
+        parent_module= os.path.join(abspath.split("LSTrAP-denovo")[0], "LSTrAP-denovo")
         sys.path.insert(0, parent_module)
  
 
@@ -36,17 +36,17 @@ def get_download_path(accession):
         filesize= filesize_1
         ascp_fullpath=  os.path.join("era-fasp@fasp.sra.ebi.ac.uk:" +path, accession+".fastq.gz")
         ftp_fullpath= os.path.join("ftp://ftp.sra.ebi.ac.uk" + path, accession+".fastq.gz")
-        #ftp_fullpath= os.path.join("http://ftp.sra.ebi.ac.uk" + path, accession+".fastq.gz")#remove 
+
     elif filesize_1 < filesize_2:
         filesize= filesize_2
         ascp_fullpath=  os.path.join("era-fasp@fasp.sra.ebi.ac.uk:" +path, accession+"_1.fastq.gz")
         ftp_fullpath= os.path.join("ftp://ftp.sra.ebi.ac.uk" + path, accession+"_1.fastq.gz")
-        #ftp_fullpath= os.path.join("http://ftp.sra.ebi.ac.uk" + path, accession+"_1.fastq.gz")#remove
+
     else:
         filesize= filesize_1
         ascp_fullpath=  os.path.join("era-fasp@fasp.sra.ebi.ac.uk:" +path, accession+".fastq.gz")
         ftp_fullpath= os.path.join("ftp://ftp.sra.ebi.ac.uk" + path, accession+".fastq.gz")
-        #ftp_fullpath= os.path.join("http://ftp.sra.ebi.ac.uk" + path, accession+".fastq.gz")#remove
+
     return ascp_fullpath, ftp_fullpath, filesize
 
 def check_filesize(http_fullpath):
