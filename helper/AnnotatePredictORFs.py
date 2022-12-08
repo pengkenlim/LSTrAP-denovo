@@ -203,14 +203,18 @@ if __name__ == "__main__":
     parser.add_argument("-pdir","--pfam_dir", type=str, metavar="", required=True,
     help="Path to directory containing Pfam hmm model (Pfam-A.hmm). If directory specified do not contain Pfam-A.hmm, it will be downloaded auotmatically." )
     
-    parser.add_argument("-hb", "--hmmsearch_bin", type=str, metavar= "", default="hmmsearch",
-    help= "Path to hmmsearch binary. Not required if hmmsearch binary directory has been added to $PATH.")
-    
-    parser.add_argument("-hpb", "--hmmpress_bin", type=str, metavar= "", default="hmmpress",
-    help= "Path to hmmpress binary. Not required if hmmpress binary directory has been added to $PATH.")
+    parser.add_argument("-hbdir", "--hmm_bin_dir", type=str, metavar= "", default="",
+    help= "Path to directory containing hmmsearch and hmmpress binaries. Not required if directory has been added to $PATH.")
     
     parser.add_argument("-tbdir", "--transdecoder_bin_dir", type=str, metavar= "", default="",
     help= "Path to directory containing transdecoder binaries (Transdecoder.LongORFs and Transdecoder.Predict). Not required if hmmsearch binary directory has been added to $PATH.")
+    
+    #banner
+    print("\n \
+    _  _ ___ ___    _____\n\
+    | || / __/ __|__|_   _| _ __ _ _ _  ___\n\
+    | __ \__ \__ \___|| || '_/ _` | ' \(_-<\n\
+    |_||_|___/___/    |_||_| \__,_|_||_/__/ AnnotatePredictORFs.py\n")
     
     #parse args
     args=parser.parse_args()
@@ -221,16 +225,11 @@ if __name__ == "__main__":
     genetic_code = args.genetic_code
     min_prot_len= args.min_prot_len
     pfam_dir= args.pfam_dir
-    hmmsearch_bin = args.hmmsearch_bin
-    hmmpress_bin = args.hmmpress_bin
+    hmm_bin_dir = args.hmm_bin_dir
     transdecoder_bin_dir = args.transdecoder_bin_dir
-    
-    #banner
-    print("\n \
-    _  _ ___ ___    _____\n\
-    | || / __/ __|__|_   _| _ __ _ _ _  ___\n\
-    | __ \__ \__ \___|| || '_/ _` | ' \(_-<\n\
-    |_||_|___/___/    |_||_| \__,_|_||_/__/ AnnotatePredictORFs.py\n")
+    hmmsearch_bin= os.path.join(hmm_bin_dir, "hmmsearch")
+    hmmpress_bin= os.path.join(hmm_bin_dir, "hmmpress")
+
     print("\nAnnotatePredictORFs.py started running on ", datetime.now().strftime("%d/%m/%Y %H:%M:%S")+ "\n")
     
     #check for trinity_dir, findout name of assembly fasta. set path for assembly fasta.
@@ -251,13 +250,12 @@ if __name__ == "__main__":
     threads=int(threadpool/workers)
     
     #check if path to hmmsearch, hmmpress and transdecoder binaries are valid.
-    if hmmsearch_bin!= "hmmsearch":
+    if hmm_bin_dir!= "":
         if not os.path.exists(hmmsearch_bin):
-            sys.exit(f"Error: hmmsearch not found at {hmmsearch_bin}. Exiting...")
-    
-    if hmmpress_bin!= "hmmpress":
+            sys.exit(f"Error: hmmsearch not found at {hmm_bin_dir}. Exiting...")
         if not os.path.exists(hmmpress_bin):
-            sys.exit(f"Error: hmmpress_bin not found at {hmmpress_bin}. Exiting...")
+            sys.exit(f"Error: hmmpress not found at {hmm_bin_dir}. Exiting...")
+    
     
     if transdecoder_bin_dir!= "":
         if not os.path.exists(os.path.join(transdecoder_bin_dir, "TransDecoder.LongOrfs")):

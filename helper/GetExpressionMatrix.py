@@ -156,6 +156,13 @@ if __name__ == "__main__":
     ME_group_1.add_argument("-con", "--conti", action="store_true",
     help = "Resume incomplete run based on output directory. Only requires -o to run.")
     
+    #banner
+    print("\n \
+    _  _ ___ ___    _____\n\
+    | || / __/ __|__|_   _| _ __ _ _ _  ___\n\
+    | __ \__ \__ \___|| || '_/ _` | ' \(_-<\n\
+    |_||_|___/___/    |_||_| \__,_|_||_/__/ GetExpressionMatrix.py\n")
+    
     #parse args
     args=parser.parse_args()
     
