@@ -53,11 +53,11 @@ def parallel_job(workers):
             print(f.result())
 
 if __name__ == "__main__":
-    accessions=  [file.split(".fastq")[0] for file in os.listdir(fastqdir) if ".gz" in file]
+    #accessions=  [file.split(".fastq")[0] for file in os.listdir(fastqdir) if ".gz" in file]
     print("kallisto index....")
-    read_map.launch_kallisto_index(referencepath, indexpath)
+    #read_map.launch_kallisto_index(referencepath, indexpath)
     print("Parallel PS...")
-    parallel_job(workers)
+    #parallel_job(workers)
     maprate_df = pd.read_csv(mapratepath, sep="\t", header=None)
     maprate_dict= maprate_df.set_index(0).to_dict()[1]
     total, failed, passed, cutoff= classify.thresholder({key:val for key, val in maprate_dict.items()}, pseudoalignment_threshold)
@@ -76,7 +76,7 @@ if __name__ == "__main__":
     print(f"PCA-transformation complete with {np.round(sum(pc_variances))}% of variance retained. (PC1= {pc_variances[0]}%)\n")
     
     print(f"Initiating k-means clustering of accesions based on PCA data.\nClustering iterations will walk from k={kmin} to k={kmax-1} to determine optimal number of clusters(k)...\n")
-    k_cluster_assignment_dict, silhouette_coefficients = classify.kmeans_kwalk(pca_data, kmin, kmax)
+    k_cluster_assignment_dict, silhouette_coefficients, k_centroids_dict = classify.kmeans_kwalk(pca_data, kmin, kmax)
     
     optimal_k, cluster_assignment , sc_max = classify.optimal_k_silhouette(kmin, kmax, silhouette_coefficients, k_cluster_assignment_dict)
     df["optimal_k"]= [optimal_k]
