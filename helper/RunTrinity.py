@@ -3,7 +3,7 @@ import os
 import sys
 if __name__ == "__main__":
         abspath= os.getcwd()
-        parent_module= os.path.join(abspath.split("HSS-Trans")[0], "HSS-Trans")
+        parent_module= os.path.join(abspath.split("LSTrAP-denovo")[0], "LSTrAP-denovo")
         sys.path.insert(0, parent_module)
 
 import argparse
@@ -15,11 +15,11 @@ if __name__ == "__main__":
     #arguments
     parser= argparse.ArgumentParser(description="Run_Trinity.py: Helper script for de novo transcriptome assembly using Trinity.\n \
     NOTE: This is to be run following completion of the HSS-Trans pipeline. Please make sure that binaries for Trinity, its associated dependencies (e.g. bowtie) are installed and added into $PATH.\
-    Refer to https://github.com/pengkenlim/HSS-Trans for more information on pipeline usage and implmentation\n\
+    Refer to https://github.com/pengkenlim/LSTrAP-denovofor more information on pipeline usage and implmentation\n\
     Refer to https://github.com/trinityrnaseq/trinityrnaseq/wiki for more information on Trinity installation, usage and implmentation")
     
     parser.add_argument("-o", "--output_dir", type=str, metavar= "", required=True,
-    help= "Directory for data output. Directory needs to be same as for step 1 and step 2 of HSS-Trans pipeline (i.e. MakeDraftCDS.py, SelectAccessions.py).")
+    help= "Directory for data output. Directory needs to be same as for step 1 and step 2 of LSTrAP-denovo pipeline (i.e. MakeDraftCDS.py, SelectAccessions.py).")
     
     parser.add_argument("-trin_args", "--trinity_arguments", type=str, metavar="", default="--full_cleanup --max_memory 10G", 
     help = "Arguments in quotes to be passed verbatim into Trinity (e.g. \"--CPU 32 --max_memory 32G\" ). \
@@ -31,11 +31,8 @@ if __name__ == "__main__":
     
     
     #banner
-    print("\n \
-    _  _ ___ ___    _____\n\
-    | || / __/ __|__|_   _| _ __ _ _ _  ___\n\
-    | __ \__ \__ \___|| || '_/ _` | ' \(_-<\n\
-    |_||_|___/___/    |_||_| \__,_|_||_/__/ RunTrinity.py\n")
+    #banner
+    misc.print_logo("RunTrinity.py")
     
     args=parser.parse_args()
     outputdir= args.output_dir
