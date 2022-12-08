@@ -78,7 +78,7 @@ if __name__ == "__main__":
     print(f"Initiating k-means clustering of accesions based on PCA data.\nClustering iterations will walk from k={kmin} to k={kmax-1} to determine optimal number of clusters(k)...\n")
     k_cluster_assignment_dict, silhouette_coefficients, k_centroids_dict = classify.kmeans_kwalk(pca_data, kmin, kmax)
     
-    optimal_k, cluster_assignment , sc_max = classify.optimal_k_silhouette(kmin, kmax, silhouette_coefficients, k_cluster_assignment_dict, k_centroids_dict)
+    optimal_k, cluster_assignment , sc_max, centroids = classify.optimal_k_silhouette(kmin, kmax, silhouette_coefficients, k_cluster_assignment_dict, k_centroids_dict)
     df["optimal_k"]= [optimal_k]
     df.to_csv(infopath)
     cluster_assignment_dict = {}
