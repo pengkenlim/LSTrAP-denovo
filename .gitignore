@@ -6,3 +6,4 @@ fastp.json
 fastp.html
 *DEPRECATED*
 data/*.py
+*.gz
