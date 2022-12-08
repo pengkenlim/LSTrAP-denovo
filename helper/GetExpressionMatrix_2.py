@@ -23,7 +23,6 @@ from setup import constants
 from preprocess import read_map, classify
 
 
-##############Functions##################
 def download_PS_job(accession, index):
     '''Job to validate download path -> download via FTP/ascp -> Peudoalignment(PS) by Kallisto'''
     try:
@@ -279,4 +278,4 @@ if __name__ == "__main__":
         logfile.contents["processed_acc"] = {key : value if "failed" in value or "exception" in value else float(value) for key, value in logfile.contents["processed_acc"].items()}
     logfile.contents["status"]= "completed"
     logfile.update()
-    print("\GetExpressionMatrix.py finished running on ", datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
+    print("GetExpressionMatrix.py finished running on ", datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
