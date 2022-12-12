@@ -30,10 +30,10 @@ if __name__ == "__main__":
     parser.add_argument("-no", "--no_overassembly", action="store_true",
     help = "Do not assemble multiple cluster-specific transcript assemblies and concatenate them to generate an over-assembly. Instead, just feed all samples into Trinity (vanilla method).")
     
-    parser.add_argument("-ct", "--cd_hit_threads", type=int,
+    parser.add_argument("-ct", "--cd_hit_threads", type=int, metavar="",
     help = "Number of threads for CD-HIT-EST to use.")
     
-    parser.add_argument("-cc", "--cd_hit_identity", type=float, default=0.98,
+    parser.add_argument("-cc", "--cd_hit_identity", type=float, default=0.98, metavar="",
     help = "Sequence identity threshold to be used by CD-HIT-EST to get rid of redundant transcripts. Defined as number of identical amino acids or bases in alignment divided by the full length of the shorter sequence. Set to 0.98 by default. Accepted range: 0.9 - 1")
     
     
