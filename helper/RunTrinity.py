@@ -16,8 +16,8 @@ if __name__ == "__main__":
     #arguments
     parser= argparse.ArgumentParser(description="RunTrinity.py: Helper script for de novo transcriptome assembly using Trinity.\n \
     NOTE: This is to be run following completion of the HSS-Trans pipeline. Please make sure that binaries for Trinity, its associated dependencies (e.g. bowtie) are installed and added into $PATH.\
-    Refer to https://github.com/pengkenlim/LSTrAP-denovofor more information on pipeline usage and implmentation\n\
-    Refer to https://github.com/trinityrnaseq/trinityrnaseq/wiki for more information on Trinity installation, usage and implmentation")
+    Refer to https://github.com/pengkenlim/LSTrAP-denovofor more information on pipeline usage and implementation \n\
+    Refer to https://github.com/trinityrnaseq/trinityrnaseq/wiki for more information on Trinity installation, usage and implementation ")
     
     parser.add_argument("-o", "--output_dir", type=str, metavar= "", required=True,
     help= "Directory for data output. Directory needs to be same as for step 1 and step 2 of LSTrAP-denovo pipeline (i.e. MakeDraftCDS.py, SelectAccessions.py).")

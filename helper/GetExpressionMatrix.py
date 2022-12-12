@@ -123,7 +123,7 @@ def parallel_job(workers):
 if __name__ == "__main__":
     #ARGPARSE
     parser= argparse.ArgumentParser(description="LSTrAP-denovo.GetExpressionMatrix.py: Helper script to generate gene expression matrix via downloading and pseudolaigning of RNA-seq accessions from ENA en masse to assembled CDS.\n\
-    Refer to https://github.com/pengkenlim/LSTrAP-denovo for more information on pipeline usage and implmentation.\n")
+    Refer to https://github.com/pengkenlim/LSTrAP-denovo for more information on pipeline usage and implementation .\n")
     
     parser.add_argument("-o", "--output_dir", type=str, metavar= "", required=True,
     help= "Directory for data output. Directory needs to be same as for Step 1 and Step 2 of the LSTrAP-denovo pipeline.")

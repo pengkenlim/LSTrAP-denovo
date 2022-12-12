@@ -232,7 +232,8 @@ if __name__ == "__main__":
     retrylimit=2
     
     #arguments
-    parser= argparse.ArgumentParser(description="LSTrAP-denovo.MakeDraftCDS.py: Assemble draft coding sequences from public RNA-seq data")
+    parser= argparse.ArgumentParser(description="LSTrAP-denovo.MakeDraftCDS.py: Assemble draft coding sequences from public RNA-seq data.\n\
+     Refer to https://github.com/pengkenlim/LSTrAP-denovo for more information on pipeline usage and implementation.")
     parser.add_argument("-o", "--output_dir", type=str, metavar= "", required=True,
     help= "Directory for data output.")
     parser.add_argument("-k", "--kmer_len", type=int, metavar="", default=35, choices=range(21, 49+1,2), 

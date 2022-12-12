@@ -201,7 +201,7 @@ if __name__ == "__main__":
     #arguments
     parser= argparse.ArgumentParser(description="LSTrAP-denovo.SelectAccessions.py: Selection of representative accessions for transcriptome assembly.\n \
     NOTE: This is step 2 of 2 in the LSTrAP-denovo pipeline. Requires prior run of step 1: MakeDraftCDS.py. \n\
-    Refer to https://github.com/pengkenlim/LSTrAP-denovo for more information on pipeline usage and implmentation")
+    Refer to https://github.com/pengkenlim/LSTrAP-denovo for more information on pipeline usage and implementation ")
     parser.add_argument("-o", "--output_dir", type=str, metavar= "", required=True,
     help= "Directory for data output. Directory needs to be same as for step 1 (MakeDraftCDS.py).")
     parser.add_argument("-ps", "--pseudoalignment_threshold", type=int ,metavar="", default=0 , choices=range(0, 70+1),

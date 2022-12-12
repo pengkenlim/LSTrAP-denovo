@@ -184,7 +184,7 @@ if __name__ == "__main__":
     NOTE: This is to be run following completion of the LSTrAP-denovo pipeline and Trinity transcriptome assembly (Run_Trinity).\n\
     Please make sure binaries for TransDecoder, hmmsearch, hmmpress are installed and added into $PATH.\n\
     \n\
-    Refer to https://github.com/pengkenlim/LSTrAP-denovo for more information on pipeline usage and implmentation.\n\
+    Refer to https://github.com/pengkenlim/LSTrAP-denovo for more information on pipeline usage and implementation .\n\
     Refer to https://github.com/TransDecoder/TransDecoder/wiki for more information on Transdecoder.\n\
     Refer to http://hmmer.org/documentation.html for more information on hmmsearch and hmmpress.\n\
     Refer to https://www.ebi.ac.uk/interpro/ for more information pfam domains.")
