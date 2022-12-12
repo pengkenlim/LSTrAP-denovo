@@ -231,7 +231,7 @@ if __name__ == "__main__":
         _, scientific_name, _, command_issued, init_time = logfile.contents["run_info"].values()
         threads=int(threadpool/workers)
         accessions = logfile.contents.get("total_acc")
-        print("\nPrevious incomplete run initiated on {init_time} detected:\n{command_issued}\n\nResuming run...\n")        
+        print(f"\nPrevious incomplete run initiated on {init_time} detected:\n{command_issued}\n\nResuming run...\n")        
         print(f"Organism name: {scientific_name} (NCBI TaxID: {taxid})\n")
         print(f"Total accessions fetched from ENA: {len(accessions)}\n")
     
