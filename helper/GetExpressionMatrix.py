@@ -228,7 +228,7 @@ if __name__ == "__main__":
             sys.exit(f"\nPrevious run initiated in {outputdir} has fully completed. There is nothing to run. Use --force to delete all previous run data in order to restart run.")
         #inherit run variables from previous run using logfile contents
         taxid, filesizelimit, threadpool, workers, download_method, accessions_limit = logfile.contents["run_var"].values()
-        _, scientific_name, _, command_issued, init_time = logfile.contents["Step_1"]["run_info"].values()
+        _, scientific_name, _, command_issued, init_time = logfile.contents["run_info"].values()
         threads=int(threadpool/workers)
         accessions = logfile.contents.get("total_acc")
         print("\nPrevious incomplete run initiated on {init_time} detected:\n{command_issued}\n\nResuming run...\n")        
