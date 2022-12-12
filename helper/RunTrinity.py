@@ -117,7 +117,7 @@ if __name__ == "__main__":
         fasta_files = [file for file in os.listdir(Trinity_dir) if "Trinity.fasta" in file and "gene_trans_map" not in file]
         pathtoconcat = os.path.join(Trinity_dir, "concat.fasta")
         concat_content=[]
-        for file in files:
+        for file in fasta_files:
             count=1
             assembly_id= file.split("_")[0]
             with open(os.path.join(workdir,file), "r") as f:
