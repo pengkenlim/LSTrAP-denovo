@@ -256,6 +256,8 @@ if __name__ == "__main__":
     if not os.path.exists(kaldir):
         os.makedirs(kaldir)
     if not os.path.exists(indexpath):
+        print(indexpath)
+        print(fastapath)
         result= misc.run_with_retries(retrylimit, read_map.launch_kallisto_index, [fastapath,indexpath],
         f"Kallisto index failed. Retrying...",
         f"\nContructing Kallisto index ...\n")
