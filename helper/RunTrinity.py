@@ -120,7 +120,7 @@ if __name__ == "__main__":
         for file in fasta_files:
             count=1
             assembly_id= file.split("_")[0]
-            with open(os.path.join(workdir,file), "r") as f:
+            with open(os.path.join(Trinity_dir,file), "r") as f:
                 contents = f.read().split("\n")
             for line in contents:
                 if ">" in line:
