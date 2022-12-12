@@ -138,7 +138,7 @@ if __name__ == "__main__":
         concat_content=[]
         for file in fasta_files:
             count=1
-            assembly_id= file.split("_")[0]
+            assembly_id= "c" + file.split("_")[-1].split(".")[0] # Trinity_Cluster_0.Trinity.fasta --> c0
             with open(os.path.join(Trinity_dir,file), "r") as f:
                 contents = f.read().split("\n")
             for line in contents:
