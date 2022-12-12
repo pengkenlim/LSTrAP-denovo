@@ -108,7 +108,7 @@ if __name__ == "__main__":
     #Cluster-specific assembly
     else:
         ##checking cd-hit-est args
-        if cd_hit_identity not >= 0.9 or not <= 1: #exceed range
+        if cd_hit_identity < 0.9 or > 1: #exceed range
             sys.exit(f"ERROR: --cd_hit_identity of {cd_hit_identity} exceeded permitted range of 0.9-1. Exiting...")
         elif cd_hit_identity == 1.0:
             cd_hit_identity = int(cd_hit_identity) # change float 1.0 to int 1
