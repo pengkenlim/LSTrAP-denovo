@@ -28,7 +28,14 @@ if __name__ == "__main__":
     If not specified, Trinity will run on memory and CPU as per its default settings with full_cleanup enabled.\n")
     
     parser.add_argument("-no", "--no_overassembly", action="store_true",
-    help = "Do not assemble multiple cluster-specific transcript assemblies and concatenate them to generate an over-assembly. Instead, just feed all samples into Trinity (vanilla).")
+    help = "Do not assemble multiple cluster-specific transcript assemblies and concatenate them to generate an over-assembly. Instead, just feed all samples into Trinity (vanilla method).")
+    
+    parser.add_argument("-ct", "--cd_hit_threads", type=int,
+    help = "Number of threads for CD-HIT-EST to use.")
+    
+    parser.add_argument("-cc", "--cd_hit_identity", type=float, default=0.98,
+    help = "Sequence identity threshold to be used by CD-HIT-EST to get rid of redundant transcripts. Defined as number of identical amino acids or bases in alignment divided by the full length of the shorter sequence. Set to 0.98 by default. Accepted range: 0.9 - 1")
+    
     
     
     #banner
@@ -42,6 +49,9 @@ if __name__ == "__main__":
     pathtotrinity= outputdir
     s_fastqdir = os.path.join(outputdir, "Step_2", "selected_accessions") #dir holding selected accessions
     TSV_file = os.path.join(outputdir,"Samples_for_trinity.tsv")
+    cd_hit_threads = args.cd_hit_threads
+    cd_hit_identity = args.cd_hit_identity
+    
     #checking outputdir...
     if not os.path.exists(TSV_file):
         sys.exit("Error in output directory. Samples_for_trinity.tsv file not found. Exiting...")
@@ -72,6 +82,8 @@ if __name__ == "__main__":
     else:
         print("All paths are valid.\n\n")
     
+    
+    
     if trinity_arguments is None:
         trinity_arguments=""
         
@@ -95,6 +107,13 @@ if __name__ == "__main__":
             
     #Cluster-specific assembly
     else:
+        ##checking cd-hit-est args
+        if cd_hit_identity not >= 0.9 or not <= 1: #exceed range
+            sys.exit(f"ERROR: --cd_hit_identity of {cd_hit_identity} exceeded permitted range of 0.9-1. Exiting...")
+        elif cd_hit_identity == 1.0:
+            cd_hit_identity = int(cd_hit_identity) # change float 1.0 to int 1
+        
+        
         print("\nAssembling multiple cluster-specific transcript assemblies for over-assembly...\n")
         #get total number of clusters
         clusters = list({line.split("\t")[0] for line in TSV_contents})
@@ -136,7 +155,7 @@ if __name__ == "__main__":
         
         print("\nLaunching CD-HIT-EST to remove redundant sequences...\n")
         pathtofinal=os.path.join(Trinity_dir, "transcripts.fasta")
-        os.system(f"{constants.cdhitpath} -p 1 -b 3 -t 10 -T 0 -M 0 -c 0.98 -i {pathtoconcat} -o {pathtofinal}")
+        os.system(f"{constants.cdhitpath} -p 1 -b 3 -t 10 -T {cd_hit_threads} -M 0 -c {cd_hit_identity} -i {pathtoconcat} -o {pathtofinal}")
         print(f"\nRun_Trinity.py completed. Trinity over-assembly is available at:\n{pathtofinal}")
         
     
