@@ -22,23 +22,20 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--output_dir", type=str, metavar= "", required=True,
     help= "Directory for data output. Directory needs to be same as for step 1 and step 2 of LSTrAP-denovo pipeline (i.e. MakeDraftCDS.py, SelectAccessions.py).")
     
-    parser.add_argument("-trin_args", "--trinity_arguments", type=str, metavar="", default="--full_cleanup --max_memory 10G", 
+    parser.add_argument("-trin_args", "--trinity_arguments", type=str, metavar="", default="--full_cleanup --max_memory 10G --trimmomatic --CPU 8", 
     help = "Arguments in quotes to be passed verbatim into Trinity (e.g. \"--CPU 32 --max_memory 32G\" ). \
     Do not include arguments for output directory and sample paths.\
-    If not specified, Trinity will run on memory and CPU as per its default settings with full_cleanup enabled.\n")
+    By default, \"--full_cleanup --max_memory 10G --trimmomatic --CPU 8\" will be passed to Trinity\n")
     
     parser.add_argument("-no", "--no_overassembly", action="store_true",
     help = "Do not assemble multiple cluster-specific transcript assemblies and concatenate them to generate an over-assembly. Instead, just feed all samples into Trinity (vanilla method).")
     
-    parser.add_argument("-ct", "--cd_hit_threads", type=int, metavar="",
+    parser.add_argument("-ct", "--cd_hit_threads", type=int, metavar="", default=8 ,
     help = "Number of threads for CD-HIT-EST to use.")
     
     parser.add_argument("-cc", "--cd_hit_identity", type=float, default=0.98, metavar="",
     help = "Sequence identity threshold to be used by CD-HIT-EST to get rid of redundant transcripts. Defined as number of identical amino acids or bases in alignment divided by the full length of the shorter sequence. Set to 0.98 by default. Accepted range: 0.9 - 1")
     
-    
-    
-    #banner
     #banner
     misc.print_logo("RunTrinity.py")
     
