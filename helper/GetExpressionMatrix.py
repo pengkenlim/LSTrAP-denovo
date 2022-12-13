@@ -167,12 +167,13 @@ if __name__ == "__main__":
     outputdir= args.output_dir
     conti=args.conti
     force=args.force
-    fastqdir = os.path.join(outputdir, "GetExpressionMatrix", "fastq")
+    fastqdir = os.path.join(kaldir,"exp_mat_untransposed.tsv")
     fastapath= os.path.join(outputdir, "Annotations", "cds_from_transcripts.fasta")
     kaldir= os.path.join(outputdir, "GetExpressionMatrix", "kallisto")
     indexpath= os.path.join(kaldir, fastapath.split("/")[-1] + ".index")
     logfile=misc.logfile_expmat(os.path.join(outputdir,"logs_expmat.json"))
-    tpm_matpath= os.path.join(kaldir,"exp_mat.tsv")
+    tpm_matpath= os.path.join(kaldir,"exp_mat_untransposed.tsv")
+    tpm_matpath_T= os.path.join(outputdir, "GetExpressionMatrix" ,"exp_mat.tsv")
     
 
     taxid= args.id
@@ -282,6 +283,11 @@ if __name__ == "__main__":
     with open(pathtoprocessed, "r") as f:
         logfile.contents["processed_acc"] = {chunk.split("\t")[0]: chunk.split("\t")[1] for chunk in f.read().split("\n") if chunk != "Accession\tMap_rate" and chunk != ""}
         logfile.contents["processed_acc"] = {key : value if "failed" in value or "exception" in value else float(value) for key, value in logfile.contents["processed_acc"].items()}
+    logfile.update()
+    #transpose expression matrix
+    returncode = classify.mat_transposer(tpm_matpath, tpm_matpath_T)
+    
     logfile.contents["status"]= "completed"
     logfile.update()
+    print(f"Expression Matrix generated in {tpm_matpath_T}")
     print("GetExpressionMatrix.py finished running on ", datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
