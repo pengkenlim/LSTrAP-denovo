@@ -286,6 +286,8 @@ if __name__ == "__main__":
     logfile.update()
     #transpose expression matrix
     returncode = classify.mat_transposer(tpm_matpath, tpm_matpath_T)
+    if returncode == 0:
+        sys.exit("Error transposing expression matrix. Exiting...")
     
     logfile.contents["status"]= "completed"
     logfile.update()
