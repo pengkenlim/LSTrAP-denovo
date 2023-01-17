@@ -27,8 +27,8 @@ def generate_from_json_log(logpath, reportpath,step=1):
     n_total_acc = log_content["Step_1"]["run_info"].get("n_total_acc")
     prelim_command= log_content["Step_1"]["run_info"].get("command_issued")
     prelim_start_time= log_content["Step_1"]["run_info"].get("init_time")
-    processed_table= {"Accession processed" :log_content["Step_1"].get("processed_acc").keys(), 
-    "Number of CDS assembled": log_content["Step_1"].get("processed_acc").values()}
+    processed_table= {"Single-Sample Assembly (SSA)" :log_content["Step_1"].get("processed_acc").keys(), 
+    "Number of ORFs in assembly": log_content["Step_1"].get("processed_acc").values()}
     processed_table= pd.DataFrame.from_dict(processed_table)
     
     CT_table= {"Consensus threshold": list(log_content["Step_1"]["consensus"]["stats"].keys()),
@@ -38,7 +38,7 @@ def generate_from_json_log(logpath, reportpath,step=1):
     CT_table= pd.DataFrame.from_dict(CT_table)
     optimal_CT= log_content["Step_1"]["consensus"].get("optimal")
     
-    optimal_CT_string=f"<p>User is reccomended to use <b>CT{optimal_CT}</b> as preliminary assembly for step 2.</p>"
+    optimal_CT_string=f"<p>Consensus threshold (CT) of <b>{optimal_CT}</b> has been determined to be optimal for extracting Draft CDSs.</p>"
     
     if step == 1:
         Consensus_threshold_for_preliminary_assembly="NA"
@@ -155,7 +155,7 @@ def generate_from_json_log(logpath, reportpath,step=1):
         var data = google.visualization.arrayToDataTable({sc_data});
 
        var options = {{
-          title: 'Clustering Performance of K-Medoids Clustering Iterations at Different ks',
+          title: 'Performance of K-Medoids Clustering Iterations at Different ks',
           legend: {{ position: 'none' }},
 		  vAxis: {{title: "Silhouette coefficient"}},
 		  hAxis: {{title: "Number of clusters (k)"}}
@@ -184,10 +184,9 @@ def generate_from_json_log(logpath, reportpath,step=1):
 	</head>
 	<body>
 		<h1 style="background-color:#D6EEEE;">LSTrAP-denovo Report</h1>
-		<h2><u>H</u>igh-throughput <u>S</u>ample <u>S</u>election pipeline for <u>Trans</u>criptome assembly</h2>
-        LSTrAP-denovo<h2><u>L</u>arge-<u>S</u>cale <u>Tr</u>anscriptome <u>A</u>ssembly <u>P</u>ipeline-<u>denovo</u></h2>
+		<h2><u>L</u>arge-<u>S</u>cale <u>Tr</u>anscriptome <u>A</u>ssembly <u>P</u>ipeline-<u>denovo</u></h2>
 		<p>For more information, please visit our <a href="https://github.com/pengkenlim/LSTrAP-denovo">GitHub repository</a>.</p>
-		<h2 style="background-color:#D6EEEE;" >Step 1. Assembling Draft CDSs</h2>
+		<h2 style="background-color:#D6EEEE;" >1. <a href="https://github.com/pengkenlim/LSTrAP-denovo/wiki/3.-MakeDraftCDS.py">MakeDraftCDS.py</a></h2>
 		<h3>Run Info</h3>
 		<table>
 			<tr>
@@ -211,13 +210,13 @@ def generate_from_json_log(logpath, reportpath,step=1):
 				<td>{prelim_start_time}</td>
 			</tr>
 		</table>
-		<h3>Download and Independent Assembly of Single-accessions</h3>
+		<h3>Independent Assembly of single RNA-seq accessions</h3>
         {processed_table.to_html(index=False)}
-		<h3>Combining Single-accessions Assemblies and Extracting Consensus Coding Sequences (CDS)</h3>
+		<h3>Extracting ORFs that co-occur in multiple SSAs as Draft Coding Sequences (CDSs)</h3>
 		<div id="curve_chart" style="width: 900px; height: 500px"></div>
-		{optimal_CT_string}
         {CT_table.to_html(index=False)}
-		<h2 style="background-color:#D6EEEE;">Step 2. Selection of representative accessions for transcriptome assembly</h2>
+        {optimal_CT_string}
+		<h2 style="background-color:#D6EEEE;">2. <a href="https://github.com/pengkenlim/LSTrAP-denovo/wiki/4.-SelectAccessions.py">SelectAccessions.py</a></h2>
         <h3>Run Info</h3>
 		<table>
 			<tr>
@@ -233,7 +232,7 @@ def generate_from_json_log(logpath, reportpath,step=1):
 				<td>{cluster_start_time}</td>
 			</tr>
 		</table>
-        <h3>Accession Quality Control</h3>
+        <h3>Quality Control of RNA-seq Accessions Based on Mapping Rate Statistic</h3>
         <div id="PS_HISTO" style="width: 900px; height: 500px;"></div>
         <p>Pseudoalignment threshold of <b>{ps_cutoff}%</b> was used for quality control (QC). <b>{n_failed}</b> out of {n_total} accessions failed QC and was excluded out of pipeline.</p>
         <h3>Clustering of Accessions using K-medoids Algorithm</h3>
