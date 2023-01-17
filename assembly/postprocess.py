@@ -47,14 +47,27 @@ def cluster_seq_extractor(n_threshold,pathtoclstrinfo):
             seq_to_retain += [representative_seq]
     return seq_to_retain
     
-def fasta_subset(inputfastapath, outputfastapath, seqid):
-    '''Create a subset fasta from input fasta based on seqid provided'''
+def fasta_subset_DEPRECATED(inputfastapath, outputfastapath, seqid):
+    '''Create a subset fasta from input fasta based on seqid provided
+    DEPRECATED'''
     with open(inputfastapath,"r") as f:
         fasta=f.read().split(">")[1:]
         with open(outputfastapath, "w") as f:
             for line in fasta:
                 if line.split("\n")[0] in seqid:
                     f.write(">"+line)
+
+def fasta_subset( pathtofasta, pathtonew, seqtoretain):
+    '''Create a subset fasta from input fasta based on seqid provided'''
+    #read content of fasta
+    with open(pathtofasta, "r") as f:
+        contents= f.read().split(">")
+    #Create a dict to fetch data using GeneIDS
+    contentsdict= {chunk.split("\n")[0].split(" ")[0] : chunk for chunk in  contents}
+    #Fetch and write into new path
+    with open(pathtonew, "w") as f:
+        for ID in seqtoretain:
+            f.write(">" + contentsdict[ID])
 
 def select_CT(n_seq_list):
     ''' Find best consensus threshold based on rate of seqeunce loss. 
