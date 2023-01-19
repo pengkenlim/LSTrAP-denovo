@@ -169,7 +169,7 @@ if __name__ == "__main__":
     force=args.force
     kaldir= os.path.join(outputdir, "GetExpressionMatrix", "kallisto")
     fastqdir = os.path.join(outputdir,"GetExpressionMatrix","fastq")
-    fastapath= os.path.join(outputdir, "Annotations", "cds_from_transcripts.fasta")
+    fastapath= os.path.join(outputdir, "Annotations", "cds_from_primary_transcripts.fasta") #changed from "cds_from_transcripts.fasta"
     indexpath= os.path.join(kaldir, fastapath.split("/")[-1] + ".index")
     logfile=misc.logfile_expmat(os.path.join(outputdir,"logs_expmat.json"))
     tpm_matpath= os.path.join(kaldir,"exp_mat_untransposed.tsv")

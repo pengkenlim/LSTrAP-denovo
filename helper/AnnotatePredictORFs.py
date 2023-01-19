@@ -6,6 +6,7 @@ import subprocess
 from datetime import datetime
 import argparse
 import pandas as pd
+from setup import constants
 
 if __name__ == "__main__":
         abspath= os.getcwd()
@@ -100,6 +101,48 @@ def combine():
     os.system("head -n 3 " + os.path.join(working_dir,"splitfile_part1", "longest_orfs_flipped.domtblout") + ">" + os.path.join(annot_dir,"translated_cds.domtblout"))
     os.system("awk \'!/#/\' " + os.path.join(working_dir,"splitfile_part*", "longest_orfs_flipped.domtblout") + ">>" + os.path.join(annot_dir,"translated_cds.domtblout"))
     print(os.path.join(annot_dir,"translated_cds.domtblout") + " generated")
+    
+    #cd-hit to cluster isoforms
+    pathtocds = os.path.join(annot_dir,"cds_from_transcripts.fasta")
+    outputpath = os.path.join(annot_dir, "Transcript_isoforms")
+    os.system(f"{constants.cdhitpath} -p 1 -b 3 -t 10 -T {threadpool} -M 0 -c 0.98 -i {inputpath} -o {outputpath}")
+    os.system(f"rm {outputpath}")
+    
+    #Select primary transcripts to make cds_from_primary_transcripts.fasta
+    ##read cds_from_transcripts.fasta and extract coding score
+    with open(pathtocds, "r") as f:
+        seqinfo = f.read().split(">")[1:]
+    seq_info_dict = {}
+    for chunk in seqinfo:
+        seqid = chunk.split("\n")[0].split(" ")[0]
+        score = float(chunk.split("\n")[0].split("score=")[1].split(" ")[0]. split(",")[0])
+        seq_info_dict[seqid]={"fasta_content" : chunk ,"Coding_score" : score}
+    
+    #read cluster information 
+    pathtoclstr = outputpath+ ".clstr"
+    with open(pathtoclstr, "r") as f:
+        clstr_contents = f.read().split(">Cluster ")[1:]
+    cluster_dict = {}
+    for chunk in clstr_contents:
+        clusterid= chunk.split("\n")[0]
+        seqid = chunk.split(">")[1:]
+        seqid= [ line.split("...")[0] for line in seqid]
+        cluster_dict[clusterid] = seqid
+    
+    #Select isoform with highest coding score as cds_from_primary_transcripts.fasta    
+    primary_cds_path = os.path.join(annot_dir,"cds_from_primary_transcripts.fasta")
+    with open(path_to_fasta_subset, "w") as f:
+        for clusterid , seqid_list in cluster_dict.items():
+            scoretobeat = -10000
+            seqtokeep= ""
+            for seqid in seqid_list:
+                score = seq_info_dict.get(seqid).get("Coding_score")
+                if score > scoretobeat:
+                    scoretobeat=score
+                    seqtokeep=seqid
+            f.write(">"+ seq_info_dict.get(seqtokeep).get("fasta_content"))
+        
+    
 
 
 def parse_domtblout(dombloutpath):
