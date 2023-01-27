@@ -111,6 +111,10 @@ def single_sample_assembly(accession,index):
         with open(pathtoprocessed, "a") as f:
             f.write(f"{accession}\tFastP failed\n")
         return f"{accession}: Aborted after {retrylimit} retries."
+    if os.path.getsize(fastqpath.split(".gz")[0]) < 100*1024*1024: # if too many reads were discarded by fastp (<100mb of reads left), then abort:
+        with open(pathtoprocessed, "a") as f:
+            f.write(f"{accession}\tFastP failed\n")
+        return f"{accession}: Aborted. FastP error."
     #make config file for soapdenovotrans to parse
     fastqpath= fastqpath.split(".gz")[0]
     configoutpath = os.path.join(ssadir, accession + "_temp.config")
