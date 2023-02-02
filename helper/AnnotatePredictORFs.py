@@ -46,6 +46,9 @@ def swap_target_query(input_domtblout, output_domtblout):
 
 
 def run_job(file_name):
+    if os.path.exists(os.path.join(working_dir ,file_name+".transdecoder.cds")):
+        return f"{file_name} already completed."
+        
     print(f"{file_name}: Running Transdecoder.LongOrfs...")
     filepath = os.path.join(working_dir ,file_name) #path/to/splitfile_partx.fasta
     outdir = os.path.join(working_dir ,file_name.split(".fasta")[0]) #path/to/splitfile_partx
@@ -71,14 +74,13 @@ def run_job(file_name):
     
     #flipping targets and queries in domtblouts output by hmmsearch so that it is consistent with hmmscan
     flipped_domtbloutpath = os.path.join(outdir, "longest_orfs_flipped.domtblout")
-    #os.system("awk \'BEGIN{OFS=FS=\" \"} NR<=3{print}; NR>3{tmp=$1; $1=$4; $4=tmp; tmp=$2; $2=$5; $5=tmp; print}\'" + f" {domtbloutpath} > {flipped_domtbloutpath}")
     swap_target_query(domtbloutpath, flipped_domtbloutpath)
     
     #predcit ORFs hmmsearch
     return_code= predict_ORFs(filepath,file_name.split(".fasta")[0], flipped_domtbloutpath)
     endtime = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     if return_code ==0:
-        return f"{file_name} completed at {endtime}"
+        return f"{file_name} completed at {endtime}."
     else:
         return f"{file_name}: ERROR. Transdecoder.Predict Failed."
     
@@ -107,7 +109,7 @@ def combine():
     #cd-hit to cluster isoforms
     pathtocds = os.path.join(annot_dir,"cds_from_transcripts.fasta")
     outputpath = os.path.join(annot_dir, "Transcript_isoforms")
-    os.system(f"{constants.cdhitpath} -p 1 -b 3 -t 10 -T {threadpool} -M 0 -c 0.98 -i {inputpath} -o {outputpath}")
+    os.system(f"{constants.cdhitpath} -p 1 -b 3 -t 10 -T {threadpool} -M 0 -c 0.98 -i {pathtocds} -o {outputpath}")
     os.system(f"rm {outputpath}")
     
     #Select primary transcripts to make cds_from_primary_transcripts.fasta
