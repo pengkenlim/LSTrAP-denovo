@@ -1,5 +1,10 @@
 import os
 import sys
+if __name__ == "__main__":
+        abspath= os.getcwd()
+        parent_module= os.path.join(abspath.split("LSTrAP-denovo")[0], "LSTrAP-denovo")
+        sys.path.insert(0, parent_module)
+
 import numpy as np
 import concurrent.futures
 import subprocess
@@ -8,10 +13,7 @@ import argparse
 import pandas as pd
 from setup import constants
 
-if __name__ == "__main__":
-        abspath= os.getcwd()
-        parent_module= os.path.join(abspath.split("LSTrAP-denovo")[0], "LSTrAP-denovo")
-        sys.path.insert(0, parent_module)
+
         
 from assembly import misc
 
