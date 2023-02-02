@@ -284,10 +284,14 @@ if __name__ == "__main__":
         logfile.contents["processed_acc"] = {chunk.split("\t")[0]: chunk.split("\t")[1] for chunk in f.read().split("\n") if chunk != "Accession\tMap_rate" and chunk != ""}
         logfile.contents["processed_acc"] = {key : value if "failed" in value or "exception" in value else float(value) for key, value in logfile.contents["processed_acc"].items()}
     logfile.update()
-    #transpose expression matrix
-    returncode = classify.mat_transposer(tpm_matpath, tpm_matpath_T)
+    
+    #subset and transpose expression matrix
+    pseudoalignment_threshold
+    total, failed, passed, cutoff= classify.thresholder({key:val for key, val in logfile.contents["processed_acc"].items() if type(val) is not str}, pseudoalignment_threshold)
+    print(f"A total of {len(total)} accessions has been downloaded and pseudoaligned.\n{len(failed)} accessions failed QC based on auto-determined psedoalignment threshold of {cutoff}%\n")
+    returncode = classify.mat_transposer(tpm_matpath, passed , tpm_matpath_T)
     if returncode == 0:
-        sys.exit("Error transposing expression matrix. Exiting...")
+        sys.exit("Error subsetting or transposing expression matrix. Exiting...")
     
     logfile.contents["status"]= "completed"
     logfile.update()

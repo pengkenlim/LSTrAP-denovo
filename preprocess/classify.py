@@ -129,10 +129,12 @@ def generate_master_cluster_assignment_dict(cluster_assignment, centroids, pca_d
             master_cluster_assignment_dict[cluster][inverted_dist_dict[value]]=[ value, mapratedict[inverted_dist_dict[value]]]
     return master_cluster_assignment_dict
     
-def mat_transposer(pathtomat, pathtomat_T):
-    ''' transpose expression matrix such that columns are RNA-seq accessions, index corresponds to genes'''
+def mat_transposer(pathtomat,  accessions ,pathtomat_T):
+    '''only include accessions that passed + 
+    transpose expression matrix such that columns are RNA-seq accessions, index corresponds to genes'''
     try:
-        pd.read_csv(pathtomat,sep="\t").set_index("accession").transpose().to_csv(pathtomat_T ,sep="\t")
+        Matrix = mat_parser(pathtomat, accessions)
+        Matrix.to_csv(pathtomat_T ,sep="\t")
         return 1
     except:
         return 0
