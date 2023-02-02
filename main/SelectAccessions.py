@@ -33,7 +33,7 @@ def download_PS_job(accession, index):
             return accession, index , "Already processed"
         if logfile.contents["Step_2"]["processed_acc"].get(accession) == "PS failed":
             return accession, index , "PS failed"
-        if accession not in logfile.contents["Step_2"]["processed_acc"].keys() or logfile.contents["Step_2"]["processed_acc"].get(accession) == "Download failed" or logfile.contents["Step_2"]["processed_acc"].get(accession) == "Download failed because link not found" or logfile.contents["Step_2"]["processed_acc"].get(accession) == "Unknown exception" : #check if accession has been downloaded/processed. Proceed with download if not.
+        if accession not in logfile.contents["Step_2"]["processed_acc"].keys() or logfile.contents["Step_2"]["processed_acc"][accession]!="Downloaded" or logfile.contents["Step_2"]["processed_acc"].get(accession) == "Download failed" or logfile.contents["Step_2"]["processed_acc"].get(accession) == "Download failed because link not found" or logfile.contents["Step_2"]["processed_acc"].get(accession) == "Unknown exception" : #check if accession has been downloaded/processed. Proceed with download if not.
             ascp_fullpath, ftp_fullpath, filesize = aspera.get_download_path_ffq(accession)
             fastqpath =os.path.join(C_fastqdir,accession+".fastq.gz")
             #remove fastq if exists
