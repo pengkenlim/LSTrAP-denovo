@@ -135,7 +135,7 @@ def combine():
     
     #Select isoform with highest coding score as cds_from_primary_transcripts.fasta    
     primary_cds_path = os.path.join(annot_dir,"cds_from_primary_transcripts.fasta")
-    with open(path_to_fasta_subset, "w") as f:
+    with open(primary_cds_path, "w") as f:
         for clusterid , seqid_list in cluster_dict.items():
             scoretobeat = -10000
             seqtokeep= ""
