@@ -286,7 +286,7 @@ if __name__ == "__main__":
     logfile.update()
     
     #subset and transpose expression matrix
-    pseudoalignment_threshold==0
+    pseudoalignment_threshold=0
     total, failed, passed, cutoff= classify.thresholder({key:val for key, val in logfile.contents["processed_acc"].items() if type(val) is not str}, pseudoalignment_threshold)
     print(f"A total of {len(total)} accessions has been downloaded and pseudoaligned.\n{len(failed)} accessions failed QC based on auto-determined psedoalignment threshold of {cutoff}%\n")
     returncode = classify.mat_transposer(tpm_matpath, passed , tpm_matpath_T)
