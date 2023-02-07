@@ -87,7 +87,8 @@ def PCA_transformer(Matrix, n_pcs=100):
 
 def mat_parser(pathtomat, accessions):
     ''' returns matrix for PCA x-formation. accessions= list of accessions that passed qc'''
-    Matrix= pd.read_csv( pathtomat,sep="\t").set_index("accession").transpose()
+    Matrix= pd.read_csv( pathtomat,sep="\t").set_index("accession")
+    Matrix = Matrix[~Matrix.index.duplicated(keep='first')].transpose()
     Matrix= Matrix[accessions]
     return Matrix
     
