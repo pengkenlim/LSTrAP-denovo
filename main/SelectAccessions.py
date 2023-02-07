@@ -436,6 +436,9 @@ if __name__ == "__main__":
         with threadpool_limits(user_api="openmp", limits=threadpool):
             pca_data , pc_variances = classify.PCA_transformer(Matrix)    
         print(f"PCA-transformation complete with {np.round(sum(pc_variances))}% of variance retained. (PC1= {pc_variances[0]}%)\n")
+        #write PCA data for troubleshooting
+        pca_data.to_csv(os.path.join(outputdir, "Step_2", "pca_data.tsv"), sep="\t")
+        
         #extract k-means minimum and maximum values from range k_range variable parsed from arguments
         if k_range == "auto":
             kmin = 5
@@ -456,6 +459,10 @@ if __name__ == "__main__":
             k_cluster_assignment_dict, silhouette_coefficients, k_centroids_dict = classify.kmeans_kwalk(pca_data, kmin, kmax)
         #feed silhouette_coefficients and cluster assignments at different ks into function that determines optimal k 
         optimal_k, cluster_assignment , sc_max, centroids = classify.optimal_k_silhouette(kmin, kmax, silhouette_coefficients, k_cluster_assignment_dict, k_centroids_dict)
+        
+        #write centroids for trouble shooting
+        with open(os.path.join(outputdir, "Step_2", "centroids.csv"), "w") as f:
+            f.write(",".join(centroids))
         
         cluster_assignment_dict = {}
         for accession , cluster in zip(passed ,cluster_assignment):
