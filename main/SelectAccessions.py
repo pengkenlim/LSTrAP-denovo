@@ -361,17 +361,17 @@ if __name__ == "__main__":
     logfile.update()
     
     if "cluster_assignment_stats" not in logfile.contents["Step_2"]["kmeans"].keys():
-        print("Transfering accession .fastq files downloaded in step 1 to new directory...")
-        for file in os.listdir(P_fastqdir): #xfer old files if not already done so
-            if "fastq.gz" in file and not os.path.exists(os.path.join(C_fastqdir,file)): 
-                os.system(f"cp {os.path.join(P_fastqdir , file)} {C_fastqdir}")
-                if os.path.getsize(os.path.join(C_fastqdir, file)) > filesizelimit:
-                    os.system(f"truncate -s {filesizelimit}  {os.path.join(C_fastqdir, file)}")
-                    print(f"{file} transfered and truncated to file size limit of {filesizelimit/1048576} mb")
-                else:
-                    print(f"{file} transfered.")
-                logfile.contents["Step_2"]["processed_acc"][file.split(".")[0]]="Downloaded"
-        logfile.update()
+        #print("Transfering accession .fastq files downloaded in step 1 to new directory...")
+        #for file in os.listdir(P_fastqdir): #xfer old files if not already done so
+            #if "fastq.gz" in file and not os.path.exists(os.path.join(C_fastqdir,file)): 
+                #os.system(f"cp {os.path.join(P_fastqdir , file)} {C_fastqdir}")
+                #if os.path.getsize(os.path.join(C_fastqdir, file)) > filesizelimit:
+                    #os.system(f"truncate -s {filesizelimit}  {os.path.join(C_fastqdir, file)}")
+                    #print(f"{file} transfered and truncated to file size limit of {filesizelimit/1048576} mb")
+                #else:
+                    #print(f"{file} transfered.")
+                #logfile.contents["Step_2"]["processed_acc"][file.split(".")[0]]="Downloaded"
+        #logfile.update()
            
         
         #directory to hold kallisto intermediate files
