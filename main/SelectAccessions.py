@@ -463,7 +463,8 @@ if __name__ == "__main__":
         #write centroids for trouble shooting
         #with open(os.path.join(outputdir, "Step_2", "centroids.csv"), "w") as f:
             #f.write(",".join([str(val) for val in centroids.tolist()]))
-        print("centroid.shape() = ", centroids.shape())
+        print("centroid.shape = ", centroids.shape)
+        print("np.array(centroids).shape = ", np.array(centroids).shape)
             
         
         cluster_assignment_dict = {}
