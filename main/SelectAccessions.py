@@ -461,8 +461,10 @@ if __name__ == "__main__":
         optimal_k, cluster_assignment , sc_max, centroids = classify.optimal_k_silhouette(kmin, kmax, silhouette_coefficients, k_cluster_assignment_dict, k_centroids_dict)
         
         #write centroids for trouble shooting
-        with open(os.path.join(outputdir, "Step_2", "centroids.csv"), "w") as f:
-            f.write(",".join([str(val) for val in centroids.tolist()]))
+        #with open(os.path.join(outputdir, "Step_2", "centroids.csv"), "w") as f:
+            #f.write(",".join([str(val) for val in centroids.tolist()]))
+        print("np.array(centroids) = ",np.array(centroids).shape())
+            
         
         cluster_assignment_dict = {}
         for accession , cluster in zip(passed ,cluster_assignment):
